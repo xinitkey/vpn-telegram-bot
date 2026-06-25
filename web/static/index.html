@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BlackVPN</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+    <div class="header">
+        <div class="logo">Black<span>VPN</span></div>
+        <div class="balance-card">
+            <div class="balance-amount" id="balance-display">0 ₽</div>
+            <button class="btn-pay" onclick="openTopUpModal()">Пополнить</button>
+        </div>
+    </div>
+    <div class="container">
+        <div id="tab-home-content">
+            <div class="main-card">
+                <div class="tariff-info">
+                    <div class="days-left" id="days-count">0 <span>дней</span></div>
+                    <button class="btn-pay" onclick="openTariffsModal()">Тарифы</button>
+                </div>
+                <div class="price-text" id="price-daily-text">от 5₽ / день</div>
+                <div class="card-actions">
+                    <div class="btn-secondary" onclick="openDevices()">Устройства</div>
+                    <div class="btn-secondary" onclick="openInstructions()">Подключение</div>
+                </div>
+                <button class="btn-primary-action" onclick="buyDaysModal()">Продлить подписку с баланса</button>
+            </div>
+            <div class="referral-card">
+                <h3>Приглашай друзей и зарабатывай</h3>
+                <p>Получай <span>50₽</span> за каждого друга</p>
+            </div>
+        </div>
+
+        <div id="tab-profile-content" class="profile-card">
+            <div class="user-profile-header">
+                <img id="user-photo" class="user-avatar" style="display:none;" alt="avatar">
+                <div id="user-avatar-placeholder" class="user-avatar">&#x1F464;</div>
+                <div class="user-details">
+                    <h4 id="user-name">Пользователь</h4>
+                    <p id="user-username">@username</p>
+                </div>
+            </div>
+            <div class="profile-info-block">&#x1F4CD; Telegram ID: <span id="user-id">...</span></div>
+            <div class="profile-info-block">&#x1F4B3; Баланс: <span id="profile-balance">0 &#x20BD;</span></div>
+            <div class="profile-info-block">&#x1F511; Ключ: <span id="profile-key">Загрузка...</span></div>
+            <div class="profile-info-block">Статус: <span>Клиент</span></div>
+        </div>
+
+        <div id="tab-info-content" class="info-card">
+            <div class="info-section">
+                <div class="info-icon">&#x2139;&#xFE0F;</div>
+                <h3>О сервисе</h3>
+                <p>BlackVPN — защищённый VPN-сервис предоставляющий скорость и анонимность.</p>
+            </div>
+            <div class="info-section">
+                <div class="info-icon">&#x1F4E7;</div>
+                <h3>Поддержка</h3>
+                <p>Технические вопросы: <span class="info-link" onclick="openSupportTech()">@Asdzxclop_bot</span></p>
+                <p>Онлайн поддержка: <span class="info-link" onclick="openSupportOnline()">@Judebellengham</span></p>
+            </div>
+            <div class="info-section">
+                <div class="info-icon">&#x1F4D6;</div>
+                <h3>Правовая информация</h3>
+                <button class="btn-info-link" onclick="openPrivacyPage()">
+                    <span>&#x1F6E1;&#xFE0F;</span> Политика конфиденциальности
+                </button>
+                <button class="btn-info-link" onclick="openTermsPage()" style="margin-top:10px">
+                    <span>&#x1F4DC;</span> Условия использования
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="topup-modal">
+        <div class="modal">
+            <button class="modal-close" onclick="closeTopUpModal()">&times;</button>
+            <h2>&#x1F4B0; Пополнение баланса</h2>
+            <div class="amount-presets">
+                <button class="amount-btn" onclick="selectAmount(50)">50 &#x20BD;</button>
+                <button class="amount-btn" onclick="selectAmount(100)">100 &#x20BD;</button>
+                <button class="amount-btn" onclick="selectAmount(200)">200 &#x20BD;</button>
+                <button class="amount-btn" onclick="selectAmount(500)">500 &#x20BD;</button>
+                <button class="amount-btn" onclick="selectAmount(1000)">1000 &#x20BD;</button>
+                <button class="amount-btn" onclick="selectAmount(2000)">2000 &#x20BD;</button>
+            </div>
+            <input type="number" class="custom-amount" id="custom-amount" placeholder="Или введите сумму (мин. 50&#x20BD;)" min="50" oninput="onCustomAmount()">
+            <div class="payment-methods">
+                <h3>Способ оплаты:</h3>
+                <button class="method-btn" id="method-stars" onclick="selectMethod('stars')">
+                    <div class="method-icon">&#x2B50;</div>
+                    <div class="method-info">
+                        <div>Telegram Stars</div>
+                        <small>Мгновенно</small>
+                    </div>
+                </button>
+                <button class="method-btn" id="method-crypto" onclick="selectMethod('crypto')">
+                    <div class="method-icon">&#x20BF;</div>
+                    <div class="method-info">
+                        <div>Криптовалюта</div>
+                        <small>USDT, BTC, TON</small>
+                    </div>
+                </button>
+                <button class="method-btn" id="method-cryptomus" onclick="selectMethod('cryptomus')">
+                    <div class="method-icon">&#x1F4B3;</div>
+                    <div class="method-info">
+                        <div>Карта</div>
+                        <small>Банковская карта | Мир | СПБ</small>
+                    </div>
+                </button>
+            </div>
+            <button class="btn-confirm" id="btn-confirm-topup" onclick="confirmTopUp()" disabled>Пополнить</button>
+        </div>
+    </div>
+
+    <!-- Tariffs Modal -->
+    <div class="modal-overlay" id="tariffs-modal">
+        <div class="modal">
+            <button class="modal-close" onclick="closeTariffsModal()">&times;</button>
+            <h2>&#x1F4CB; Тарифы</h2>
+            <div class="tariff-hint">Выберите срок подписки</div>
+            <div class="tariff-list">
+                <div class="tariff-option" onclick="selectTariff(3, 15)">
+                    <div class="tariff-badge">&#x1F4A1;</div>
+                    <div class="tariff-info-block">
+                        <div class="tariff-days">3 дня</div>
+                        <div class="tariff-perday">5,0 &#x20BD;/день</div>
+                    </div>
+                    <div class="tariff-price">15 &#x20BD;</div>
+                    <div class="tariff-trial-label">Триал</div>
+                </div>
+                <div class="tariff-option tariff-recommended" onclick="selectTariff(30, 119)">
+                    <div class="tariff-badge">&#x1F525;</div>
+                    <div class="tariff-info-block">
+                        <div class="tariff-days">30 дней</div>
+                        <div class="tariff-perday">4,0 &#x20BD;/день</div>
+                    </div>
+                    <div class="tariff-price">119 &#x20BD;</div>
+                    <div class="tariff-rec-label">Базовый</div>
+                </div>
+                <div class="tariff-option" onclick="selectTariff(90, 299)">
+                    <div class="tariff-badge">&#x1F31F;</div>
+                    <div class="tariff-info-block">
+                        <div class="tariff-days">90 дней</div>
+                        <div class="tariff-perday">3,3 &#x20BD;/день</div>
+                    </div>
+                    <div class="tariff-price">299 &#x20BD;</div>
+                    <div class="tariff-standard-label">Стандарт</div>
+                </div>
+                <div class="tariff-option" onclick="selectTariff(180, 549)">
+                    <div class="tariff-badge">&#x1F451;</div>
+                    <div class="tariff-info-block">
+                        <div class="tariff-days">180 дней</div>
+                        <div class="tariff-perday">3,1 &#x20BD;/день</div>
+                    </div>
+                    <div class="tariff-price">549 &#x20BD;</div>
+                    <div class="tariff-profitable-label">Выгодный</div>
+                </div>
+                <div class="tariff-option tariff-best" onclick="selectTariff(365, 999)">
+                    <div class="tariff-badge">&#x1F31F;</div>
+                    <div class="tariff-info-block">
+                        <div class="tariff-days">365 дней</div>
+                        <div class="tariff-perday">2,7 &#x20BD;/день</div>
+                    </div>
+                    <div class="tariff-price">999 &#x20BD;</div>
+                    <div class="tariff-best-label">Лучший</div>
+                </div>
+            </div>
+            <button class="btn-confirm" id="btn-confirm-tariff" onclick="confirmTariffPurchase()" disabled>Выберите тариф</button>
+        </div>
+    </div>
+
+    <div class="bottom-nav">
+        <div class="nav-item active" id="nav-home" onclick="switchTab('home')"><div class="nav-icon">&#x1F3E0;</div><div>Главная</div></div>
+        <div class="nav-item" id="nav-subs" onclick="showSubscriptionInfo()"><div class="nav-icon">&#x1F4CB;</div><div>Подписки</div></div>
+        <div class="nav-item" id="nav-info" onclick="switchTab('info')"><div class="nav-icon">&#x2139;&#xFE0F;</div><div>Инфо</div></div>
+        <div class="nav-item" id="nav-profile" onclick="switchTab('profile')"><div class="nav-icon">&#x1F464;</div><div>Профиль</div></div>
+    </div>
+
+    <script src="/app.js"></script>
+</body>
+</html>

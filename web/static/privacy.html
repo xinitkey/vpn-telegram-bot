@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="color-scheme" content="dark" />
+  <title>BlackVPN — Privacy Policy</title>
+  <style>
+    :root {
+      --bg-main: #09090b;
+      --bg-panel: #12090a;
+      --bg-panel-2: #170c0d;
+      --bg-soft: #221718;
+      --bg-red-deep: #4d0003;
+      --bg-red-2: #650508;
+      --bg-red-3: #8a1116;
+      --accent-red: #ff3131;
+      --accent-red-hover: #ff4d4d;
+      --accent-red-soft: rgba(255, 49, 49, 0.18);
+      --accent-red-glow: 0 0 22px rgba(255, 49, 49, 0.34);
+      --text-main: #ffffff;
+      --text-muted: #c8c3c6;
+      --text-dim: #8c8388;
+      --border-soft: rgba(255,255,255,0.08);
+      --shadow-card: 0 14px 40px rgba(0,0,0,0.38);
+      --radius-xl: 28px;
+      --radius-lg: 22px;
+      --radius-md: 18px;
+      --radius-sm: 14px;
+      --content: 980px;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--text-main);
+      background:
+        radial-gradient(circle at 85% 12%, rgba(255,49,49,0.09), transparent 18%),
+        radial-gradient(circle at 15% 85%, rgba(255,49,49,0.07), transparent 20%),
+        linear-gradient(180deg, var(--bg-red-deep) 0%, var(--bg-red-2) 44%, var(--bg-red-3) 100%);
+    }
+
+    a {
+      color: var(--text-main);
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    .page {
+      max-width: var(--content);
+      margin: 0 auto;
+      padding: 18px 16px 36px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 18px;
+      padding: 10px 14px;
+      border-radius: 22px;
+      background: rgba(5, 10, 18, 0.72);
+      border: 1px solid rgba(255,255,255,0.05);
+      backdrop-filter: blur(10px);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .logo {
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      overflow: hidden;
+      flex: 0 0 auto;
+      box-shadow: 0 0 0 1px rgba(255,255,255,0.05);
+      background: #0e1016;
+      display: grid;
+      place-items: center;
+    }
+
+    .logo img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .brand-title {
+      font-size: 15px;
+      font-weight: 700;
+      line-height: 1.2;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .lang-switcher {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.05);
+      border-radius: 999px;
+    }
+
+    .lang-btn {
+      border: 0;
+      background: transparent;
+      color: var(--text-dim);
+      min-width: 52px;
+      padding: 9px 12px;
+      border-radius: 999px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: all .18s ease;
+    }
+
+    .lang-btn.active {
+      background: var(--accent-red);
+      color: #fff;
+      box-shadow: var(--accent-red-glow);
+    }
+
+    .hero-card,
+    .content-card,
+    .note-card {
+      border-radius: var(--radius-xl);
+      background: linear-gradient(180deg, rgba(10,7,10,0.96) 0%, rgba(18,9,10,0.96) 100%);
+      border: 1px solid var(--border-soft);
+      box-shadow: var(--shadow-card);
+    }
+
+    .hero-card {
+      padding: 26px 18px;
+      margin-bottom: 16px;
+    }
+
+    .eyebrow {
+      margin: 0 0 8px;
+      color: #ff8b8b;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      font-weight: 700;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(34px, 6vw, 60px);
+      line-height: 0.98;
+      letter-spacing: -0.04em;
+      font-weight: 900;
+    }
+
+    .hero-accent {
+      color: #ff5a5a;
+      text-shadow: 0 0 22px rgba(255, 80, 80, 0.22);
+    }
+
+    .hero-text {
+      margin: 14px 0 0;
+      max-width: 60ch;
+      color: var(--text-muted);
+      font-size: 15px;
+    }
+
+    .meta-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+      margin-top: 20px;
+    }
+
+    .meta-item {
+      border-radius: 20px;
+      padding: 14px 15px;
+      background: linear-gradient(180deg, rgba(32,14,15,0.95), rgba(25,12,13,0.95));
+      border: 1px solid rgba(255,255,255,0.06);
+    }
+
+    .meta-label {
+      display: block;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-dim);
+      margin-bottom: 6px;
+      font-weight: 700;
+    }
+
+    .meta-value {
+      color: var(--text-main);
+      font-size: 14px;
+      font-weight: 700;
+      line-height: 1.35;
+      word-break: break-word;
+    }
+
+    .content-card {
+      padding: 20px 18px 24px;
+    }
+
+    .doc h2 {
+      margin: 28px 0 12px;
+      font-size: 24px;
+      line-height: 1.15;
+      letter-spacing: -0.02em;
+      font-weight: 800;
+    }
+
+    .doc h2:first-child {
+      margin-top: 0;
+    }
+
+    .doc p {
+      margin: 0 0 14px;
+      color: var(--text-main);
+      font-size: 15px;
+      line-height: 1.68;
+    }
+
+    .doc ul {
+      margin: 0 0 16px 18px;
+      padding: 0;
+    }
+
+    .doc li {
+      margin: 0 0 8px;
+      color: var(--text-main);
+      font-size: 15px;
+      line-height: 1.62;
+    }
+
+    .doc strong {
+      color: #fff;
+    }
+
+    .note-card {
+      margin-top: 16px;
+      padding: 16px 18px;
+      color: var(--text-muted);
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    .footer {
+      display: flex;
+      justify-content: space-between;
+      gap: 14px;
+      flex-wrap: wrap;
+      margin-top: 18px;
+      color: var(--text-dim);
+      font-size: 13px;
+    }
+
+    [hidden] {
+      display: none !important;
+    }
+
+    @media (max-width: 640px) {
+      .page {
+        padding-left: 10px;
+        padding-right: 10px;
+      }
+
+      .topbar {
+        padding: 10px;
+      }
+
+      .brand-title {
+        font-size: 14px;
+      }
+
+      .hero-card,
+      .content-card,
+      .note-card {
+        border-radius: 22px;
+      }
+
+      .hero-card,
+      .content-card,
+      .note-card {
+        padding-left: 14px;
+        padding-right: 14px;
+      }
+
+      .lang-switcher {
+        flex: 0 0 auto;
+      }
+
+      .lang-btn {
+        min-width: 46px;
+        padding: 8px 10px;
+      }
+
+      .doc h2 {
+        font-size: 22px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header class="topbar">
+      <div class="brand">
+        <div class="logo">
+          <img src="https://blackvpn.blackvpn.workers.dev/logo.png" alt="BlackVPN logo" onerror="this.style.display='none'; this.parentNode.textContent='B'; this.parentNode.style.color='#ff4747'; this.parentNode.style.fontWeight='900'; this.parentNode.style.fontSize='20px';" />
+        </div>
+        <div class="brand-title" data-copy="topbarTitle">BlackVPN — Политика конфиденциальности</div>
+      </div>
+
+      <div class="lang-switcher" aria-label="Language switcher">
+        <button class="lang-btn active" type="button" data-switch-lang="ru">RU</button>
+        <button class="lang-btn" type="button" data-switch-lang="en">EN</button>
+      </div>
+    </header>
+
+    <section class="hero-card">
+      <p class="eyebrow" data-copy="eyebrow">Юридическая информация</p>
+      <h1><span class="hero-base">Black</span><span class="hero-accent">VPN</span></h1>
+      <p class="hero-text" data-copy="heroText">Политика конфиденциальности сервиса BlackVPN — Telegram-бота, mini app и веб-интерфейса.</p>
+
+      <div class="meta-grid">
+        <div class="meta-item">
+          <span class="meta-label" data-copy="effectiveLabel">Дата вступления в силу</span>
+          <div class="meta-value">23 июня 2026</div>
+        </div>
+        <div class="meta-item">
+          <span class="meta-label" data-copy="serviceLabel">Сервис</span>
+          <div class="meta-value">BlackVPN / @BlackVPN_OfficialBot</div>
+        </div>
+        <div class="meta-item">
+          <span class="meta-label" data-copy="contactsLabel">Контакты</span>
+          <div class="meta-value"><a href="mailto:blackvpn2026@mail.ru">blackvpn2026@mail.ru</a></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="content-card">
+      <article class="doc" lang="ru" data-lang-block="ru">
+        <h2>Политика конфиденциальности BlackVPN</h2>
+        <p><strong>Дата вступления в силу:</strong> 24 июня 2026 года</p>
+        <p><strong>Исполнитель:</strong> Администрация сервиса BlackVPN</p>
+        <p><strong>Юрисдикция:</strong> Российская Федерация</p>
+        <p><strong>Сервис:</strong> BlackVPN, Telegram-бот <strong>@BlackVPN_OfficialBot</strong>, mini app / сайт: <strong>blackvpn.blackvpn.workers.dev</strong></p>
+        <p><strong>Контакты:</strong> <a href="mailto:blackvpn2026@mail.ru">blackvpn2026@mail.ru</a></p>
+        <p><strong>Техническая поддержка:</strong> <a href="https://t.me/Asdzxclop_bot" target="_blank" rel="noopener noreferrer">@Asdzxclop_bot</a></p>
+        <p><strong>Онлайн поддержка:</strong> <a href="https://t.me/Judebellengham" target="_blank" rel="noopener noreferrer">@Judebellengham</a></p>
+
+        <h2>1. Общие положения</h2>
+        <p>Настоящая Политика конфиденциальности описывает порядок обработки и защиты персональных данных пользователей сервиса BlackVPN, включая Telegram-бота @BlackVPN_OfficialBot и веб-интерфейс, расположенный по адресу blackvpn.blackvpn.workers.dev.</p>
+        <p>Политика разработана с учётом применимого законодательства о персональных данных, включая Федеральный закон Российской Федерации № 152-ФЗ «О персональных данных».</p>
+        <p>Используя сервис BlackVPN, вы подтверждаете, что ознакомились с настоящей Политикой и понимаете порядок обработки ваших персональных данных.</p>
+
+        <h2>2. Какие данные мы собираем</h2>
+        <p>Мы можем обрабатывать следующие персональные и технические данные:</p>
+        <ul>
+          <li>Telegram user ID;</li>
+          <li>username в Telegram;</li>
+          <li>имя, указанное в Telegram-профиле;</li>
+          <li>язык интерфейса;</li>
+          <li>данные о подписке, включая тариф, дату начала и дату окончания подписки, а также её текущий статус;</li>
+          <li>платёжный статус и информация о факте оплаты;</li>
+          <li>IP-адрес;</li>
+        </ul>
+        <p>Мы не храним полные реквизиты банковских карт, если оплата осуществляется через сторонний платёжный сервис.</p>
+
+        <h2>3. Цели обработки данных</h2>
+        <p>Мы обрабатываем данные для следующих целей:</p>
+        <ul>
+          <li>идентификация пользователя в сервисе;</li>
+          <li>предоставление доступа к VPN-услугам;</li>
+          <li>учёт, активация, продление и прекращение подписок;</li>
+          <li>обработка платёжного статуса и подтверждение оплаты;</li>
+          <li>обеспечение безопасности сервиса, предотвращение злоупотреблений и мошенничества;</li>
+          <li>техническая поддержка, диагностика ошибок и улучшение стабильности работы сервиса;</li>
+          <li>исполнение требований применимого законодательства.</li>
+        </ul>
+
+        <h2>4. Правовые основания обработки</h2>
+        <p>Обработка персональных данных осуществляется на следующих основаниях:</p>
+        <ul>
+          <li>согласие пользователя на обработку персональных данных;</li>
+          <li>необходимость исполнения договора или предоставления запрошенного сервиса;</li>
+          <li>законные интересы исполнителя, связанные с защитой сервиса, предотвращением злоупотреблений и обеспечением его нормальной работы;</li>
+          <li>исполнение обязанностей, предусмотренных законодательством.</li>
+        </ul>
+
+        <h2>5. Порядок обработки и хранения данных</h2>
+        <p>Персональные данные обрабатываются с использованием автоматизированных и неавтоматизированных средств.</p>
+        <p>Мы принимаем разумные организационные и технические меры для защиты данных от утраты, неправомерного доступа, изменения, блокирования, раскрытия или уничтожения.</p>
+        <p>История подписок может храниться после окончания действия подписки в целях учёта, подтверждения оказания услуг, разрешения споров, анализа операций и соблюдения законных интересов исполнителя.</p>
+        <p>Технические логи и IP-адреса могут храниться ограниченный срок, необходимый для обеспечения безопасности и диагностики работы сервиса.</p>
+
+        <h2>6. Передача данных третьим лицам</h2>
+        <p>Мы можем передавать ограниченный объём данных третьим лицам только в тех случаях, когда это необходимо для работы сервиса.</p>
+        <p>К таким лицам могут относиться:</p>
+        <ul>
+          <li>платёжные провайдеры и сервисы обработки платежей, включая <strong>platega.io</strong>, а также иные сторонние сервисы оплаты картой или криптовалютой;</li>
+          <li>хостинг- и инфраструктурные провайдеры;</li>
+          <li>сервисы мониторинга, логирования и технической поддержки;</li>
+          <li>государственные органы — в случаях, прямо предусмотренных законом.</li>
+        </ul>
+        <p>При использовании сторонних платёжных сервисов обработка платёжных данных осуществляется в соответствии с политиками конфиденциальности соответствующих платёжных провайдеров.</p>
+
+        <h2>7. Международная передача данных</h2>
+        <p>Поскольку сервис может использовать глобальную облачную инфраструктуру и сторонние сервисы, отдельные данные могут обрабатываться или передаваться за пределы страны вашего проживания в объёме, необходимом для предоставления сервиса и работы инфраструктуры.</p>
+
+        <h2>8. Права пользователя</h2>
+        <p>Пользователь имеет право:</p>
+        <ul>
+          <li>получать информацию о факте обработки его персональных данных;</li>
+          <li>требовать уточнения, обновления или исправления своих данных;</li>
+          <li>требовать удаления или блокирования данных, если они являются неполными, устаревшими, неточными или обрабатываются с нарушением закона;</li>
+          <li>отозвать согласие на обработку персональных данных, если обработка основана на согласии;</li>
+          <li>обращаться к исполнителю по вопросам обработки персональных данных по указанным контактам.</li>
+        </ul>
+
+        <h2>9. Срок хранения данных</h2>
+        <p>Персональные данные хранятся не дольше, чем это необходимо для целей обработки, если более длительный срок хранения не требуется по закону или не необходим для защиты прав и законных интересов исполнителя.</p>
+        <p>История подписок может сохраняться после завершения подписки. Данные, не требующие дальнейшего хранения, удаляются или обезличиваются в разумный срок.</p>
+
+        <h2>10. Использование cookies и аналогичных технологий</h2>
+        <p>В веб-версии сервиса могут использоваться технические cookies и аналогичные технологии, необходимые для корректной работы интерфейса, безопасности, диагностики и поддержки пользовательской сессии.</p>
+
+        <h2>11. Изменения Политики</h2>
+        <p>Мы вправе обновлять настоящую Политику конфиденциальности. Актуальная версия всегда публикуется по действующему адресу страницы политики.</p>
+        <p>Если изменения существенно затрагивают порядок обработки персональных данных, пользователю может быть предложено повторно ознакомиться с новой редакцией и подтвердить согласие.</p>
+
+      </article>
+
+      <article class="doc" lang="en" data-lang-block="en" hidden>
+        <h2>BlackVPN Privacy Policy</h2>
+        <p><strong>Effective date:</strong> June 23, 2026</p>
+        <p><strong>Service:</strong> BlackVPN, Telegram bot <strong>@BlackVPN_OfficialBot</strong>, mini app / website: <strong>blackvpn.blackvpn.workers.dev</strong></p>
+        <p><strong>Contacts:</strong> <a href="mailto:blackvpn2026@mail.ru">blackvpn2026@mail.ru</a></p>
+        <p><strong>Technical support:</strong> <a href="https://t.me/Asdzxclop_bot" target="_blank" rel="noopener noreferrer">@Asdzxclop_bot</a></p>
+        <p><strong>Online support:</strong> <a href="https://t.me/Judebellengham" target="_blank" rel="noopener noreferrer">@Judebellengham</a></p>
+
+        <h2>1. General Provisions</h2>
+        <p>This Privacy Policy explains how BlackVPN processes and protects personal data of users of the BlackVPN service, including the Telegram bot @BlackVPN_OfficialBot and the web interface available at blackvpn.blackvpn.workers.dev.</p>
+        <p>This Policy is intended to comply with applicable personal data protection laws and general privacy transparency requirements.</p>
+        <p>By using BlackVPN, you acknowledge that you have read and understood this Privacy Policy.</p>
+
+        <h2>2. Data We Collect</h2>
+        <p>We may process the following personal and technical data:</p>
+        <ul>
+          <li>Telegram user ID;</li>
+          <li>Telegram username;</li>
+          <li>name shown in the Telegram profile;</li>
+          <li>interface language;</li>
+          <li>subscription data, including selected plan, subscription start date, end date, and current status;</li>
+          <li>payment status and information confirming the payment event;</li>
+          <li>IP address;</li>
+        </ul>
+        <p>We do not store full bank card details when payments are processed through third-party payment providers.</p>
+
+        <h2>3. Purposes of Processing</h2>
+        <p>We process personal data for the following purposes:</p>
+        <ul>
+          <li>user identification within the service;</li>
+          <li>providing VPN services and subscription access;</li>
+          <li>subscription activation, renewal, tracking, and termination;</li>
+          <li>payment status verification and service accounting;</li>
+          <li>service security, abuse prevention, and fraud detection;</li>
+          <li>technical support, troubleshooting, and service improvement;</li>
+          <li>compliance with applicable legal obligations.</li>
+        </ul>
+
+        <h2>4. Legal Bases for Processing</h2>
+        <p>We may process personal data on the following legal bases:</p>
+        <ul>
+          <li>your consent;</li>
+          <li>the necessity to provide the requested service or perform a contract;</li>
+          <li>our legitimate interests in maintaining, protecting, and improving the service;</li>
+          <li>compliance with applicable law.</li>
+        </ul>
+
+        <h2>5. Data Processing and Retention</h2>
+        <p>Personal data may be processed using automated and non-automated means.</p>
+        <p>We implement reasonable technical and organizational measures to protect personal data against accidental loss, unauthorized access, alteration, disclosure, blocking, or destruction.</p>
+        <p>Subscription history may be retained after a subscription expires for accounting, dispute resolution, fraud prevention, service verification, and legitimate business purposes.</p>
+        <p>Technical logs and IP data may be stored for a limited period reasonably necessary for security and diagnostics.</p>
+
+        <h2>6. Sharing with Third Parties</h2>
+        <p>We may share a limited amount of data with third parties only where necessary for the operation of the service.</p>
+        <p>Such third parties may include:</p>
+        <ul>
+          <li>payment processors and payment-related service providers, including <strong>platega.io</strong>, and other third-party card or cryptocurrency payment services;</li>
+          <li>hosting and infrastructure providers;</li>
+          <li>monitoring, logging, and technical support providers;</li>
+          <li>government authorities where disclosure is required by law.</li>
+        </ul>
+        <p>When using third-party payment providers, payment-related personal data is processed according to the privacy policies of those providers.</p>
+
+        <h2>7. International Data Transfers</h2>
+        <p>Because the service may rely on global cloud infrastructure and third-party services, certain data may be processed or transferred outside your country of residence to the extent necessary to provide the service.</p>
+
+        <h2>8. Your Rights</h2>
+        <p>Depending on applicable law, you may have the right to:</p>
+        <ul>
+          <li>request information about your personal data being processed;</li>
+          <li>request correction or update of inaccurate data;</li>
+          <li>request deletion or blocking of data where lawful and appropriate;</li>
+          <li>withdraw consent where processing is based on consent;</li>
+          <li>contact us regarding any privacy-related questions or requests.</li>
+        </ul>
+
+        <h2>9. Retention Period</h2>
+        <p>Personal data is retained only for as long as necessary for the purposes described in this Privacy Policy, unless a longer retention period is required by law or necessary to protect our rights and legitimate interests.</p>
+        <p>Subscription history may be retained after the end of a subscription. Data that is no longer necessary is deleted or anonymized within a reasonable period.</p>
+
+        <h2>10. Cookies and Similar Technologies</h2>
+        <p>The web interface may use technical cookies and similar technologies necessary for proper functionality, security, diagnostics, and maintaining the user session.</p>
+
+        <h2>11. Changes to This Policy</h2>
+        <p>We may update this Privacy Policy from time to time. The current version will always be published at the active Privacy Policy page URL.</p>
+        <p>If the changes materially affect the way personal data is processed, users may be asked to review the updated version and confirm consent again.</p>
+
+      </article>
+    </section>
+
+    <section class="note-card">
+      <div data-note-lang="ru">Версия документа: 2026-06-24.</div>
+      <div data-note-lang="en" hidden>Document version: 2026-06-24.</div>
+    </section>
+
+    <footer class="footer">
+      <div><a href="https://blackvpn.blackvpn.workers.dev" target="_blank" rel="noopener noreferrer">blackvpn.blackvpn.workers.dev</a></div>
+      <div>BlackVPN · Privacy Policy</div>
+    </footer>
+  </div>
+
+  <script>
+    const buttons = document.querySelectorAll('[data-switch-lang]');
+    const blocks = document.querySelectorAll('[data-lang-block]');
+    const noteRu = document.querySelector('[data-note-lang="ru"]');
+    const noteEn = document.querySelector('[data-note-lang="en"]');
+    const eyebrow = document.querySelector('[data-copy="eyebrow"]');
+    const heroText = document.querySelector('[data-copy="heroText"]');
+    const effectiveLabel = document.querySelector('[data-copy="effectiveLabel"]');
+    const serviceLabel = document.querySelector('[data-copy="serviceLabel"]');
+    const contactsLabel = document.querySelector('[data-copy="contactsLabel"]');
+
+    const copy = {
+      ru: {
+        title: 'BlackVPN — Политика конфиденциальности',
+        eyebrow: 'Юридическая информация',
+        heroText: 'Политика конфиденциальности сервиса BlackVPN для Telegram-бота, mini app и веб-интерфейса.',
+        effectiveLabel: 'Дата вступления в силу',
+        serviceLabel: 'Сервис',
+        contactsLabel: 'Контакты'
+      },
+      en: {
+        title: 'BlackVPN — Privacy Policy',
+        eyebrow: 'Legal information',
+        heroText: 'Privacy Policy for the BlackVPN Telegram bot, mini app, and web interface.',
+        effectiveLabel: 'Effective date',
+        serviceLabel: 'Service',
+        contactsLabel: 'Contacts'
+      }
+    };
+
+    function setLang(lang) {
+      document.documentElement.lang = lang;
+      document.title = copy[lang].title;
+      eyebrow.textContent = copy[lang].eyebrow;
+      heroText.textContent = copy[lang].heroText;
+      effectiveLabel.textContent = copy[lang].effectiveLabel;
+      serviceLabel.textContent = copy[lang].serviceLabel;
+      contactsLabel.textContent = copy[lang].contactsLabel;
+
+      blocks.forEach((block) => {
+        block.hidden = block.dataset.langBlock !== lang;
+      });
+
+      buttons.forEach((btn) => {
+        btn.classList.toggle('active', btn.dataset.switchLang === lang);
+      });
+
+      noteRu.hidden = lang !== 'ru';
+      noteEn.hidden = lang !== 'en';
+    }
+
+    buttons.forEach((btn) => {
+      btn.addEventListener('click', () => setLang(btn.dataset.switchLang));
+    });
+
+    const initialLang = (navigator.language || 'ru').toLowerCase().startsWith('ru') ? 'ru' : 'en';
+    setLang(initialLang);
+  </script>
+</body>
+</html>
