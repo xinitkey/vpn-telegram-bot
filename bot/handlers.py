@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 @router.message(CommandStart())
 async def cmd_start(message: Message):
     user_id = message.from_user.id
-    webapp_url = f"https://{settings.HOST}:{settings.PORT}/app" if settings.HOST != '0.0.0.0" else f"http://localhost:{settings.PORT}/app"
+    webapp_url = f"https://{settings.HOST}:{settings.PORT}/app" if settings.HOST != '0.0.0.0' else f"http://localhost:{settings.PORT}/app"
     # If behind domain, better to use env var BASE_URL; we'll just use request origin later via middleware.
     # For simplicity, we'll use a placeholder that will be replaced by frontend via workerUrl.
     # We'll just use a generic URL; the frontend will compute workerUrl from window.location.origin.

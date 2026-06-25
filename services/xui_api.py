@@ -3,7 +3,7 @@ import uuid as uuid_pkg
 import json
 import time
 from typing import Dict, Any
-from .settings import settings
+from config.settings import settings
 from urllib.parse import quote
 
 async def _request(method: str, path: str, data: dict | None = None) -> dict:

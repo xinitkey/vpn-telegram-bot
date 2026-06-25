@@ -6,7 +6,7 @@ from aiogram import Bot, Dispatcher
 from aiogram.types import Update
 from services.db import (
     get_user, create_user, update_user, add_balance, set_subscription,
-    save_vpn_info, create_payment, get_payment, update_payment_status
+    create_payment, get_payment, update_payment_status
 )
 from services.xui_api import (
     add_client as xui_add_client,

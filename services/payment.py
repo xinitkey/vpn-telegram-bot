@@ -1,7 +1,7 @@
 import time
 import uuid
 from urllib.parse import quote_plus
-from .settings import settings
+from config.settings import settings
 
 def generate_payment_id() -> str:
     return f"pay_{int(time.time())}_{uuid.uuid4().hex[:8]}"

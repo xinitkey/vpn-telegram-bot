@@ -1,7 +1,7 @@
 import aiosqlite
 from typing import Optional, List
 from models.user import User
-from .settings import settings
+from config.settings import settings
 import time
 
 DB_PATH = None  # will be initialized
