@@ -174,25 +174,10 @@ async def _request(method: str, path: str, data: dict | None = None, retries: in
                 raise
 
 
-async def pick_inbound() -> int:
+async def add_client(email: str, days: int, inbound_id: int | None = None) -> dict[str, str]:
     ids = settings.XUI_INBOUND_IDS
     if not ids:
         raise RuntimeError("No inbounds configured (XUI_INBOUND_IDS)")
-    best = ids[0]
-    best_count = -1
-    for iid in ids:
-        info = await get_inbound_info(iid)
-        clients = info.get("clientStats", [])
-        count = len(clients)
-        if best_count == -1 or count < best_count:
-            best_count = count
-            best = iid
-    return best
-
-
-async def add_client(email: str, days: int, inbound_id: int | None = None) -> dict[str, str]:
-    if inbound_id is None:
-        inbound_id = await pick_inbound()
     uid = str(uuid_pkg.uuid4())
     sub_id = str(uuid_pkg.uuid4())[:16]
     expiry = int(time.time() * 1000) + days * 86400000
@@ -209,11 +194,11 @@ async def add_client(email: str, days: int, inbound_id: int | None = None) -> di
     }
     payload = {
         "client": client,
-        "inboundIds": [inbound_id],
+        "inboundIds": ids,
     }
     await _request("POST", "/panel/api/clients/add", data=payload)
     link = await _build_link(uid, email, sub_id)
-    return {"uuid": uid, "email": email, "link": link, "inbound_id": inbound_id}
+    return {"uuid": uid, "email": email, "link": link, "inbound_id": ids[0]}
 
 
 async def update_client_expiry(email: str, days: int):
