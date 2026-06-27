@@ -5,7 +5,7 @@ import time
 import logging
 from typing import Optional
 from config.settings import settings
-from urllib.parse import quote
+from urllib.parse import quote, urlparse
 from aiohttp import CookieJar, ClientSession, ClientError
 
 logger = logging.getLogger(__name__)
@@ -245,6 +245,9 @@ async def _build_link(uuid: str, email: str, sub_id: str) -> str:
     sub_url = (sub_settings.get("subURL") or "").rstrip('/')
     if sub_url:
         return f"{sub_url}/{sub_id}"
+    parsed = urlparse(settings.XUI_URL)
+    scheme = parsed.scheme or "http"
+    host = sub_settings.get("webDomain") or sub_settings.get("subDomain") or parsed.hostname or ""
+    port = sub_settings.get("subPort") or 2096
     sub_path = (sub_settings.get("subPath") or "/use_happ/").strip('/')
-    base = (settings.XUI_SUB_URL or settings.XUI_URL).rstrip('/')
-    return f"{base}/{sub_path}/{sub_id}"
+    return f"{scheme}://{host}:{port}/{sub_path}/{sub_id}"
