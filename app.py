@@ -2,6 +2,7 @@ import asyncio
 import logging
 from aiohttp import web
 from aiogram import Bot, Dispatcher
+from aiogram.types import MenuButtonWebApp, WebAppInfo
 from aiogram.webhook.aiohttp_server import SimpleRequestHandler
 from bot.handlers import register_router
 from bot.admin_handlers import router as admin_router
@@ -33,13 +34,15 @@ def _validate_settings():
         logger.warning("Missing required env vars: %s", ', '.join(missing))
 
 async def on_startup(_app):
-    bot = Bot(token=settings.TELEGRAM_BOT_TOKEN)
+    bot = _app['bot']
     await bot.delete_webhook(drop_pending_updates=True)
     await init_db()
     webhook_url = f"{settings.BASE_URL}/telegram-webhook"
     await bot.set_webhook(webhook_url)
+    await bot.set_chat_menu_button(
+        menu_button=MenuButtonWebApp(text="BlackVPN", web_app=WebAppInfo(url=f"{settings.BASE_URL}/"))
+    )
     logger.info("Webhook set to %s", webhook_url)
-    await bot.session.close()
 
 async def on_shutdown(_app):
     await close_db()
@@ -52,6 +55,7 @@ def main():
     register_router(dp)
 
     app = web.Application()
+    app['bot'] = bot
     app.on_startup.append(on_startup)
     app.on_shutdown.append(on_shutdown)
     setup_routes(app, bot, dp)

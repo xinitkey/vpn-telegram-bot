@@ -225,7 +225,7 @@ function openDevices() {
     tg.showPopup({ title: "Устройства", message: "Раздел находится в разработке", buttons: [{type: 'ok'}] });
 }
 function openInstructions() {
-    tg.showPopup({ title: "Инструкция", message: "Откройте ссылку из вкладки Профиль, выберите вашу платформу и приложение — ключ настроится автоматически", buttons: [{type: 'ok'}] });
+    tg.showPopup({ title: "Инструкция", message: "Выберите и установите приложение из списка поддерживаемых и перейдите по ссылке для копирования или подключения ключа", buttons: [{type: 'ok'}] });
 }
 function openPrivacyPage() {
     tg.HapticFeedback.impactOccurred('light');
