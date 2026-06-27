@@ -54,7 +54,11 @@ def setup_routes(app: web.Application, bot: Bot, dp: Dispatcher):
     app.middlewares.append(_rate_middleware())
 
     async def index(request):
-        return web.Response(text="BlackVPN API Operational", content_type='text/plain')
+        try:
+            with open('web/static/index.html', 'rb') as f:
+                return web.Response(body=f.read(), content_type='text/html')
+        except FileNotFoundError:
+            return web.Response(text="BlackVPN API Operational", content_type='text/plain')
     app.router.add_get('/', index)
 
     async def api_user_data(request):
@@ -257,7 +261,7 @@ def setup_routes(app: web.Application, bot: Bot, dp: Dispatcher):
     app.router.add_get('/terms', serve_terms)
 
     async def serve_static(request):
-        filename = request.match_info.get('filename', 'index.html')
+        filename = request.match_info.get('filename', 'index.html') or 'index.html'
         if '..' in filename or '/' in filename:
             raise web.HTTPNotFound()
         try:
