@@ -117,17 +117,24 @@ function switchTab(tab) {
 function showSubscriptionInfo() {
     tg.HapticFeedback.impactOccurred('light');
     const status = globalUserData.daysLeft > 0 ? "АКТИВНА" : "НЕ АКТИВНА";
+    const key = globalUserData.vpnKey;
     const infoMessage =
         "Статус: " + status + "\n" +
         "Осталось: " + (globalUserData.remainingStr || globalUserData.daysLeft + " дн.") + "\n" +
         "Начало: " + formatTs(globalUserData.subscriptionStart) + "\n" +
-        "Заканчивается: " + formatTs(globalUserData.subscriptionEnd) + "\n\n" +
-        "Ваш ключ: " + globalUserData.vpnKey;
+        "Заканчивается: " + formatTs(globalUserData.subscriptionEnd);
+
+    const buttons = [{ type: 'ok', text: "Отлично" }];
+    if (key && key !== 'Не создан') {
+        buttons.unshift({ type: 'default', id: 'open_key', text: "Открыть ключ" });
+    }
 
     tg.showPopup({
         title: "Характеристика подписки",
         message: infoMessage,
-        buttons: [{ type: 'ok', text: "Отлично" }]
+        buttons: buttons
+    }, function(buttonId) {
+        if (buttonId === 'open_key') openLink(key);
     });
 }
 
