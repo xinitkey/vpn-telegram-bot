@@ -1,6 +1,20 @@
-const tg = window.Telegram.WebApp;
-tg.expand();
-tg.setHeaderColor('#1f0303');
+const tg = window.Telegram?.WebApp || {
+    expand: () => {},
+    setHeaderColor: () => {},
+    initDataUnsafe: { user: { id: 1, first_name: 'Dev', last_name: 'User', username: 'dev' } },
+    initData: '',
+    sendData: function(data) { console.log('sendData:', data); },
+    openLink: (url) => window.open(url, '_blank'),
+    openTelegramLink: (url) => window.open(url, '_blank'),
+    showPopup: (params, cb) => { if (cb) cb('ok'); },
+    showAlert: (msg) => alert(msg),
+    HapticFeedback: { impactOccurred: () => {}, notificationOccurred: () => {} },
+    ready: () => {}
+};
+if (window.Telegram?.WebApp) {
+    tg.expand();
+    tg.setHeaderColor('#1f0303');
+}
 
 const userId = tg.initDataUnsafe?.user?.id;
 const initData = tg.initData || '';
