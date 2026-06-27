@@ -85,8 +85,8 @@ async def get_user(user_id: int) -> Optional[User]:
                 xui_uuid=row['xui_uuid'] or '',
                 xui_email=row['xui_email'] or '',
                 link=row['link'] or '',
-                trial_used=bool(row['trial_used']) if 'trial_used' in row else False,
-                subscription_start=row['subscription_start'] if 'subscription_start' in row else None,
+                trial_used=bool(row['trial_used']) if 'trial_used' in row.keys() else False,
+                subscription_start=row['subscription_start'] if 'subscription_start' in row.keys() else None,
                 banned=bool(row['banned']) if 'banned' in row.keys() else False
             )
 
@@ -198,8 +198,8 @@ async def get_all_users() -> list[User]:
                 xui_uuid=row['xui_uuid'] or '',
                 xui_email=row['xui_email'] or '',
                 link=row['link'] or '',
-                trial_used=bool(row['trial_used']) if 'trial_used' in row else False,
-                subscription_start=row['subscription_start'] if 'subscription_start' in row else None,
+                trial_used=bool(row['trial_used']) if 'trial_used' in row.keys() else False,
+                subscription_start=row['subscription_start'] if 'subscription_start' in row.keys() else None,
                 banned=bool(row['banned']) if 'banned' in row.keys() else False
             ) for row in rows]
 
@@ -298,7 +298,7 @@ def _user_from_row(row) -> User:
         xui_uuid=row['xui_uuid'] or '',
         xui_email=row['xui_email'] or '',
         link=row['link'] or '',
-        trial_used=bool(row['trial_used']) if 'trial_used' in row else False,
-        subscription_start=row['subscription_start'] if 'subscription_start' in row else None,
+        trial_used=bool(row['trial_used']) if 'trial_used' in row.keys() else False,
+        subscription_start=row['subscription_start'] if 'subscription_start' in row.keys() else None,
         banned=bool(row['banned']) if 'banned' in row.keys() else False
     )
