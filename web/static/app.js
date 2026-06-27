@@ -53,8 +53,10 @@ async function loadUserData() {
             globalUserData = await response.json();
             document.getElementById('balance-display').innerText = globalUserData.balance + " ₽";
             document.getElementById('profile-balance').innerText = globalUserData.balance + " ₽";
-            document.getElementById('days-count').innerHTML = globalUserData.daysLeft + " <span>дней</span>";
+            document.getElementById('days-count').innerHTML = globalUserData.remainingStr || globalUserData.daysLeft + " <span>дней</span>";
             document.getElementById('profile-key').innerText = globalUserData.vpnKey;
+            document.getElementById('profile-sub-start').innerText = globalUserData.subscriptionStart || '—';
+            document.getElementById('profile-sub-end').innerText = globalUserData.subscriptionEnd || '—';
             document.getElementById('price-daily-text').innerText = globalUserData.dailyPrice + "₽ / день за устройство";
         }
     } catch (e) { console.error(e); }
@@ -93,12 +95,13 @@ function switchTab(tab) {
 
 function showSubscriptionInfo() {
     tg.HapticFeedback.impactOccurred('light');
-    const status = globalUserData.daysLeft > 0 ? "🟢 АКТИВНА" : "🔴 НЕ АКТИВНА";
+    const status = globalUserData.daysLeft > 0 ? "АКТИВНА" : "НЕ АКТИВНА";
     const infoMessage =
         "Статус: " + status + "\n" +
-        "Осталось дней: " + globalUserData.daysLeft + " дн.\n" +
-        "Текущий тариф: " + globalUserData.dailyPrice + " ₽ / сутки\n\n" +
-        "Ваш ключ доступа:\n\n" + globalUserData.vpnKey;
+        "Осталось: " + (globalUserData.remainingStr || globalUserData.daysLeft + " дн.") + "\n" +
+        "Начало: " + (globalUserData.subscriptionStart || "—") + "\n" +
+        "Заканчивается: " + (globalUserData.subscriptionEnd || "—") + "\n\n" +
+        "Ваш ключ:\n\n" + globalUserData.vpnKey;
 
     tg.showPopup({
         title: "Характеристика подписки",
@@ -269,14 +272,14 @@ function selectTariff(days, price) {
     });
     const btn = document.getElementById('btn-confirm-tariff');
     btn.disabled = false;
-    btn.innerText = 'Купить за ' + price + ' ₽';
+    btn.innerText = price === 0 ? 'Активировать триал' : 'Купить за ' + price + ' ₽';
 }
 
 async function confirmTariffPurchase() {
-    if (!selectedTariffDays || !selectedTariffPrice) return;
+    if (!selectedTariffDays || selectedTariffPrice === undefined) return;
     tg.HapticFeedback.impactOccurred('medium');
 
-    if (globalUserData.balance < selectedTariffPrice) {
+    if (selectedTariffPrice > 0 && globalUserData.balance < selectedTariffPrice) {
         tg.showPopup({
             title: "Недостаточно средств",
             message: "На балансе " + globalUserData.balance + " ₽. Нужно " + selectedTariffPrice + " ₽.\nПополните баланс и повторите попытку.",

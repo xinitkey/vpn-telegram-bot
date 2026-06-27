@@ -3,7 +3,7 @@ from aiogram.types import Message, CallbackQuery, InlineKeyboardButton, InlineKe
 from aiogram.filters import CommandStart
 from aiogram import Dispatcher
 from config import settings
-from services.db import add_balance, create_payment as db_create_payment, get_payment, update_payment_status
+from services.db import add_balance, create_payment as db_create_payment, get_payment, update_payment_status, get_user
 import json
 import logging
 
@@ -13,6 +13,10 @@ logger = logging.getLogger(__name__)
 
 @router.message(CommandStart())
 async def cmd_start(message: Message):
+    user = await get_user(message.from_user.id)
+    if user and user.banned:
+        await message.answer("❌ Вы заблокированы.")
+        return
     keyboard = InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(text="🚀 Открыть BlackVPN App", web_app=WebAppInfo(url=f"{settings.BASE_URL}/"))]
     ])
@@ -38,6 +42,9 @@ async def cb_back_to_menu(callback: CallbackQuery):
 
 @router.message(lambda msg: msg.web_app_data is not None)
 async def web_app_data_handler(message: Message):
+    user = await get_user(message.from_user.id)
+    if user and user.banned:
+        return
     try:
         data = json.loads(message.web_app_data.data)
     except Exception as e:

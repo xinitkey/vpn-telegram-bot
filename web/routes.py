@@ -79,8 +79,12 @@ def setup_routes(app: web.Application, bot: Bot, dp: Dispatcher):
         return web.json_response({
             'balance': user.balance,
             'daysLeft': user.days_left,
+            'remainingStr': user.remaining_str,
+            'subscriptionEnd': user.subscription_end_str,
+            'subscriptionStart': user.subscription_start_str,
             'vpnKey': user.link or 'Не создан',
-            'dailyPrice': settings.TARIFF_DAILY_PRICE
+            'dailyPrice': settings.TARIFF_DAILY_PRICE,
+            'banned': user.banned
         })
 
     async def api_buy_subscription(request):
@@ -98,16 +102,29 @@ def setup_routes(app: web.Application, bot: Bot, dp: Dispatcher):
         user = await get_user(user_id)
         if user is None:
             return web.json_response({'error': 'User not found'}, status=404)
-        total_price = price if price is not None else days * settings.TARIFF_DAILY_PRICE
-        if user.balance < total_price:
-            return web.json_response(
-                {'error': f'Недостаточно средств. Нужно {total_price}₽'}, status=400
-            )
-        user.balance -= total_price
+        if user.banned:
+            return web.json_response({'error': 'Вы заблокированы'}, status=403)
+        is_trial = days == 3 and (price is None or price == 0)
+        if is_trial:
+            if user.trial_used:
+                return web.json_response(
+                    {'error': 'Вы уже использовали триал. Купите тариф.'}, status=400
+                )
+            total_price = 0
+        else:
+            total_price = price if price is not None else days * settings.TARIFF_DAILY_PRICE
+            if user.balance < total_price:
+                return web.json_response(
+                    {'error': f'Недостаточно средств. Нужно {total_price}₽'}, status=400
+                )
+            user.balance -= total_price
         now_ms = int(time.time() * 1000)
         add_ms = days * 86400000
-        new_sub = user.subscription + add_ms if user.subscription and user.subscription > now_ms else now_ms + add_ms
+        is_extension = bool(user.subscription and user.subscription > now_ms)
+        new_sub = user.subscription + add_ms if is_extension else now_ms + add_ms
         user.subscription = new_sub
+        if not is_extension:
+            user.subscription_start = now_ms
         xui_error = None
         if settings.XUI_URL and settings.XUI_PASSWORD and settings.XUI_INBOUND_ID is not None:
             email = f'user_{user_id}'
@@ -124,12 +141,17 @@ def setup_routes(app: web.Application, bot: Bot, dp: Dispatcher):
             except Exception as e:
                 log.error(f"3x-UI error for user {user_id}: {e}")
                 xui_error = str(e)
-                user.balance += total_price
+                if not is_trial:
+                    user.balance += total_price
                 user.subscription = user.subscription - add_ms if user.subscription else 0
+                if not is_extension:
+                    user.subscription_start = 0
                 await update_user(user)
                 return web.json_response(
                     {'error': f'Ошибка VPN-панели: {xui_error}'}, status=502
                 )
+        if is_trial:
+            user.trial_used = True
         await update_user(user)
         try:
             await bot.send_message(
@@ -137,7 +159,7 @@ def setup_routes(app: web.Application, bot: Bot, dp: Dispatcher):
                 f"<b>Тариф успешно активирован!</b>\n\n"
                 f"<b>Ваш ключ:</b>\n"
                 f"{user.link or '—'}\n\n"
-                f"<b>Дней осталось:</b> {user.days_left}\n\n"
+                f"<b>Осталось:</b> {user.remaining_str}\n\n"
                 f"<b>Инструкция:</b> Выберите и установите приложение из списка поддерживаемых "
                 f"и перейдите по ссылке для копирования или подключения ключа\n\n"
                 f"<b>Скачать приложения</b>\n\n"

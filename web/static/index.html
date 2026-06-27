@@ -47,10 +47,11 @@
                     <p id="user-username">@username</p>
                 </div>
             </div>
-            <div class="profile-info-block">&#x1F4CD; Telegram ID: <span id="user-id">...</span></div>
-            <div class="profile-info-block">&#x1F4B3; Баланс: <span id="profile-balance">0 &#x20BD;</span></div>
-            <div class="profile-info-block">&#x1F511; Ключ: <span id="profile-key">Загрузка...</span></div>
-            <div class="profile-info-block">Статус: <span>Клиент</span></div>
+            <div class="profile-info-block">Telegram ID: <span id="user-id">...</span></div>
+            <div class="profile-info-block">Баланс: <span id="profile-balance">0 &#x20BD;</span></div>
+            <div class="profile-info-block">Ключ: <span id="profile-key">Загрузка...</span></div>
+            <div class="profile-info-block">Начало: <span id="profile-sub-start">—</span></div>
+            <div class="profile-info-block">Заканчивается: <span id="profile-sub-end">—</span></div>
         </div>
 
         <div id="tab-info-content" class="info-card">
@@ -126,13 +127,13 @@
             <h2>&#x1F4CB; Тарифы</h2>
             <div class="tariff-hint">Выберите срок подписки</div>
             <div class="tariff-list">
-                <div class="tariff-option" onclick="selectTariff(3, 15)">
+                <div class="tariff-option" onclick="selectTariff(3, 0)">
                     <div class="tariff-badge">&#x1F4A1;</div>
                     <div class="tariff-info-block">
                         <div class="tariff-days">3 дня</div>
-                        <div class="tariff-perday">5,0 &#x20BD;/день</div>
+                        <div class="tariff-perday">Бесплатно</div>
                     </div>
-                    <div class="tariff-price">15 &#x20BD;</div>
+                    <div class="tariff-price">0 &#x20BD;</div>
                     <div class="tariff-trial-label">Триал</div>
                 </div>
                 <div class="tariff-option tariff-recommended" onclick="selectTariff(30, 119)">
