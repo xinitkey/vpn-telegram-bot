@@ -14,7 +14,7 @@ from services.xui_api import (
     build_link_for_email as xui_build_link_for_email,
 )
 from services.payment import generate_payment_id
-from services.auth import verify_telegram_init_data, verify_cryptomus_signature
+from services.auth import verify_telegram_init_data
 from config import settings
 
 log = logging.getLogger(__name__)
@@ -222,9 +222,19 @@ def setup_routes(app: web.Application, bot: Bot, dp: Dispatcher):
         payment_url = None
         if method == 'crypto':
             payment_url = f"https://t.me/CryptoBot?start={payment_id}"
-        elif method == 'cryptomus' and settings.CRYPTOMUS_LINK:
-            base = settings.CRYPTOMUS_LINK.rstrip('/')
-            payment_url = f"{base}?amount={amount}&order_id={payment_id}"
+        elif method == 'platega' and settings.PLATEGA_MERCHANT_ID and settings.PLATEGA_SECRET:
+            try:
+                from services.platega import create_transaction as platega_create
+                desc = f"Пополнение BlackVPN на {amount}₽"
+                result = await platega_create(
+                    payment_id=payment_id,
+                    amount=amount,
+                    description=desc,
+                )
+                payment_url = result.get("redirect", "")
+            except Exception as e:
+                log.error(f"Platega error: {e}")
+                return web.json_response({'error': f'Ошибка платежной системы: {e}'}, status=502)
 
         return web.json_response({
             'success': True,
@@ -236,43 +246,6 @@ def setup_routes(app: web.Application, bot: Bot, dp: Dispatcher):
     app.router.add_get('/api/user-data', api_user_data)
     app.router.add_post('/api/buy-subscription', api_buy_subscription)
     app.router.add_post('/api/create-payment', api_create_payment)
-
-    async def cryptomus_webhook(request):
-        try:
-            raw = await request.json()
-        except Exception:
-            return web.Response(status=400)
-
-        if settings.CRYPTOMUS_SECRET_KEY:
-            body_copy = dict(raw)
-            if not verify_cryptomus_signature(body_copy, settings.CRYPTOMUS_SECRET_KEY):
-                log.warning("Cryptomus webhook: invalid signature")
-                return web.Response(status=403)
-
-        amount = float(raw.get('amount', 0))
-        txn_id = raw.get('txn_id', '')
-        if not txn_id:
-            return web.Response(status=400)
-
-        payment = await get_payment(txn_id)
-        if not payment:
-            return web.Response(status=404)
-        if payment['status'] != 'pending':
-            return web.Response(text='OK')
-        if amount < payment['amount']:
-            return web.Response(text='OK')
-
-        await update_payment_status(txn_id, 'completed')
-        await add_balance(payment['user_id'], amount)
-        try:
-            await bot.send_message(
-                payment['user_id'],
-                f"💰 Баланс пополнен через Cryptomus!\nСумма: {amount} ₽\nСтатус: Успешно",
-                parse_mode='HTML'
-            )
-        except Exception as e:
-            log.error(f"Failed to notify user: {e}")
-        return web.Response(text='OK')
 
     async def cryptobot_webhook(request):
         try:
@@ -298,8 +271,33 @@ def setup_routes(app: web.Application, bot: Bot, dp: Dispatcher):
                     log.error(f"Failed to notify user: {e}")
         return web.Response(text='OK')
 
-    app.router.add_post('/cryptomus-webhook', cryptomus_webhook)
     app.router.add_post('/cryptobot-webhook', cryptobot_webhook)
+
+    async def platega_webhook(request):
+        try:
+            raw = await request.json()
+        except Exception:
+            return web.Response(status=400)
+
+        status = raw.get("status", "")
+        payload_id = raw.get("payload", "")
+        if status == "CONFIRMED" and payload_id:
+            payment = await get_payment(payload_id)
+            if payment and payment['status'] == 'pending':
+                amount = float(raw.get("paymentDetails", {}).get("amount", payment['amount']))
+                await update_payment_status(payload_id, 'completed')
+                await add_balance(payment['user_id'], amount)
+                try:
+                    await bot.send_message(
+                        payment['user_id'],
+                        f"Баланс пополнен через Platega!\nСумма: {amount} ₽\nСтатус: Успешно",
+                        parse_mode='HTML'
+                    )
+                except Exception as e:
+                    log.error(f"Failed to notify user: {e}")
+        return web.Response(text='OK')
+
+    app.router.add_post('/platega-webhook', platega_webhook)
 
     async def serve_privacy(request):
         try:

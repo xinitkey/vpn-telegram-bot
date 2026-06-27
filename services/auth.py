@@ -38,11 +38,3 @@ def verify_telegram_init_data(init_data: str, bot_token: str, max_age: int = 864
 
     return parsed
 
-
-def verify_cryptomus_signature(body: dict, secret_key: str) -> bool:
-    sign = body.pop('sign', '')
-    if not sign:
-        return False
-    body_json = json.dumps(body, separators=(',', ':'), sort_keys=True)
-    expected = hashlib.md5((body_json + secret_key).encode()).hexdigest()
-    return hmac.compare_digest(expected, sign)
