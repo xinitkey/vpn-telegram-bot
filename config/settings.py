@@ -15,8 +15,11 @@ XUI_URL = os.getenv('XUI_URL')
 XUI_API_TOKEN = os.getenv('XUI_API_TOKEN')
 XUI_USERNAME = os.getenv('XUI_USERNAME', 'admin')
 XUI_PASSWORD = os.getenv('XUI_PASSWORD')
-XUI_INBOUND_ID = int(os.getenv('XUI_INBOUND_ID', '0')) if os.getenv('XUI_INBOUND_ID') else None
+_inbound_str = os.getenv('XUI_INBOUND_IDS') or os.getenv('XUI_INBOUND_ID', '')
+XUI_INBOUND_IDS = [int(x.strip()) for x in _inbound_str.split(',') if x.strip()]
+XUI_INBOUND_ID = XUI_INBOUND_IDS[0] if XUI_INBOUND_IDS else None  # backward compat
 XUI_SERVER = os.getenv('XUI_SERVER')  # optional
+XUI_SUB_URL = os.getenv('XUI_SUB_URL', '').rstrip('/')
 
 # Database
 DB_URL = os.getenv('DB_URL', 'sqlite+aiosqlite:///./data/bot.db')
@@ -48,8 +51,10 @@ class Settings:
     XUI_API_TOKEN = XUI_API_TOKEN
     XUI_USERNAME = XUI_USERNAME
     XUI_PASSWORD = XUI_PASSWORD
+    XUI_INBOUND_IDS = XUI_INBOUND_IDS
     XUI_INBOUND_ID = XUI_INBOUND_ID
     XUI_SERVER = XUI_SERVER
+    XUI_SUB_URL = XUI_SUB_URL
     DB_URL = DB_URL
     CRYPTOMUS_LINK = CRYPTOMUS_LINK
     CRYPTOMUS_MERCHANT_ID = CRYPTOMUS_MERCHANT_ID

@@ -10,8 +10,8 @@ from aiohttp import CookieJar, ClientSession, ClientError
 
 logger = logging.getLogger(__name__)
 
-_inbound_cache: Optional[dict] = None
-_inbound_cache_ts: float = 0
+_inbound_cache: dict[int, dict] = {}
+_inbound_cache_ts: dict[int, float] = {}
 _INBOUND_CACHE_TTL = 300
 
 _sub_settings_cache: Optional[dict] = None
@@ -174,11 +174,28 @@ async def _request(method: str, path: str, data: dict | None = None, retries: in
                 raise
 
 
-async def add_client(email: str, days: int) -> dict[str, str]:
+async def pick_inbound() -> int:
+    ids = settings.XUI_INBOUND_IDS
+    if not ids:
+        raise RuntimeError("No inbounds configured (XUI_INBOUND_IDS)")
+    best = ids[0]
+    best_count = -1
+    for iid in ids:
+        info = await get_inbound_info(iid)
+        clients = info.get("clientStats", [])
+        count = len(clients)
+        if best_count == -1 or count < best_count:
+            best_count = count
+            best = iid
+    return best
+
+
+async def add_client(email: str, days: int, inbound_id: int | None = None) -> dict[str, str]:
+    if inbound_id is None:
+        inbound_id = await pick_inbound()
     uid = str(uuid_pkg.uuid4())
     sub_id = str(uuid_pkg.uuid4())[:16]
     expiry = int(time.time() * 1000) + days * 86400000
-    inbound_id = settings.XUI_INBOUND_ID
     client = {
         "email": email,
         "subId": sub_id,
@@ -196,7 +213,7 @@ async def add_client(email: str, days: int) -> dict[str, str]:
     }
     await _request("POST", "/panel/api/clients/add", data=payload)
     link = await _build_link(uid, email, sub_id)
-    return {"uuid": uid, "email": email, "link": link}
+    return {"uuid": uid, "email": email, "link": link, "inbound_id": inbound_id}
 
 
 async def update_client_expiry(email: str, days: int):
@@ -213,25 +230,27 @@ async def remove_client(email: str):
     await _request("POST", f"/panel/api/clients/del/{quote(email)}")
 
 
-async def get_client_subid(email: str) -> str | None:
-    inbound = await get_inbound_info(settings.XUI_INBOUND_ID)
-    clients = inbound.get("clientStats", [])
-    if not clients:
-        raw = inbound.get("settings", "")
-        if isinstance(raw, str):
-            try:
-                raw = json.loads(raw)
-            except Exception:
-                raw = {}
-        clients = raw.get("clients", []) if isinstance(raw, dict) else []
-    for client in clients:
-        if isinstance(client, dict) and client.get("email") == email:
-            return str(client.get("subId", ""))
+async def get_client_subid(email: str, inbound_id: int | None = None) -> str | None:
+    ids = [inbound_id] if inbound_id else settings.XUI_INBOUND_IDS
+    for iid in ids:
+        inbound = await get_inbound_info(iid)
+        clients = inbound.get("clientStats", [])
+        if not clients:
+            raw = inbound.get("settings", "")
+            if isinstance(raw, str):
+                try:
+                    raw = json.loads(raw)
+                except Exception:
+                    raw = {}
+            clients = raw.get("clients", []) if isinstance(raw, dict) else []
+        for client in clients:
+            if isinstance(client, dict) and client.get("email") == email:
+                return str(client.get("subId", ""))
     return None
 
 
-async def build_link_for_email(email: str) -> str:
-    sub_id = await get_client_subid(email)
+async def build_link_for_email(email: str, inbound_id: int | None = None) -> str:
+    sub_id = await get_client_subid(email, inbound_id)
     if not sub_id:
         raise RuntimeError(f"Client not found in panel: {email}")
     return await _build_link("", email, sub_id)
@@ -240,11 +259,12 @@ async def build_link_for_email(email: str) -> str:
 async def get_inbound_info(inbound_id: int) -> dict:
     global _inbound_cache, _inbound_cache_ts
     now = time.time()
-    if _inbound_cache is not None and (now - _inbound_cache_ts) < _INBOUND_CACHE_TTL:
-        return _inbound_cache
+    cached = _inbound_cache.get(inbound_id)
+    if cached is not None and (now - _inbound_cache_ts.get(inbound_id, 0)) < _INBOUND_CACHE_TTL:
+        return cached
     data = await _request("GET", f"/panel/api/inbounds/get/{inbound_id}")
-    _inbound_cache = data
-    _inbound_cache_ts = now
+    _inbound_cache[inbound_id] = data
+    _inbound_cache_ts[inbound_id] = now
     return data
 
 
@@ -265,6 +285,8 @@ async def _get_sub_settings() -> dict:
 
 
 async def _build_link(uuid: str, email: str, sub_id: str) -> str:
+    if settings.XUI_SUB_URL:
+        return f"{settings.XUI_SUB_URL}/{sub_id}"
     sub_settings = await _get_sub_settings()
     sub_url = (sub_settings.get("subURL") or "").rstrip('/')
     if sub_url:

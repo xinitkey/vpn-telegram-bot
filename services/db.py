@@ -51,6 +51,10 @@ async def init_db():
             await db.execute('ALTER TABLE users ADD COLUMN banned INTEGER DEFAULT 0')
         except Exception:
             pass
+        try:
+            await db.execute('ALTER TABLE users ADD COLUMN xui_inbound_id INTEGER DEFAULT 0')
+        except Exception:
+            pass
         await db.execute('''
             CREATE TABLE IF NOT EXISTS payments (
                 payment_id TEXT PRIMARY KEY,
@@ -87,7 +91,8 @@ async def get_user(user_id: int) -> Optional[User]:
                 link=row['link'] or '',
                 trial_used=bool(row['trial_used']) if 'trial_used' in row.keys() else False,
                 subscription_start=row['subscription_start'] if 'subscription_start' in row.keys() else None,
-                banned=bool(row['banned']) if 'banned' in row.keys() else False
+                banned=bool(row['banned']) if 'banned' in row.keys() else False,
+                xui_inbound_id=row['xui_inbound_id'] if 'xui_inbound_id' in row.keys() else 0
             )
 
 async def create_user(user_id: int):
@@ -105,9 +110,9 @@ async def update_user(user: User):
         db = await _get_db()
         await db.execute(
             '''UPDATE users SET balance = ?, subscription = ?, xui_uuid = ?, xui_email = ?, link = ?,
-               trial_used = ?, subscription_start = ?, banned = ? WHERE user_id = ?''',
+               trial_used = ?, subscription_start = ?, banned = ?, xui_inbound_id = ? WHERE user_id = ?''',
             (user.balance, user.subscription, user.xui_uuid, user.xui_email, user.link,
-             int(user.trial_used), user.subscription_start, int(user.banned), user.user_id)
+             int(user.trial_used), user.subscription_start, int(user.banned), user.xui_inbound_id, user.user_id)
         )
         await db.commit()
 
@@ -200,7 +205,8 @@ async def get_all_users() -> list[User]:
                 link=row['link'] or '',
                 trial_used=bool(row['trial_used']) if 'trial_used' in row.keys() else False,
                 subscription_start=row['subscription_start'] if 'subscription_start' in row.keys() else None,
-                banned=bool(row['banned']) if 'banned' in row.keys() else False
+                banned=bool(row['banned']) if 'banned' in row.keys() else False,
+                xui_inbound_id=row['xui_inbound_id'] if 'xui_inbound_id' in row.keys() else 0
             ) for row in rows]
 
 async def get_user_count() -> int:
@@ -300,5 +306,6 @@ def _user_from_row(row) -> User:
         link=row['link'] or '',
         trial_used=bool(row['trial_used']) if 'trial_used' in row.keys() else False,
         subscription_start=row['subscription_start'] if 'subscription_start' in row.keys() else None,
-        banned=bool(row['banned']) if 'banned' in row.keys() else False
+        banned=bool(row['banned']) if 'banned' in row.keys() else False,
+        xui_inbound_id=row['xui_inbound_id'] if 'xui_inbound_id' in row.keys() else 0
     )

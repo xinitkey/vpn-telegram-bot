@@ -200,7 +200,7 @@ async def cmd_give_sub(message: Message, command: CommandObject):
         await create_user(user_id)
         user = await get_user(user_id)
     await set_subscription(user_id, days)
-    if settings.XUI_URL and settings.XUI_PASSWORD and settings.XUI_INBOUND_ID is not None:
+    if settings.XUI_URL and settings.XUI_PASSWORD and settings.XUI_INBOUND_IDS:
         email = f'user_{user_id}'
         now_ms = int(time.time() * 1000)
         sub = max(user.subscription or now_ms, now_ms) + days * 86400000
@@ -208,11 +208,15 @@ async def cmd_give_sub(message: Message, command: CommandObject):
         try:
             if user.xui_email:
                 await xui_update_expiry(user.xui_email, total_days)
-                link = await xui_build_link_for_email(user.xui_email)
+                link = await xui_build_link_for_email(user.xui_email, user.xui_inbound_id or None)
                 await update_vpn_info(user_id, link=link)
             else:
-                client = await xui_add_client(email, total_days)
+                client = await xui_add_client(email, total_days, user.xui_inbound_id or None)
                 await update_vpn_info(user_id, uuid=client['uuid'], email=client['email'], link=client['link'])
+                u = await get_user(user_id)
+                if u:
+                    u.xui_inbound_id = client['inbound_id']
+                    await update_user(u)
         except Exception as e:
             logger.error(f"3x-UI error in give: {e}")
     user = await get_user(user_id)
@@ -429,22 +433,18 @@ async def cmd_xui(message: Message):
         return
     try:
         from services.xui_api import get_inbound_info
-        inbound = await get_inbound_info(settings.XUI_INBOUND_ID)
-        port = inbound.get("port", "?")
-        protocol = inbound.get("protocol", "?")
-        remark = inbound.get("remark", "?")
-        clients = inbound.get("clientStats", [])
-        total_gb = inbound.get("total", 0)
-        up = inbound.get("up", 0)
-        down = inbound.get("down", 0)
-        await message.answer(
-            f"<b>3x-UI Статус</b>\n\n"
-            f"Сервер: <code>{settings.XUI_URL}</code>\n"
-            f"Inbound: <code>{remark}</code> ({protocol}:{port})\n"
-            f"Клиентов: <code>{len(clients)}</code>\n"
-            f"Трафик: {up / 1e9:.2f} GB / {down / 1e9:.2f} GB",
-            parse_mode='HTML'
-        )
+        lines = [f"<b>3x-UI Статус</b>\n"]
+        for iid in settings.XUI_INBOUND_IDS:
+            inbound = await get_inbound_info(iid)
+            port = inbound.get("port", "?")
+            protocol = inbound.get("protocol", "?")
+            remark = inbound.get("remark", "?")
+            clients = inbound.get("clientStats", [])
+            lines.append(
+                f"#{iid} <code>{remark}</code> ({protocol}:{port}) — "
+                f"<code>{len(clients)}</code> клиентов"
+            )
+        await message.answer("\n".join(lines), parse_mode='HTML')
     except Exception as e:
         await message.answer(f"Ошибка: {e}", parse_mode='HTML')
 

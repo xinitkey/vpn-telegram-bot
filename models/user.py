@@ -17,6 +17,7 @@ class User:
     xui_uuid: str = ''
     xui_email: str = ''
     link: str = ''
+    xui_inbound_id: int = 0
     trial_used: bool = False
     banned: bool = False
 
