@@ -34,7 +34,7 @@ async def _get_session() -> dict:
                     json={"username": settings.XUI_USERNAME, "password": settings.XUI_PASSWORD},
                     headers={"x-csrf-token": csrf, "Content-Type": "application/json"},
                 ) as resp:
-                    data = await resp.json()
+                    data = await resp.json(content_type=None)
                     if not data.get("success"):
                         raise RuntimeError(f"3x-UI login failed: {data.get('msg', 'unknown')}")
                 cookies = {}
