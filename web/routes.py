@@ -126,7 +126,7 @@ def setup_routes(app: web.Application, bot: Bot, dp: Dispatcher):
         if not is_extension:
             user.subscription_start = now_ms
         xui_error = None
-        if settings.XUI_URL and settings.XUI_PASSWORD and settings.XUI_INBOUND_IDS:
+        if settings.XUI_URL and settings.XUI_PASSWORD and settings.XUI_INBOUND_ID is not None:
             email = f'user_{user_id}'
             total_days = max(1, (new_sub - now_ms) // 86400000)
             try:
