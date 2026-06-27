@@ -28,12 +28,17 @@ async def _get_session() -> dict:
             async with aiohttp.ClientSession() as sess:
                 async with sess.get(f"{base}/") as resp:
                     html = await resp.text()
+                    if 'csrf-token" content="' not in html:
+                        raise RuntimeError("CSRF token not found in 3x-UI login page")
                     csrf = html.split('csrf-token" content="')[1].split('"')[0]
                 async with sess.post(
                     f"{base}/login",
                     json={"username": settings.XUI_USERNAME, "password": settings.XUI_PASSWORD},
                     headers={"x-csrf-token": csrf, "Content-Type": "application/json"},
                 ) as resp:
+                    if resp.status != 200:
+                        text = await resp.text()
+                        raise RuntimeError(f"3x-UI login failed ({resp.status}): {text[:200]}")
                     data = await resp.json(content_type=None)
                     if not data.get("success"):
                         raise RuntimeError(f"3x-UI login failed: {data.get('msg', 'unknown')}")
@@ -57,6 +62,8 @@ async def _request(method: str, path: str, data: dict | None = None, retries: in
     for attempt in range(1 + retries):
         try:
             cookies = await _get_session()
+            if not cookies:
+                raise RuntimeError("3x-UI session invalid (empty cookies)")
             cookie_header = "; ".join(f"{k}={v}" for k, v in cookies.items())
             headers = {
                 "Cookie": cookie_header,
@@ -81,7 +88,8 @@ async def _request(method: str, path: str, data: dict | None = None, retries: in
                     if not result.get("success"):
                         msg = result.get('msg', 'unknown')
                         raise RuntimeError(f"3x-UI error: {msg}")
-                    return result.get("obj", {})
+                    obj = result.get("obj")
+                    return obj if obj is not None else {}
         except (aiohttp.ClientError, asyncio.TimeoutError, RuntimeError) as e:
             if attempt < retries and "login" not in str(e).lower():
                 wait = 2 ** attempt
