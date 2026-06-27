@@ -54,6 +54,8 @@ def main():
     webhook_requests_handler = SimpleRequestHandler(dispatcher=dp, bot=bot)
     webhook_requests_handler.register(app, path='/telegram-webhook')
 
+    setup_application(app, dp)
+
     if settings.ADMIN_BOT_TOKEN:
         from aiogram import Bot as AdminBot
         admin_bot = AdminBot(token=settings.ADMIN_BOT_TOKEN)
