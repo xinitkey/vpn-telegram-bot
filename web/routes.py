@@ -80,8 +80,8 @@ def setup_routes(app: web.Application, bot: Bot, dp: Dispatcher):
             'balance': user.balance,
             'daysLeft': user.days_left,
             'remainingStr': user.remaining_str,
-            'subscriptionEnd': user.subscription_end_str,
-            'subscriptionStart': user.subscription_start_str,
+            'subscriptionEnd': user.subscription or 0,
+            'subscriptionStart': user.subscription_start or 0,
             'vpnKey': user.link or 'Не создан',
             'dailyPrice': settings.TARIFF_DAILY_PRICE,
             'banned': user.banned

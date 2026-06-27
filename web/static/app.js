@@ -25,6 +25,13 @@ const initData = tg.initData || '';
 const userRaw = tg.initDataUnsafe?.user;
 const workerUrl = window.location.origin;
 
+function formatTs(ts) {
+  if (!ts || ts <= 0) return '—';
+  const d = new Date(ts);
+  const pad = n => String(n).padStart(2, '0');
+  return `${pad(d.getDate())}.${pad(d.getMonth() + 1)}.${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
 let selectedAmount = 0;
 let selectedMethod = '';
 let selectedTariffDays = 0;
@@ -55,8 +62,8 @@ async function loadUserData() {
             document.getElementById('profile-balance').innerText = globalUserData.balance + " ₽";
             document.getElementById('days-count').innerHTML = globalUserData.remainingStr || globalUserData.daysLeft + " <span>дней</span>";
             document.getElementById('profile-key').innerText = globalUserData.vpnKey;
-            document.getElementById('profile-sub-start').innerText = globalUserData.subscriptionStart || '—';
-            document.getElementById('profile-sub-end').innerText = globalUserData.subscriptionEnd || '—';
+            document.getElementById('profile-sub-start').innerText = formatTs(globalUserData.subscriptionStart);
+            document.getElementById('profile-sub-end').innerText = formatTs(globalUserData.subscriptionEnd);
             document.getElementById('price-daily-text').innerText = globalUserData.dailyPrice + "₽ / день за устройство";
         }
     } catch (e) { console.error(e); }
@@ -99,8 +106,8 @@ function showSubscriptionInfo() {
     const infoMessage =
         "Статус: " + status + "\n" +
         "Осталось: " + (globalUserData.remainingStr || globalUserData.daysLeft + " дн.") + "\n" +
-        "Начало: " + (globalUserData.subscriptionStart || "—") + "\n" +
-        "Заканчивается: " + (globalUserData.subscriptionEnd || "—") + "\n\n" +
+        "Начало: " + formatTs(globalUserData.subscriptionStart) + "\n" +
+        "Заканчивается: " + formatTs(globalUserData.subscriptionEnd) + "\n\n" +
         "Ваш ключ:\n\n" + globalUserData.vpnKey;
 
     tg.showPopup({
