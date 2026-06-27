@@ -129,6 +129,17 @@ def setup_routes(app: web.Application, bot: Bot, dp: Dispatcher):
                     {'error': f'Ошибка VPN-панели: {xui_error}'}, status=502
                 )
         await update_user(user)
+        try:
+            await bot.send_message(
+                user_id,
+                f"🎉 <b>Тариф успешно активирован!</b>\n\n"
+                f"🔑 Ваш VPN-ключ:\n<code>{user.link or '—'}</code>\n\n"
+                f"📅 Дней осталось: <b>{user.days_left}</b>\n\n"
+                f"💡 Скопируйте ключ и используйте в приложении V2Box / v2rayNG / Nekobox",
+                parse_mode='HTML'
+            )
+        except Exception as e:
+            log.error(f"Failed to send key to user {user_id}: {e}")
         resp = {
             'success': True,
             'balance': user.balance,

@@ -153,6 +153,18 @@ async def cmd_give_sub(message: Message, command: CommandObject):
         except Exception as e:
             logger.error(f"3x-UI error in give: {e}")
     user = await get_user(user_id)
+    if user.link:
+        try:
+            await message.bot.send_message(
+                user_id,
+                f"🎉 <b>Вам выдана подписка BlackVPN!</b>\n\n"
+                f"🔑 Ваш VPN-ключ:\n<code>{user.link}</code>\n\n"
+                f"📅 Дней: <b>{user.days_left}</b>\n\n"
+                f"💡 Скопируйте ключ и используйте в приложении V2Box / v2rayNG / Nekobox",
+                parse_mode='HTML'
+            )
+        except Exception as e:
+            logger.error(f"Failed to send key to user {user_id}: {e}")
     await message.answer(
         f"✅ Выдано <code>{days}</code> дн. подписки\n"
         f"👤 <code>{user_id}</code> — осталось <code>{user.days_left}</code> дн.",
