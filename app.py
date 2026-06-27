@@ -4,6 +4,7 @@ from aiohttp import web
 from aiogram import Bot, Dispatcher
 from aiogram.webhook.aiohttp_server import SimpleRequestHandler
 from bot.handlers import register_router
+from bot.admin_handlers import router as admin_router
 from web.routes import setup_routes
 from config import settings
 from services.db import init_db, close_db
@@ -46,6 +47,7 @@ def main():
     _validate_settings()
     bot = Bot(token=settings.TELEGRAM_BOT_TOKEN)
     dp = Dispatcher()
+    dp.include_router(admin_router)
     register_router(dp)
 
     app = web.Application()

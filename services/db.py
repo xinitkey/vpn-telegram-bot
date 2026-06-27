@@ -167,3 +167,52 @@ async def update_payment_status(payment_id: str, status: str):
             (status, int(time.time()), payment_id)
         )
         await db.commit()
+
+async def get_all_users() -> list[User]:
+    async with _db_lock:
+        db = await _get_db()
+        async with db.execute('SELECT * FROM users ORDER BY user_id') as cur:
+            rows = await cur.fetchall()
+            return [User(
+                user_id=row['user_id'],
+                balance=row['balance'],
+                subscription=row['subscription'],
+                xui_uuid=row['xui_uuid'] or '',
+                xui_email=row['xui_email'] or '',
+                link=row['link'] or ''
+            ) for row in rows]
+
+async def get_user_count() -> int:
+    async with _db_lock:
+        db = await _get_db()
+        async with db.execute('SELECT COUNT(*) as cnt FROM users') as cur:
+            row = await cur.fetchone()
+            return row['cnt'] if row else 0
+
+async def get_active_sub_count() -> int:
+    now_ms = int(time.time() * 1000)
+    async with _db_lock:
+        db = await _get_db()
+        async with db.execute('SELECT COUNT(*) as cnt FROM users WHERE subscription > ?', (now_ms,)) as cur:
+            row = await cur.fetchone()
+            return row['cnt'] if row else 0
+
+async def get_total_balance() -> float:
+    async with _db_lock:
+        db = await _get_db()
+        async with db.execute('SELECT SUM(balance) as total FROM users') as cur:
+            row = await cur.fetchone()
+            return row['total'] if row and row['total'] else 0.0
+
+async def get_payments_count() -> dict:
+    async with _db_lock:
+        db = await _get_db()
+        total = 0
+        completed = 0
+        async with db.execute('SELECT COUNT(*) as cnt FROM payments') as cur:
+            row = await cur.fetchone()
+            total = row['cnt'] if row else 0
+        async with db.execute("SELECT COUNT(*) as cnt FROM payments WHERE status = 'completed'") as cur:
+            row = await cur.fetchone()
+            completed = row['cnt'] if row else 0
+        return {'total': total, 'completed': completed}
