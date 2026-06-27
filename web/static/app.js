@@ -11,7 +11,7 @@ const tg = window.Telegram?.WebApp || {
     HapticFeedback: { impactOccurred: () => {}, notificationOccurred: () => {} },
     ready: () => {}
 };
-const isBrowser = !window.Telegram?.WebApp;
+const isBrowser = !tg.initData;
 if (isBrowser) {
     document.getElementById('dev-notice').style.display = 'block';
 }
