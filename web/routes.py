@@ -11,6 +11,7 @@ from services.db import (
 from services.xui_api import (
     add_client as xui_add_client,
     update_client_expiry as xui_update_expiry,
+    build_link_for_email as xui_build_link_for_email,
 )
 from services.payment import generate_payment_id
 from services.auth import verify_telegram_init_data, verify_cryptomus_signature
@@ -114,6 +115,7 @@ def setup_routes(app: web.Application, bot: Bot, dp: Dispatcher):
             try:
                 if user.xui_email:
                     await xui_update_expiry(user.xui_email, total_days)
+                    user.link = await xui_build_link_for_email(user.xui_email)
                 else:
                     client = await xui_add_client(email, total_days)
                     user.xui_uuid = client['uuid']

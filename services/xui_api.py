@@ -213,6 +213,30 @@ async def remove_client(email: str):
     await _request("POST", f"/panel/api/clients/del/{quote(email)}")
 
 
+async def get_client_subid(email: str) -> str | None:
+    inbound = await get_inbound_info(settings.XUI_INBOUND_ID)
+    clients = inbound.get("clientStats", [])
+    if not clients:
+        raw = inbound.get("settings", "")
+        if isinstance(raw, str):
+            try:
+                raw = json.loads(raw)
+            except Exception:
+                raw = {}
+        clients = raw.get("clients", []) if isinstance(raw, dict) else []
+    for client in clients:
+        if isinstance(client, dict) and client.get("email") == email:
+            return str(client.get("subId", ""))
+    return None
+
+
+async def build_link_for_email(email: str) -> str:
+    sub_id = await get_client_subid(email)
+    if not sub_id:
+        raise RuntimeError(f"Client not found in panel: {email}")
+    return await _build_link("", email, sub_id)
+
+
 async def get_inbound_info(inbound_id: int) -> dict:
     global _inbound_cache, _inbound_cache_ts
     now = time.time()

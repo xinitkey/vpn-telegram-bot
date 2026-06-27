@@ -8,7 +8,7 @@ from services.db import (
     get_total_balance, get_payments_count, add_balance, set_subscription,
     update_vpn_info, create_user
 )
-from services.xui_api import add_client as xui_add_client, update_client_expiry as xui_update_expiry
+from services.xui_api import add_client as xui_add_client, update_client_expiry as xui_update_expiry, build_link_for_email as xui_build_link_for_email
 import time
 import logging
 
@@ -147,6 +147,8 @@ async def cmd_give_sub(message: Message, command: CommandObject):
         try:
             if user.xui_email:
                 await xui_update_expiry(user.xui_email, total_days)
+                link = await xui_build_link_for_email(user.xui_email)
+                await update_vpn_info(user_id, link=link)
             else:
                 client = await xui_add_client(email, total_days)
                 await update_vpn_info(user_id, uuid=client['uuid'], email=client['email'], link=client['link'])
