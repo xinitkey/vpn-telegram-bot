@@ -6,6 +6,7 @@ import logging
 from typing import Optional
 from config.settings import settings
 from urllib.parse import quote, urlparse
+from aiohttp import CookieJar, ClientSession, ClientError
 
 logger = logging.getLogger(__name__)
 
@@ -14,18 +15,28 @@ _inbound_cache_ts: float = 0
 _INBOUND_CACHE_TTL = 300
 
 _session_cookies: Optional[dict] = None
+_csrf_token: Optional[str] = None
 _session_lock = asyncio.Lock()
 
 
-async def _get_session() -> dict:
-    global _session_cookies
+def _make_session() -> ClientSession:
+    return ClientSession(cookie_jar=CookieJar(unsafe=True))
+
+
+async def _get_session() -> tuple[dict, str]:
+    global _session_cookies, _csrf_token
     base = settings.XUI_URL.rstrip('/')
     async with _session_lock:
-        if _session_cookies:
-            return _session_cookies
+        if _session_cookies and _csrf_token:
+            return _session_cookies, _csrf_token
+        if _session_cookies and not _csrf_token:
+            csrf = await _fetch_csrf(_session_cookies)
+            if csrf:
+                _csrf_token = csrf
+                return _session_cookies, csrf
+
         async with asyncio.timeout(15):
-            import aiohttp
-            async with aiohttp.ClientSession() as sess:
+            async with _make_session() as sess:
                 async with sess.get(f"{base}/") as resp:
                     html = await resp.text()
                     if 'csrf-token" content="' not in html:
@@ -33,8 +44,12 @@ async def _get_session() -> dict:
                     csrf = html.split('csrf-token" content="')[1].split('"')[0]
                 async with sess.post(
                     f"{base}/login",
-                    json={"username": settings.XUI_USERNAME, "password": settings.XUI_PASSWORD},
-                    headers={"x-csrf-token": csrf, "Content-Type": "application/json"},
+                    data={"username": settings.XUI_USERNAME, "password": settings.XUI_PASSWORD},
+                    headers={
+                        "x-csrf-token": csrf,
+                        "X-Requested-With": "XMLHttpRequest",
+                        "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+                    },
                 ) as resp:
                     if resp.status != 200:
                         text = await resp.text()
@@ -42,56 +57,112 @@ async def _get_session() -> dict:
                     data = await resp.json(content_type=None)
                     if not data.get("success"):
                         raise RuntimeError(f"3x-UI login failed: {data.get('msg', 'unknown')}")
+
                 cookies = {}
                 for cookie in sess.cookie_jar:
                     cookies[cookie.key] = cookie.value
                 _session_cookies = cookies
+
+                api_csrf = await _fetch_csrf(cookies)
+                _csrf_token = api_csrf or ""
+
                 logger.info("3x-UI session established")
-                return cookies
+                return cookies, _csrf_token
+
+
+async def _fetch_csrf(cookies: dict) -> str:
+    base = settings.XUI_URL.rstrip('/')
+    cookie_header = "; ".join(f"{k}={v}" for k, v in cookies.items())
+    try:
+        async with _make_session() as sess:
+            async with sess.get(
+                f"{base}/csrf-token",
+                headers={"Cookie": cookie_header, "X-Requested-With": "XMLHttpRequest"},
+            ) as resp:
+                data = await resp.json(content_type=None)
+                token = data.get("obj", "")
+                if token:
+                    return token
+        async with _make_session() as sess:
+            async with sess.get(
+                f"{base}/panel/",
+                headers={"Cookie": cookie_header},
+            ) as resp:
+                html = await resp.text()
+                if 'csrf-token" content="' in html:
+                    return html.split('csrf-token" content="')[1].split('"')[0]
+    except Exception:
+        pass
+    return ""
+
+
+async def _refresh_csrf() -> str:
+    global _csrf_token, _session_cookies
+    if not _session_cookies:
+        return ""
+    csrf = await _fetch_csrf(_session_cookies)
+    _csrf_token = csrf
+    return csrf
 
 
 async def _invalidate_session():
-    global _session_cookies
+    global _session_cookies, _csrf_token
     _session_cookies = None
+    _csrf_token = None
 
 
 async def _request(method: str, path: str, data: dict | None = None, retries: int = 2) -> dict:
     base = settings.XUI_URL.rstrip('/')
     url = f"{base}{path}"
-    import aiohttp
+    is_mutation = method.upper() in ("POST", "PUT", "PATCH", "DELETE")
     for attempt in range(1 + retries):
         try:
-            cookies = await _get_session()
+            cookies, csrf = await _get_session()
             if not cookies:
                 raise RuntimeError("3x-UI session invalid (empty cookies)")
             cookie_header = "; ".join(f"{k}={v}" for k, v in cookies.items())
             headers = {
                 "Cookie": cookie_header,
-                "Content-Type": "application/x-www-form-urlencoded",
                 "X-Requested-With": "XMLHttpRequest",
+                "Content-Type": "application/json",
             }
-            async with aiohttp.ClientSession() as sess:
-                async with sess.request(method, url, headers=headers, data=data) as resp:
+            if is_mutation and csrf:
+                headers["X-CSRF-Token"] = csrf
+            async with _make_session() as sess:
+                async with sess.request(method, url, headers=headers, json=data) as resp:
                     text = await resp.text()
                     if resp.status == 403:
-                        await _invalidate_session()
-                        if attempt < retries:
-                            logger.warning("3x-UI session expired, re-logging in...")
-                            continue
-                        raise RuntimeError(f"3x-UI access denied: {text[:200]}")
+                        new_csrf = await _refresh_csrf()
+                        if new_csrf and is_mutation:
+                            headers["X-CSRF-Token"] = new_csrf
+                            async with _make_session() as retry_sess:
+                                async with retry_sess.request(method, url, headers=headers, json=data) as retry_resp:
+                                    text = await retry_resp.text()
+                                    if retry_resp.status == 403:
+                                        await _invalidate_session()
+                                        if attempt < retries:
+                                            logger.warning("3x-UI CSRF expired, re-logging in...")
+                                            continue
+                                        raise RuntimeError(f"3x-UI access denied after CSRF refresh: {text[:200]}")
+                                    resp = retry_resp
+                        else:
+                            await _invalidate_session()
+                            if attempt < retries:
+                                logger.warning("3x-UI session expired, re-logging in...")
+                                continue
+                            raise RuntimeError(f"3x-UI access denied: {text[:200]}")
                     if resp.status >= 500:
                         raise RuntimeError(f"3x-UI server error ({resp.status}): {text[:300]}")
-                    try:
-                        result = json.loads(text)
-                    except json.JSONDecodeError:
-                        raise RuntimeError(f"3x-UI returned non-JSON ({resp.status}): {text[:300]}")
+                    if not text:
+                        return {}
+                    result = json.loads(text)
                     if not result.get("success"):
                         msg = result.get('msg', 'unknown')
                         raise RuntimeError(f"3x-UI error: {msg}")
                     obj = result.get("obj")
                     return obj if obj is not None else {}
-        except (aiohttp.ClientError, asyncio.TimeoutError, RuntimeError) as e:
-            if attempt < retries and "login" not in str(e).lower():
+        except (ClientError, asyncio.TimeoutError, RuntimeError) as e:
+            if attempt < retries and "login" not in str(e).lower() and "session invalid" not in str(e).lower():
                 wait = 2 ** attempt
                 logger.warning("3x-UI request failed (attempt %d/%d): %s. Retrying in %ds...", attempt + 1, retries, e, wait)
                 await asyncio.sleep(wait)
@@ -101,15 +172,23 @@ async def _request(method: str, path: str, data: dict | None = None, retries: in
 
 async def add_client(email: str, days: int) -> dict[str, str]:
     uid = str(uuid_pkg.uuid4())
+    sub_id = str(uuid_pkg.uuid4())[:16]
     expiry = int(time.time() * 1000) + days * 86400000
     inbound_id = settings.XUI_INBOUND_ID
-    payload = {
+    client = {
         "email": email,
-        "uuid": uid,
-        "inboundIds": str(inbound_id),
-        "totalGB": "0",
-        "expiryTime": str(expiry),
-        "enable": "true",
+        "subId": sub_id,
+        "id": uid,
+        "flow": "",
+        "totalGB": 0,
+        "expiryTime": expiry,
+        "enable": True,
+        "limitIp": 0,
+        "tgId": 0,
+    }
+    payload = {
+        "client": client,
+        "inboundIds": [inbound_id],
     }
     await _request("POST", "/panel/api/clients/add", data=payload)
     link = await _build_link(uid, email)
@@ -119,8 +198,9 @@ async def add_client(email: str, days: int) -> dict[str, str]:
 async def update_client_expiry(email: str, days: int):
     expiry = int(time.time() * 1000) + days * 86400000
     payload = {
-        "enable": "true",
-        "expiryTime": str(expiry),
+        "email": email,
+        "enable": True,
+        "expiryTime": expiry,
     }
     await _request("POST", f"/panel/api/clients/update/{quote(email)}", data=payload)
 

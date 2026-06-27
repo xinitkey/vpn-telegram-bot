@@ -139,7 +139,7 @@ async def cmd_give_sub(message: Message, command: CommandObject):
         await create_user(user_id)
         user = await get_user(user_id)
     await set_subscription(user_id, days)
-    if settings.XUI_URL and settings.XUI_API_TOKEN and settings.XUI_INBOUND_ID is not None:
+    if settings.XUI_URL and settings.XUI_PASSWORD and settings.XUI_INBOUND_ID is not None:
         email = f'user_{user_id}'
         now_ms = int(time.time() * 1000)
         sub = max(user.subscription or now_ms, now_ms) + days * 86400000
