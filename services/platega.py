@@ -1,7 +1,6 @@
 import uuid
 import logging
-from urllib.parse import urljoin
-from aiohttp import ClientSession, ClientError
+from aiohttp import ClientSession
 from config.settings import settings
 
 logger = logging.getLogger(__name__)
@@ -29,16 +28,14 @@ async def create_transaction(
         },
         "description": description,
         "payload": payment_id,
+        "return": return_url or settings.BASE_URL.rstrip('/'),
+        "failedUrl": failed_url or settings.BASE_URL.rstrip('/'),
     }
     if settings.PLATEGA_PAYMENT_METHOD:
         body["paymentMethod"] = settings.PLATEGA_PAYMENT_METHOD
-    if return_url:
-        body["returnUrl"] = return_url
-    if failed_url:
-        body["failedUrl"] = failed_url
 
     async with ClientSession(headers=headers) as sess:
-        async with sess.post(urljoin(BASE_URL, "/transaction/process"), json=body) as resp:
+        async with sess.post(f"{BASE_URL}/transaction/process", json=body) as resp:
             if resp.status != 200:
                 text = await resp.text()
                 raise RuntimeError(f"Platega API error ({resp.status}): {text[:300]}")

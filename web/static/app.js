@@ -160,7 +160,7 @@ function buyDaysModal() {
                     tg.showAlert("Подписка успешно продлена на 1 день!");
                     loadUserData();
                 } else {
-                    const text = await res.text();
+            const text = await response.text();
                     let errData;
                     try { errData = JSON.parse(text); } catch { errData = { error: text }; }
                     tg.showAlert(errData.error || "Ошибка проведения платежа");
@@ -245,7 +245,10 @@ async function confirmTopUp() {
                 tg.openLink(data.paymentUrl);
             }
         } else {
-            tg.showAlert("Не удалось сформировать счет на оплату.");
+            const text = await res.text();
+            let errData;
+            try { errData = JSON.parse(text); } catch { errData = { error: text }; }
+            tg.showAlert(errData.error || "Не удалось сформировать счет на оплату.");
         }
     } catch {
         tg.showAlert("Произошла ошибка при соединении с сервером.");
