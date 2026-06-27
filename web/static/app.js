@@ -32,6 +32,20 @@ function formatTs(ts) {
   return `${pad(d.getDate())}.${pad(d.getMonth() + 1)}.${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
+function openLink(url) {
+  if (window.Telegram?.WebApp?.openLink) {
+    window.Telegram.WebApp.openLink(url);
+  } else {
+    window.open(url, '_blank');
+  }
+}
+
+function formatLink(url) {
+  if (!url || url === 'Не создан') return url || 'Не создан';
+  const text = url.length > 60 ? url.slice(0, 57) + '...' : url;
+  return `<a href="#" onclick="openLink('${url.replace(/'/g, "\\'")}'); return false;">${text}</a>`;
+}
+
 let selectedAmount = 0;
 let selectedMethod = '';
 let selectedTariffDays = 0;
@@ -61,7 +75,7 @@ async function loadUserData() {
             document.getElementById('balance-display').innerText = globalUserData.balance + " ₽";
             document.getElementById('profile-balance').innerText = globalUserData.balance + " ₽";
             document.getElementById('days-count').innerHTML = globalUserData.remainingStr || globalUserData.daysLeft + " <span>дней</span>";
-            document.getElementById('profile-key').innerText = globalUserData.vpnKey;
+            document.getElementById('profile-key').innerHTML = formatLink(globalUserData.vpnKey);
             document.getElementById('profile-sub-start').innerText = formatTs(globalUserData.subscriptionStart);
             document.getElementById('profile-sub-end').innerText = formatTs(globalUserData.subscriptionEnd);
             document.getElementById('price-daily-text').innerText = globalUserData.dailyPrice + "₽ / день за устройство";
@@ -108,7 +122,7 @@ function showSubscriptionInfo() {
         "Осталось: " + (globalUserData.remainingStr || globalUserData.daysLeft + " дн.") + "\n" +
         "Начало: " + formatTs(globalUserData.subscriptionStart) + "\n" +
         "Заканчивается: " + formatTs(globalUserData.subscriptionEnd) + "\n\n" +
-        "Ваш ключ:\n\n" + globalUserData.vpnKey;
+        "Ваш ключ: " + globalUserData.vpnKey;
 
     tg.showPopup({
         title: "Характеристика подписки",

@@ -66,6 +66,7 @@ body {
 .user-details p { margin: 0; font-size: 14px; color: #9ca3af; }
 .profile-info-block { background: rgba(255,255,255,0.02); padding: 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); margin-top: 10px; font-size: 14px; }
 .profile-info-block span { color: #ef4444; font-weight: bold; word-break: break-all; }
+.profile-info-block span a { color: #3b82f6; text-decoration: underline; }
 
 .info-section {
     background: rgba(15, 15, 15, 0.85); backdrop-filter: blur(10px);
