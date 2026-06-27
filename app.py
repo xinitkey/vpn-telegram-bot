@@ -20,6 +20,7 @@ _REQUIRED_ENV = [
     ('XUI_URL', 'XUI_URL'),
     ('XUI_API_TOKEN', 'XUI_API_TOKEN'),
     ('XUI_INBOUND_ID', 'XUI_INBOUND_ID'),
+    ('XUI_PASSWORD', 'XUI_PASSWORD'),
     ('BASE_URL', 'BASE_URL'),
 ]
 

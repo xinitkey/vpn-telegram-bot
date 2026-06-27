@@ -13,6 +13,8 @@ ADMIN_IDS = [int(x) for x in os.getenv('ADMIN_IDS', '').split(',') if x.strip()]
 # 3x-UI
 XUI_URL = os.getenv('XUI_URL')
 XUI_API_TOKEN = os.getenv('XUI_API_TOKEN')
+XUI_USERNAME = os.getenv('XUI_USERNAME', 'admin')
+XUI_PASSWORD = os.getenv('XUI_PASSWORD')
 XUI_INBOUND_ID = int(os.getenv('XUI_INBOUND_ID', '0')) if os.getenv('XUI_INBOUND_ID') else None
 XUI_SERVER = os.getenv('XUI_SERVER')  # optional
 
@@ -44,6 +46,8 @@ class Settings:
     ADMIN_IDS = ADMIN_IDS
     XUI_URL = XUI_URL
     XUI_API_TOKEN = XUI_API_TOKEN
+    XUI_USERNAME = XUI_USERNAME
+    XUI_PASSWORD = XUI_PASSWORD
     XUI_INBOUND_ID = XUI_INBOUND_ID
     XUI_SERVER = XUI_SERVER
     DB_URL = DB_URL
