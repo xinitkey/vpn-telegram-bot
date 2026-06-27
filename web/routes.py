@@ -209,6 +209,7 @@ def setup_routes(app: web.Application, bot: Bot, dp: Dispatcher):
         user_id = verified_id or int(raw.get('userId', 0))
         amount = float(raw.get('amount', 0))
         method = raw.get('method', '')
+        pay_method = int(raw.get('paymentMethod', 0))
         if not user_id or amount < 50:
             return web.json_response({'error': 'Invalid data. Minimum 50₽'}, status=400)
 
@@ -222,7 +223,7 @@ def setup_routes(app: web.Application, bot: Bot, dp: Dispatcher):
         payment_url = None
         if method == 'crypto':
             payment_url = f"https://t.me/CryptoBot?start={payment_id}"
-        elif method == 'platega' and settings.PLATEGA_MERCHANT_ID and settings.PLATEGA_SECRET:
+        elif method.startswith('platega') and settings.PLATEGA_MERCHANT_ID and settings.PLATEGA_SECRET:
             try:
                 from services.platega import create_transaction as platega_create
                 desc = f"Пополнение BlackVPN на {amount}₽"
@@ -230,6 +231,7 @@ def setup_routes(app: web.Application, bot: Bot, dp: Dispatcher):
                     payment_id=payment_id,
                     amount=amount,
                     description=desc,
+                    payment_method=pay_method,
                 )
                 payment_url = result.get("redirect", "")
             except Exception as e:

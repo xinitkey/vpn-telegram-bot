@@ -227,11 +227,15 @@ async function confirmTopUp() {
     if (selectedAmount < 50 || !selectedMethod) return;
     tg.HapticFeedback.impactOccurred('medium');
 
+    const body = { userId, amount: selectedAmount, method: selectedMethod, initData };
+    const pm = { platega_sbp: 2, platega_cards: 10, platega_crypto: 13 }[selectedMethod];
+    if (pm) body.paymentMethod = pm;
+
     try {
         const response = await fetch(workerUrl + "/api/create-payment", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ userId, amount: selectedAmount, method: selectedMethod, initData })
+            body: JSON.stringify(body)
         });
 
         if (response.ok) {
@@ -245,7 +249,7 @@ async function confirmTopUp() {
                 tg.openLink(data.paymentUrl);
             }
         } else {
-            const text = await res.text();
+            const text = await response.text();
             let errData;
             try { errData = JSON.parse(text); } catch { errData = { error: text }; }
             tg.showAlert(errData.error || "Не удалось сформировать счет на оплату.");

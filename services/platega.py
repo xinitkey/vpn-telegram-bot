@@ -6,6 +6,13 @@ from config.settings import settings
 logger = logging.getLogger(__name__)
 BASE_URL = "https://app.platega.io"
 
+METHOD_MAP = {
+    2: "SBP",
+    10: "CARDS",
+    11: "ACQUIRING",
+    12: "INTERNATIONAL",
+    13: "CRYPTO",
+}
 
 async def create_transaction(
     payment_id: str,
@@ -13,6 +20,7 @@ async def create_transaction(
     description: str = "",
     return_url: str = "",
     failed_url: str = "",
+    payment_method: int = 0,
 ) -> dict:
     headers = {
         "X-MerchantId": settings.PLATEGA_MERCHANT_ID,
@@ -21,6 +29,7 @@ async def create_transaction(
         "Accept": "application/json",
     }
     body = {
+        "paymentMethod": payment_method or settings.PLATEGA_PAYMENT_METHOD or 2,
         "id": str(uuid.uuid4()),
         "paymentDetails": {
             "amount": amount,
@@ -31,8 +40,6 @@ async def create_transaction(
         "return": return_url or settings.BASE_URL.rstrip('/'),
         "failedUrl": failed_url or settings.BASE_URL.rstrip('/'),
     }
-    if settings.PLATEGA_PAYMENT_METHOD:
-        body["paymentMethod"] = settings.PLATEGA_PAYMENT_METHOD
 
     async with ClientSession(headers=headers) as sess:
         async with sess.post(f"{BASE_URL}/transaction/process", json=body) as resp:
