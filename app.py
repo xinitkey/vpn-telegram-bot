@@ -2,7 +2,7 @@ import asyncio
 import logging
 from aiohttp import web
 from aiogram import Bot, Dispatcher
-from aiogram.webhook.aiohttp_server import SimpleRequestHandler, setup_application
+from aiogram.webhook.aiohttp_server import SimpleRequestHandler
 from bot.handlers import register_router
 from web.routes import setup_routes
 from config import settings
@@ -30,35 +30,35 @@ def _validate_settings():
     if missing:
         logger.warning("Missing required env vars: %s", ', '.join(missing))
 
-async def on_startup(bot: Bot):
+async def on_startup(_app):
+    bot = Bot(token=settings.TELEGRAM_BOT_TOKEN)
     await bot.delete_webhook(drop_pending_updates=True)
     await init_db()
     webhook_url = f"{settings.BASE_URL}/telegram-webhook"
     await bot.set_webhook(webhook_url)
     logger.info("Webhook set to %s", webhook_url)
+    await bot.session.close()
 
-async def on_shutdown(bot: Bot):
+async def on_shutdown(_app):
     await close_db()
 
 def main():
     _validate_settings()
     bot = Bot(token=settings.TELEGRAM_BOT_TOKEN)
     dp = Dispatcher()
-    dp.startup.register(on_startup)
-    dp.shutdown.register(on_shutdown)
     register_router(dp)
 
     app = web.Application()
+    app.on_startup.append(on_startup)
+    app.on_shutdown.append(on_shutdown)
     setup_routes(app, bot, dp)
 
     webhook_requests_handler = SimpleRequestHandler(dispatcher=dp, bot=bot)
     webhook_requests_handler.register(app, path='/telegram-webhook')
 
-    setup_application(app, dp)
-
     if settings.ADMIN_BOT_TOKEN:
         from aiogram import Bot as AdminBot
-        admin_bot = AdminBot(token=settings.ADMIN_BOT_TOKEN)
+        AdminBot(token=settings.ADMIN_BOT_TOKEN)
 
     web.run_app(app, host=settings.HOST, port=settings.PORT)
 
