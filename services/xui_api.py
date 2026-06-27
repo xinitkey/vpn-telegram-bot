@@ -5,7 +5,7 @@ import time
 import logging
 from typing import Optional
 from config.settings import settings
-from urllib.parse import quote, urlparse
+from urllib.parse import quote
 from aiohttp import CookieJar, ClientSession, ClientError
 
 logger = logging.getLogger(__name__)
@@ -191,7 +191,7 @@ async def add_client(email: str, days: int) -> dict[str, str]:
         "inboundIds": [inbound_id],
     }
     await _request("POST", "/panel/api/clients/add", data=payload)
-    link = await _build_link(uid, email)
+    link = await _build_link(uid, email, sub_id)
     return {"uuid": uid, "email": email, "link": link}
 
 
@@ -220,45 +220,7 @@ async def get_inbound_info(inbound_id: int) -> dict:
     return data
 
 
-async def _build_link(uuid: str, email: str) -> str:
-    inbound = await get_inbound_info(settings.XUI_INBOUND_ID)
-    port = inbound.get("port")
-    protocol = inbound.get("protocol", "vless")
-    stream_settings = {}
-    try:
-        ss = inbound.get("streamSettings")
-        if isinstance(ss, str):
-            stream_settings = json.loads(ss)
-        else:
-            stream_settings = ss or {}
-    except Exception:
-        stream_settings = {}
-    network = stream_settings.get("network", "tcp")
-    security = stream_settings.get("security", "none")
-    query = {}
-    query["encryption"] = "none"
-    query["type"] = network
-    if security == "reality":
-        rs = stream_settings.get("realitySettings", {})
-        server_names = rs.get("serverNames", [settings.XUI_SERVER or ""])
-        sni = server_names[0] if server_names else (settings.XUI_SERVER or "")
-        query["flow"] = "xtls-rprx-vision"
-        query["security"] = "reality"
-        query["sni"] = sni
-        query["fp"] = "chrome"
-        if rs.get("publicKey"):
-            query["pbk"] = rs["publicKey"]
-        if rs.get("shortIds"):
-            query["sid"] = rs["shortIds"][0]
-    elif security == "tls":
-        tls = stream_settings.get("tlsSettings", {})
-        sni = tls.get("serverName", settings.XUI_SERVER or "")
-        query["security"] = "tls"
-        query["sni"] = sni
-        query["fp"] = "chrome"
-    query_parts = [f"{k}={v}" for k, v in query.items() if v]
-    query_str = "&".join(query_parts)
-    server = settings.XUI_SERVER or ""
-    if not server:
-        server = urlparse(settings.XUI_URL).hostname or ""
-    return f"{protocol}://{uuid}@{server}:{port}?{query_str}#BlackVPN-{email}"
+async def _build_link(uuid: str, email: str, sub_id: str) -> str:
+    base = settings.XUI_URL.rstrip('/')
+    sub_path = settings.XUI_SUB_PATH.strip('/')
+    return f"{base}/{sub_path}{sub_id}"

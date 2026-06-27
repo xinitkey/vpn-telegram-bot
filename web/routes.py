@@ -133,9 +133,11 @@ def setup_routes(app: web.Application, bot: Bot, dp: Dispatcher):
             await bot.send_message(
                 user_id,
                 f"🎉 <b>Тариф успешно активирован!</b>\n\n"
-                f"🔑 Ваш VPN-ключ:\n<code>{user.link or '—'}</code>\n\n"
+                f"🔗 <b>Ссылка для настройки:</b>\n"
+                f"{user.link or '—'}\n\n"
                 f"📅 Дней осталось: <b>{user.days_left}</b>\n\n"
-                f"💡 Скопируйте ключ и используйте в приложении V2Box / v2rayNG / Nekobox",
+                f"💡 Откройте ссылку, выберите вашу платформу и приложение — "
+                f"ключ добавится автоматически",
                 parse_mode='HTML'
             )
         except Exception as e:

@@ -158,9 +158,11 @@ async def cmd_give_sub(message: Message, command: CommandObject):
             await message.bot.send_message(
                 user_id,
                 f"🎉 <b>Вам выдана подписка BlackVPN!</b>\n\n"
-                f"🔑 Ваш VPN-ключ:\n<code>{user.link}</code>\n\n"
+                f"🔗 <b>Ссылка для настройки:</b>\n"
+                f"{user.link}\n\n"
                 f"📅 Дней: <b>{user.days_left}</b>\n\n"
-                f"💡 Скопируйте ключ и используйте в приложении V2Box / v2rayNG / Nekobox",
+                f"💡 Откройте ссылку, выберите вашу платформу и приложение — "
+                f"ключ добавится автоматически",
                 parse_mode='HTML'
             )
         except Exception as e:
