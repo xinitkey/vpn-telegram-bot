@@ -27,7 +27,7 @@ DB_URL = os.getenv('DB_URL', 'sqlite+aiosqlite:///./data/bot.db')
 # Platega
 PLATEGA_MERCHANT_ID = os.getenv('PLATEGA_MERCHANT_ID')
 PLATEGA_SECRET = os.getenv('PLATEGA_SECRET')
-PLATEGA_PAYMENT_METHOD = int(os.getenv('PLATEGA_PAYMENT_METHOD', '0'))
+PLATEGA_PAYMENT_METHOD = int(os.getenv('PLATEGA_PAYMENT_METHOD', '2'))
 
 # Server
 HOST = os.getenv('HOST', '0.0.0.0')

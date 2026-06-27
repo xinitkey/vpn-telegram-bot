@@ -228,7 +228,7 @@ async function confirmTopUp() {
     tg.HapticFeedback.impactOccurred('medium');
 
     const body = { userId, amount: selectedAmount, method: selectedMethod, initData };
-    const pm = { platega_sbp: 2, platega_cards: 10, platega_crypto: 13 }[selectedMethod];
+    const pm = { platega_sbp: 2, platega_crypto: 13 }[selectedMethod];
     if (pm) body.paymentMethod = pm;
 
     try {
@@ -242,10 +242,7 @@ async function confirmTopUp() {
             const data = await response.json();
             closeTopUpModal();
 
-            if (selectedMethod === 'stars') {
-                tg.sendData(JSON.stringify({ action: "create_payment", amount: selectedAmount, method: selectedMethod }));
-                tg.close();
-            } else if (data.paymentUrl) {
+            if (data.paymentUrl) {
                 tg.openLink(data.paymentUrl);
             }
         } else {

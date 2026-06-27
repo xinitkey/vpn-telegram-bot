@@ -221,9 +221,7 @@ def setup_routes(app: web.Application, bot: Bot, dp: Dispatcher):
         await create_payment(payment_id, user_id, amount, method)
 
         payment_url = None
-        if method == 'crypto':
-            payment_url = f"https://t.me/CryptoBot?start={payment_id}"
-        elif method.startswith('platega') and settings.PLATEGA_MERCHANT_ID and settings.PLATEGA_SECRET:
+        if method.startswith('platega') and settings.PLATEGA_MERCHANT_ID and settings.PLATEGA_SECRET:
             try:
                 from services.platega import create_transaction as platega_create
                 desc = f"Пополнение BlackVPN на {amount}₽"
@@ -248,32 +246,6 @@ def setup_routes(app: web.Application, bot: Bot, dp: Dispatcher):
     app.router.add_get('/api/user-data', api_user_data)
     app.router.add_post('/api/buy-subscription', api_buy_subscription)
     app.router.add_post('/api/create-payment', api_create_payment)
-
-    async def cryptobot_webhook(request):
-        try:
-            raw = await request.json()
-        except Exception:
-            return web.Response(status=400)
-
-        update = raw.get('payload', {})
-        status = update.get('status', '')
-        payload_id = update.get('payload', '')
-        if status == 'active' and payload_id:
-            payment = await get_payment(payload_id)
-            if payment and payment['status'] == 'pending':
-                amount = float(update.get('amount', payment['amount']))
-                await update_payment_status(payload_id, 'completed')
-                await add_balance(payment['user_id'], amount)
-                try:
-                    await bot.send_message(
-                        payment['user_id'],
-                        f"💰 Баланс пополнен через CryptoBot!\nСумма: {amount} USD\nСтатус: Успешно",
-                    )
-                except Exception as e:
-                    log.error(f"Failed to notify user: {e}")
-        return web.Response(text='OK')
-
-    app.router.add_post('/cryptobot-webhook', cryptobot_webhook)
 
     async def platega_webhook(request):
         try:

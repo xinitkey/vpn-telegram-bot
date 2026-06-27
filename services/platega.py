@@ -29,7 +29,7 @@ async def create_transaction(
         "Accept": "application/json",
     }
     body = {
-        "paymentMethod": payment_method or settings.PLATEGA_PAYMENT_METHOD or 2,
+        "paymentMethod": payment_method or settings.PLATEGA_PAYMENT_METHOD,
         "id": str(uuid.uuid4()),
         "paymentDetails": {
             "amount": amount,
