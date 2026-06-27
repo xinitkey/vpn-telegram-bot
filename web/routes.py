@@ -2,34 +2,71 @@ from aiohttp import web
 import json
 import logging
 import time
+from collections import defaultdict
 from aiogram import Bot, Dispatcher
-from aiogram.types import Update
 from services.db import (
-    get_user, create_user, update_user, add_balance, set_subscription,
+    get_user, create_user, update_user, add_balance,
     create_payment, get_payment, update_payment_status
 )
 from services.xui_api import (
     add_client as xui_add_client,
     update_client_expiry as xui_update_expiry,
 )
+from services.payment import generate_payment_id
+from services.auth import verify_telegram_init_data, verify_cryptomus_signature
 from config import settings
 
 log = logging.getLogger(__name__)
 
+RATE_LIMIT = 60
+RATE_WINDOW = 60
+_rate_store = defaultdict(list)
+
+
+def _rate_middleware():
+    @web.middleware
+    async def middleware(request, handler):
+        path = request.path
+        if not path.startswith('/api/'):
+            return await handler(request)
+        ip = request.remote or 'unknown'
+        now = time.time()
+        window = _rate_store[ip]
+        while window and window[0] < now - RATE_WINDOW:
+            window.pop(0)
+        if len(window) >= RATE_LIMIT:
+            return web.json_response({'error': 'Too many requests'}, status=429)
+        window.append(now)
+        return await handler(request)
+    return middleware
+
+
+def _get_user_id_from_request(request, data: dict | None = None) -> int | None:
+    init_data = request.headers.get('X-Init-Data') or (data or {}).get('initData', '')
+    if init_data:
+        verified = verify_telegram_init_data(init_data, settings.TELEGRAM_BOT_TOKEN)
+        if verified and isinstance(verified.get('user'), dict):
+            return verified['user'].get('id')
+    return None
+
+
 def setup_routes(app: web.Application, bot: Bot, dp: Dispatcher):
-    # Root endpoint
+    app.middlewares.append(_rate_middleware())
+
     async def index(request):
         return web.Response(text="BlackVPN API Operational", content_type='text/plain')
     app.router.add_get('/', index)
 
-    # API: get user data
     async def api_user_data(request):
-        try:
-            user_id = int(request.query.get('user_id', 0))
-        except ValueError:
-            return web.json_response({'error': 'Invalid user_id'}, status=400)
-        if user_id == 0:
-            return web.json_response({'error': 'Missing user_id'}, status=400)
+        user_id = _get_user_id_from_request(request)
+        if user_id is None:
+            try:
+                user_id = int(request.query.get('userId', 0))
+            except ValueError:
+                return web.json_response({'error': 'Invalid user_id'}, status=400)
+            if user_id == 0:
+                return web.json_response({'error': 'Missing authentication'}, status=401)
+
         user = await get_user(user_id)
         if user is None:
             await create_user(user_id)
@@ -41,15 +78,16 @@ def setup_routes(app: web.Application, bot: Bot, dp: Dispatcher):
             'dailyPrice': settings.TARIFF_DAILY_PRICE
         })
 
-    # API: buy subscription with balance
     async def api_buy_subscription(request):
         try:
-            data = await request.json()
+            raw = await request.json()
         except Exception:
             return web.json_response({'error': 'Invalid JSON'}, status=400)
-        user_id = int(data.get('userId', 0))
-        days = int(data.get('days', 0))
-        price = data.get('price')
+
+        verified_id = _get_user_id_from_request(request, raw)
+        user_id = verified_id or int(raw.get('userId', 0))
+        days = int(raw.get('days', 0))
+        price = raw.get('price')
         if not user_id or days <= 0:
             return web.json_response({'error': 'Invalid data'}, status=400)
         user = await get_user(user_id)
@@ -60,81 +98,98 @@ def setup_routes(app: web.Application, bot: Bot, dp: Dispatcher):
             return web.json_response(
                 {'error': f'Недостаточно средств. Нужно {total_price}₽'}, status=400
             )
-        # Deduct balance
         user.balance -= total_price
-        # Update subscription timestamp
         now_ms = int(time.time() * 1000)
         add_ms = days * 86400000
         new_sub = user.subscription + add_ms if user.subscription and user.subscription > now_ms else now_ms + add_ms
         user.subscription = new_sub
-        # Update 3x-UI if configured
+        xui_error = None
         if settings.XUI_URL and settings.XUI_API_TOKEN and settings.XUI_INBOUND_ID is not None:
             email = f'user_{user_id}'
             total_days = max(1, (new_sub - now_ms) // 86400000)
-            if user.xui_email:
-                await xui_update_expiry(user.xui_email, total_days)
-            else:
-                client = await xui_add_client(email, total_days)
-                user.xui_uuid = client['uuid']
-                user.xui_email = client['email']
-                user.link = client['link']
-                user.vpn_key = client['link']
+            try:
+                if user.xui_email:
+                    await xui_update_expiry(user.xui_email, total_days)
+                else:
+                    client = await xui_add_client(email, total_days)
+                    user.xui_uuid = client['uuid']
+                    user.xui_email = client['email']
+                    user.link = client['link']
+            except Exception as e:
+                log.error(f"3x-UI error for user {user_id}: {e}")
+                xui_error = str(e)
+                user.balance += total_price
+                user.subscription = user.subscription - add_ms if user.subscription else 0
+                await update_user(user)
+                return web.json_response(
+                    {'error': f'Ошибка VPN-панели: {xui_error}'}, status=502
+                )
         await update_user(user)
-        return web.json_response({
+        resp = {
             'success': True,
             'balance': user.balance,
             'subscription': user.subscription,
             'link': user.link or ''
-        })
+        }
+        if xui_error:
+            resp['xui_warning'] = xui_error
+        return web.json_response(resp)
 
-    # API: create payment (returns payment ID)
     async def api_create_payment(request):
         try:
-            data = await request.json()
+            raw = await request.json()
         except Exception:
             return web.json_response({'error': 'Invalid JSON'}, status=400)
-        user_id = int(data.get('userId', 0))
-        amount = float(data.get('amount', 0))
-        method = data.get('method', '')
+
+        verified_id = _get_user_id_from_request(request, raw)
+        user_id = verified_id or int(raw.get('userId', 0))
+        amount = float(raw.get('amount', 0))
+        method = raw.get('method', '')
         if not user_id or amount < 50:
             return web.json_response({'error': 'Invalid data. Minimum 50₽'}, status=400)
+
         user = await get_user(user_id)
         if user is None:
             await create_user(user_id)
-            user = await get_user(user_id)
-        import uuid
-        payment_id = f'pay_{int(time.time())}_{uuid.uuid4().hex[:8]}'
+
+        payment_id = generate_payment_id()
         await create_payment(payment_id, user_id, amount, method)
+
+        payment_url = None
+        if method == 'crypto':
+            payment_url = f"https://t.me/CryptoBot?start={payment_id}"
+        elif method == 'cryptomus' and settings.CRYPTOMUS_LINK:
+            base = settings.CRYPTOMUS_LINK.rstrip('/')
+            payment_url = f"{base}?amount={amount}&order_id={payment_id}"
+
         return web.json_response({
             'success': True,
             'paymentId': payment_id,
-            'amount': amount
+            'amount': amount,
+            'paymentUrl': payment_url or ''
         })
 
     app.router.add_get('/api/user-data', api_user_data)
     app.router.add_post('/api/buy-subscription', api_buy_subscription)
     app.router.add_post('/api/create-payment', api_create_payment)
 
-    # Telegram webhook
-    async def telegram_webhook(request):
-        try:
-            data = await request.json()
-        except Exception:
-            return web.Response(status=400)
-        update = Update(**data)
-        await dp.feed_update(bot, update)
-        return web.Response(text='OK')
-
-    # Cryptomus webhook
     async def cryptomus_webhook(request):
         try:
-            data = await request.json()
+            raw = await request.json()
         except Exception:
             return web.Response(status=400)
-        amount = float(data.get('amount', 0))
-        txn_id = data.get('txn_id', '')
+
+        if settings.CRYPTOMUS_SECRET_KEY:
+            body_copy = dict(raw)
+            if not verify_cryptomus_signature(body_copy, settings.CRYPTOMUS_SECRET_KEY):
+                log.warning("Cryptomus webhook: invalid signature")
+                return web.Response(status=403)
+
+        amount = float(raw.get('amount', 0))
+        txn_id = raw.get('txn_id', '')
         if not txn_id:
             return web.Response(status=400)
+
         payment = await get_payment(txn_id)
         if not payment:
             return web.Response(status=404)
@@ -142,10 +197,9 @@ def setup_routes(app: web.Application, bot: Bot, dp: Dispatcher):
             return web.Response(text='OK')
         if amount < payment['amount']:
             return web.Response(text='OK')
-        # Mark as completed and add balance
+
         await update_payment_status(txn_id, 'completed')
         await add_balance(payment['user_id'], amount)
-        # Notify user
         try:
             await bot.send_message(
                 payment['user_id'],
@@ -156,10 +210,33 @@ def setup_routes(app: web.Application, bot: Bot, dp: Dispatcher):
             log.error(f"Failed to notify user: {e}")
         return web.Response(text='OK')
 
-    app.router.add_post('/telegram-webhook', telegram_webhook)
-    app.router.add_post('/cryptomus-webhook', cryptomus_webhook)
+    async def cryptobot_webhook(request):
+        try:
+            raw = await request.json()
+        except Exception:
+            return web.Response(status=400)
 
-    # Serve privacy and terms pages (extensionless)
+        update = raw.get('payload', {})
+        status = update.get('status', '')
+        payload_id = update.get('payload', '')
+        if status == 'active' and payload_id:
+            payment = await get_payment(payload_id)
+            if payment and payment['status'] == 'pending':
+                amount = float(update.get('amount', payment['amount']))
+                await update_payment_status(payload_id, 'completed')
+                await add_balance(payment['user_id'], amount)
+                try:
+                    await bot.send_message(
+                        payment['user_id'],
+                        f"💰 Баланс пополнен через CryptoBot!\nСумма: {amount} USD\nСтатус: Успешно",
+                    )
+                except Exception as e:
+                    log.error(f"Failed to notify user: {e}")
+        return web.Response(text='OK')
+
+    app.router.add_post('/cryptomus-webhook', cryptomus_webhook)
+    app.router.add_post('/cryptobot-webhook', cryptobot_webhook)
+
     async def serve_privacy(request):
         try:
             with open('web/static/privacy.html', 'rb') as f:
@@ -179,10 +256,8 @@ def setup_routes(app: web.Application, bot: Bot, dp: Dispatcher):
     app.router.add_get('/privacy', serve_privacy)
     app.router.add_get('/terms', serve_terms)
 
-    # Serve static files (must be last)
     async def serve_static(request):
         filename = request.match_info.get('filename', 'index.html')
-        # Basic security
         if '..' in filename or '/' in filename:
             raise web.HTTPNotFound()
         try:

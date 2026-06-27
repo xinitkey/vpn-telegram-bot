@@ -6,7 +6,7 @@ from aiogram.webhook.aiohttp_server import SimpleRequestHandler, setup_applicati
 from bot.handlers import register_router
 from web.routes import setup_routes
 from config import settings
-from services.db import init_db
+from services.db import init_db, close_db
 
 logging.basicConfig(
     level=logging.INFO,
@@ -14,37 +14,50 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+_REQUIRED_ENV = [
+    ('TELEGRAM_BOT_TOKEN', 'TELEGRAM_BOT_TOKEN'),
+    ('XUI_URL', 'XUI_URL'),
+    ('XUI_API_TOKEN', 'XUI_API_TOKEN'),
+    ('XUI_INBOUND_ID', 'XUI_INBOUND_ID'),
+    ('BASE_URL', 'BASE_URL'),
+]
+
+def _validate_settings():
+    missing = []
+    for name, attr in _REQUIRED_ENV:
+        if not getattr(settings, attr, None):
+            missing.append(name)
+    if missing:
+        logger.warning("Missing required env vars: %s", ', '.join(missing))
+
 async def on_startup(bot: Bot):
     await bot.delete_webhook(drop_pending_updates=True)
-    # Initialize database
     await init_db()
-    # Set webhook (if using webhook mode)
     webhook_url = f"{settings.BASE_URL}/telegram-webhook"
     await bot.set_webhook(webhook_url)
-    logger.info(f"Webhook set to {webhook_url}")
+    logger.info("Webhook set to %s", webhook_url)
 
 def main():
+    _validate_settings()
     bot = Bot(token=settings.TELEGRAM_BOT_TOKEN)
     dp = Dispatcher()
-    # Register routers/handlers
     register_router(dp)
 
-    # Create aiohttp application for serving static files and API routes
     app = web.Application()
     setup_routes(app, bot, dp)
 
-    # Setup aiogram webhook handler
+    async def on_shutdown(_app):
+        await close_db()
+
+    app.on_shutdown.append(on_shutdown)
+
     webhook_requests_handler = SimpleRequestHandler(dispatcher=dp, bot=bot)
     webhook_requests_handler.register(app, path='/telegram-webhook')
 
-    # Optional admin bot webhook (if separate token)
     if settings.ADMIN_BOT_TOKEN:
         from aiogram import Bot as AdminBot
         admin_bot = AdminBot(token=settings.ADMIN_BOT_TOKEN)
-        # For simplicity we can reuse same dispatcher but filter by admin ID via middleware
-        # We'll skip for now.
 
-    # Start web server
     web.run_app(app, host=settings.HOST, port=settings.PORT)
 
 if __name__ == '__main__':

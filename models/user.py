@@ -6,8 +6,7 @@ from typing import Optional
 class User:
     user_id: int
     balance: float = 0.0
-    subscription: Optional[int] = None  # timestamp in milliseconds
-    vpn_key: str = ''
+    subscription: Optional[int] = None
     xui_uuid: str = ''
     xui_email: str = ''
     link: str = ''

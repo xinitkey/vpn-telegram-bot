@@ -3,6 +3,7 @@ tg.expand();
 tg.setHeaderColor('#1f0303');
 
 const userId = tg.initDataUnsafe?.user?.id;
+const initData = tg.initData || '';
 const userRaw = tg.initDataUnsafe?.user;
 const workerUrl = window.location.origin;
 
@@ -27,7 +28,9 @@ if (userRaw) {
 async function loadUserData() {
     if (!userId) return;
     try {
-        const response = await fetch(workerUrl + "/api/user-data?userId=" + userId);
+        const response = await fetch(workerUrl + "/api/user-data?userId=" + userId, {
+            headers: { "X-Init-Data": initData }
+        });
         if (response.ok) {
             globalUserData = await response.json();
             document.getElementById('balance-display').innerText = globalUserData.balance + " ₽";
@@ -101,7 +104,7 @@ function buyDaysModal() {
                 const res = await fetch(workerUrl + "/api/buy-subscription", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ userId, days: 1 })
+                    body: JSON.stringify({ userId, days: 1, initData })
                 });
                 if (res.ok) {
                     tg.HapticFeedback.notificationOccurred('success');
@@ -179,20 +182,18 @@ async function confirmTopUp() {
         const response = await fetch(workerUrl + "/api/create-payment", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ userId, amount: selectedAmount, method: selectedMethod })
+            body: JSON.stringify({ userId, amount: selectedAmount, method: selectedMethod, initData })
         });
 
         if (response.ok) {
             const data = await response.json();
             closeTopUpModal();
 
-            if (data.paymentUrl) {
-                if (selectedMethod === 'stars') {
-                    tg.sendData(JSON.stringify({ action: "create_payment", amount: selectedAmount, method: selectedMethod }));
-                    tg.close();
-                } else {
-                    tg.openLink(data.paymentUrl);
-                }
+            if (selectedMethod === 'stars') {
+                tg.sendData(JSON.stringify({ action: "create_payment", amount: selectedAmount, method: selectedMethod }));
+                tg.close();
+            } else if (data.paymentUrl) {
+                tg.openLink(data.paymentUrl);
             }
         } else {
             tg.showAlert("Не удалось сформировать счет на оплату.");
@@ -272,7 +273,7 @@ async function confirmTariffPurchase() {
         const res = await fetch(workerUrl + "/api/buy-subscription", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ userId, days: selectedTariffDays, price: selectedTariffPrice })
+            body: JSON.stringify({ userId, days: selectedTariffDays, price: selectedTariffPrice, initData })
         });
 
         if (res.ok) {
