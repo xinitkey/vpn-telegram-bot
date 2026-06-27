@@ -11,6 +11,10 @@ const tg = window.Telegram?.WebApp || {
     HapticFeedback: { impactOccurred: () => {}, notificationOccurred: () => {} },
     ready: () => {}
 };
+const isBrowser = !window.Telegram?.WebApp;
+if (isBrowser) {
+    document.getElementById('dev-notice').style.display = 'block';
+}
 if (window.Telegram?.WebApp) {
     tg.expand();
     tg.setHeaderColor('#1f0303');

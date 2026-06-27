@@ -4,6 +4,8 @@ body {
     background: linear-gradient(135deg, #1f0303 0%, #420606 50%, #7f1d1d 100%);
     color: #ffffff; min-height: 100vh; padding-bottom: 90px;
 }
+.dev-notice { display: none; background: #222; color: #aaa; text-align: center; padding: 6px; font-size: 12px; }
+.dev-notice a { color: #ef4444; text-decoration: none; font-weight: 600; }
 .header { display: flex; justify-content: space-between; align-items: center; padding: 20px; }
 .logo { font-size: 24px; font-weight: 800; font-style: italic; }
 .logo span { color: #ef4444; }
