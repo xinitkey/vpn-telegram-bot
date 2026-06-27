@@ -37,19 +37,19 @@ async def on_startup(bot: Bot):
     await bot.set_webhook(webhook_url)
     logger.info("Webhook set to %s", webhook_url)
 
+async def on_shutdown(bot: Bot):
+    await close_db()
+
 def main():
     _validate_settings()
     bot = Bot(token=settings.TELEGRAM_BOT_TOKEN)
     dp = Dispatcher()
+    dp.startup.register(on_startup)
+    dp.shutdown.register(on_shutdown)
     register_router(dp)
 
     app = web.Application()
     setup_routes(app, bot, dp)
-
-    async def on_shutdown(_app):
-        await close_db()
-
-    app.on_shutdown.append(on_shutdown)
 
     webhook_requests_handler = SimpleRequestHandler(dispatcher=dp, bot=bot)
     webhook_requests_handler.register(app, path='/telegram-webhook')
