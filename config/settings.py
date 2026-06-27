@@ -17,7 +17,6 @@ XUI_USERNAME = os.getenv('XUI_USERNAME', 'admin')
 XUI_PASSWORD = os.getenv('XUI_PASSWORD')
 XUI_INBOUND_ID = int(os.getenv('XUI_INBOUND_ID', '0')) if os.getenv('XUI_INBOUND_ID') else None
 XUI_SERVER = os.getenv('XUI_SERVER')  # optional
-XUI_SUB_PATH = os.getenv('XUI_SUB_PATH', '/use_happ/')
 
 # Database
 DB_URL = os.getenv('DB_URL', 'sqlite+aiosqlite:///./data/bot.db')
@@ -51,7 +50,6 @@ class Settings:
     XUI_PASSWORD = XUI_PASSWORD
     XUI_INBOUND_ID = XUI_INBOUND_ID
     XUI_SERVER = XUI_SERVER
-    XUI_SUB_PATH = XUI_SUB_PATH
     DB_URL = DB_URL
     CRYPTOMUS_LINK = CRYPTOMUS_LINK
     CRYPTOMUS_MERCHANT_ID = CRYPTOMUS_MERCHANT_ID

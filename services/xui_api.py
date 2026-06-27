@@ -14,6 +14,10 @@ _inbound_cache: Optional[dict] = None
 _inbound_cache_ts: float = 0
 _INBOUND_CACHE_TTL = 300
 
+_sub_settings_cache: Optional[dict] = None
+_sub_settings_cache_ts: float = 0
+_SUB_SETTINGS_CACHE_TTL = 300
+
 _session_cookies: Optional[dict] = None
 _csrf_token: Optional[str] = None
 _session_lock = asyncio.Lock()
@@ -220,7 +224,27 @@ async def get_inbound_info(inbound_id: int) -> dict:
     return data
 
 
+async def _get_sub_settings() -> dict:
+    global _sub_settings_cache, _sub_settings_cache_ts
+    now = time.time()
+    if _sub_settings_cache is not None and (now - _sub_settings_cache_ts) < _SUB_SETTINGS_CACHE_TTL:
+        return _sub_settings_cache
+    try:
+        data = await _request("GET", "/panel/api/settings")
+        if data:
+            _sub_settings_cache = data
+            _sub_settings_cache_ts = now
+        return data
+    except Exception as e:
+        logger.warning(f"Failed to get panel settings: {e}")
+        return _sub_settings_cache or {}
+
+
 async def _build_link(uuid: str, email: str, sub_id: str) -> str:
+    sub_settings = await _get_sub_settings()
+    sub_url = (sub_settings.get("subURL") or "").rstrip('/')
+    sub_path = (sub_settings.get("subPath") or "/use_happ/").strip('/')
+    if sub_url:
+        return f"{sub_url}{sub_id}"
     base = settings.XUI_URL.rstrip('/')
-    sub_path = settings.XUI_SUB_PATH.strip('/')
     return f"{base}/{sub_path}{sub_id}"
