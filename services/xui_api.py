@@ -243,8 +243,8 @@ async def _get_sub_settings() -> dict:
 async def _build_link(uuid: str, email: str, sub_id: str) -> str:
     sub_settings = await _get_sub_settings()
     sub_url = (sub_settings.get("subURL") or "").rstrip('/')
-    sub_path = (sub_settings.get("subPath") or "/use_happ/").strip('/')
     if sub_url:
-        return f"{sub_url}{sub_id}"
-    base = settings.XUI_URL.rstrip('/')
-    return f"{base}/{sub_path}{sub_id}"
+        return f"{sub_url}/{sub_id}"
+    sub_path = (sub_settings.get("subPath") or "/use_happ/").strip('/')
+    base = (settings.XUI_SUB_URL or settings.XUI_URL).rstrip('/')
+    return f"{base}/{sub_path}/{sub_id}"
