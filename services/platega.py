@@ -22,7 +22,6 @@ async def create_transaction(
         "Accept": "application/json",
     }
     body = {
-        "paymentMethod": settings.PLATEGA_PAYMENT_METHOD,
         "id": str(uuid.uuid4()),
         "paymentDetails": {
             "amount": amount,
@@ -31,6 +30,8 @@ async def create_transaction(
         "description": description,
         "payload": payment_id,
     }
+    if settings.PLATEGA_PAYMENT_METHOD:
+        body["paymentMethod"] = settings.PLATEGA_PAYMENT_METHOD
     if return_url:
         body["returnUrl"] = return_url
     if failed_url:
