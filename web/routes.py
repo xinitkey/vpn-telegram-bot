@@ -2,6 +2,8 @@ from aiohttp import web
 import json
 import logging
 import time
+import hmac
+import hashlib
 from collections import defaultdict
 from aiogram import Bot, Dispatcher
 from services.db import (
@@ -248,8 +250,66 @@ def setup_routes(app: web.Application, bot: Bot, dp: Dispatcher):
     app.router.add_post('/api/create-payment', api_create_payment)
 
     async def platega_webhook(request):
+        # Rate-limit webhook (10 requests/minute/IP)
+        ip = request.remote or 'unknown'
+        now = time.time()
+        wh_window = _rate_store[f'wh_{ip}']
+        while wh_window and wh_window[0] < now - 60:
+            wh_window.pop(0)
+        if len(wh_window) >= 10:
+            log.warning(f"Platega webhook rate limit exceeded from {ip}")
+            return web.Response(status=429)
+        wh_window.append(now)
+
+        # Token verification
+        if settings.PLATEGA_WEBHOOK_TOKEN:
+            token = request.query.get('token', '')
+            if not hmac.compare_digest(token, settings.PLATEGA_WEBHOOK_TOKEN):
+                log.error(f"Platega webhook invalid token from {ip}")
+                return web.Response(status=403)
+
+        body_bytes = await request.read()
+        if not body_bytes:
+            log.warning(f"Platega webhook empty body from {ip}")
+            return web.Response(status=400)
+
+        if settings.PLATEGA_WEBHOOK_VERIFY and settings.PLATEGA_WEBHOOK_SECRET:
+            sig_header = (
+                request.headers.get('X-Signature', '')
+                or request.headers.get('X-Webhook-Signature', '')
+                or request.headers.get('Webhook-Signature', '')
+                or ''
+            )
+            if not sig_header:
+                log.warning("Platega webhook missing signature header (X-Signature / X-Webhook-Signature / Webhook-Signature)")
+                return web.Response(status=400)
+
+            expected = hmac.new(
+                settings.PLATEGA_WEBHOOK_SECRET.encode(),
+                body_bytes,
+                hashlib.sha256,
+            ).hexdigest()
+
+            # Try hex match first, then base64
+            match = hmac.compare_digest(expected, sig_header)
+            if not match:
+                try:
+                    expected_b64 = hmac.new(
+                        settings.PLATEGA_WEBHOOK_SECRET.encode(),
+                        body_bytes,
+                        hashlib.sha256,
+                    ).digest()
+                    import base64
+                    match = hmac.compare_digest(base64.b64encode(expected_b64).decode(), sig_header)
+                except Exception:
+                    pass
+
+            if not match:
+                log.error("Platega webhook signature verification failed")
+                return web.Response(status=400)
+
         try:
-            raw = await request.json()
+            raw = json.loads(body_bytes)
         except Exception:
             return web.Response(status=400)
 
@@ -258,7 +318,11 @@ def setup_routes(app: web.Application, bot: Bot, dp: Dispatcher):
         if status == "CONFIRMED" and payload_id:
             payment = await get_payment(payload_id)
             if payment and payment['status'] == 'pending':
-                amount = float(raw.get("paymentDetails", {}).get("amount", payment['amount']))
+                wh_amount = float(raw.get("paymentDetails", {}).get("amount", 0))
+                if wh_amount and abs(wh_amount - payment['amount']) > 0.01:
+                    log.error(f"Platega amount mismatch for {payload_id}: expected {payment['amount']}, got {wh_amount}")
+                    return web.Response(status=400)
+                amount = wh_amount or payment['amount']
                 await update_payment_status(payload_id, 'completed')
                 await add_balance(payment['user_id'], amount)
                 try:
