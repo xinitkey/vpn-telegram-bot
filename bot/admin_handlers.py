@@ -6,7 +6,8 @@ from config import settings
 from services.db import (
     get_user, get_all_users, get_user_count, get_active_sub_count,
     get_total_balance, get_payments_count, add_balance, set_subscription,
-    update_vpn_info, create_user, get_recent_payments, get_all_completed_payments, get_revenue,
+    update_vpn_info, create_user, get_recent_payments, get_all_completed_payments,
+    get_user_payments, get_revenue,
     get_users_by_id_or_email, get_banned_count, get_trial_used_count,
     update_user, create_promocode, delete_promocode, get_all_promocodes,
     reset_trial, wipe_user,
@@ -52,6 +53,7 @@ async def cmd_admin(message: Message):
         "/stats — статистика\n"
         "/users [страница] — список пользователей\n"
         "/find <code>id</code> — информация о пользователе\n"
+        "/history <code>id</code> — история платежей пользователя\n"
         "/search <code>запрос</code> — поиск по ID или email\n"
         "/admins — список администраторов\n\n"
         "<b>Управление:</b>\n"
@@ -163,6 +165,44 @@ async def cmd_find(message: Message, command: CommandObject):
         f"Email: <code>{user.xui_email or 'нет'}</code>",
         parse_mode='HTML'
     )
+
+
+@router.message(Command("history"))
+async def cmd_history(message: Message, command: CommandObject):
+    if not is_admin(message.from_user.id):
+        await message.answer(_NOT_ADMIN_MSG)
+        return
+    args = command.args
+    if not args or not args.strip().isdigit():
+        await message.answer("Формат: /history <code>user_id</code>", parse_mode='HTML')
+        return
+    user_id = int(args.strip())
+    user = await get_user(user_id)
+    payments = await get_user_payments(user_id)
+    if not payments:
+        name = f"Пользователь <code>{user_id}</code>" if user else f"Неизвестный <code>{user_id}</code>"
+        await message.answer(f"{name} — платежей нет.", parse_mode='HTML')
+        return
+    total = sum(p['amount'] for p in payments)
+    completed = sum(1 for p in payments if p['status'] == 'completed')
+    pending = sum(1 for p in payments if p['status'] == 'pending')
+    lines = [
+        f"<b>Платежи пользователя {user_id}</b>\n",
+        f"Всего: <code>{len(payments)}</code> | "
+        f"Успешно: <code>{completed}</code> | "
+        f"В ожидании: <code>{pending}</code>",
+        f"Сумма успешных: <code>{total:.0f} ₽</code>\n",
+    ]
+    for p in payments:
+        ts = time.strftime('%d.%m.%Y %H:%M', time.localtime(p['created_at']))
+        emoji = {'completed': '✅', 'pending': '⏳', 'expired': '❌'}.get(p['status'], '❓')
+        lines.append(
+            f"{emoji} <code>{p['payment_id'][:24]:24}</code> "
+            f"{p['amount']:>6.0f}₽ "
+            f"{p['method'] or '?':12} "
+            f"{ts}"
+        )
+    await message.answer("\n".join(lines), parse_mode='HTML')
 
 
 @router.message(Command("search"))
