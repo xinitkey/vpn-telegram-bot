@@ -354,6 +354,21 @@ async def reset_trial(user_id: int = None):
         await db.commit()
 
 
+async def wipe_user(user_id: int):
+    async with _db_lock:
+        db = await _get_db()
+        await db.execute('DELETE FROM payments WHERE user_id = ?', (user_id,))
+        await db.execute('DELETE FROM referral_rewards WHERE referrer_id = ? OR referred_id = ?', (user_id, user_id))
+        await db.execute(
+            '''UPDATE users SET balance = 0, subscription = 0, subscription_start = 0,
+               xui_uuid = '', xui_email = '', link = '', trial_used = 0,
+               banned = 0, xui_inbound_id = 0, referral_code = '', referred_by = NULL,
+               referral_earnings = 0 WHERE user_id = ?''',
+            (user_id,)
+        )
+        await db.commit()
+
+
 def _user_from_row(row) -> User:
     return User(
         user_id=row['user_id'],

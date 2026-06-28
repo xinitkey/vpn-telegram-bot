@@ -9,7 +9,7 @@ from services.db import (
     update_vpn_info, create_user, get_recent_payments, get_revenue,
     get_users_by_id_or_email, get_banned_count, get_trial_used_count,
     update_user, create_promocode, delete_promocode, get_all_promocodes,
-    reset_trial,
+    reset_trial, wipe_user,
 )
 from services.xui_api import add_client as xui_add_client, update_client_expiry as xui_update_expiry, build_link_for_email as xui_build_link_for_email
 import time
@@ -56,6 +56,7 @@ async def cmd_admin(message: Message):
         "/give <code>id дней</code> — выдать подписку\n"
         "/giveall <code>дни</code> — добавить дни всем\n"
         "/reset <code>id</code> — сбросить подписку\n"
+        "/wipe <code>id</code> — полностью стереть пользователя\n"
         "/resettrial <code>id</code> — обнулить триал\n"
         "/resettrial all — обнулить триал всем\n"
         "/ban <code>id</code> — заблокировать\n"
@@ -290,6 +291,33 @@ async def cmd_reset_sub(message: Message, command: CommandObject):
     await update_user(user)
     await message.answer(
         f"Подписка пользователя <code>{user_id}</code> сброшена.",
+        parse_mode='HTML'
+    )
+
+
+@router.message(Command("wipe"))
+async def cmd_wipe(message: Message, command: CommandObject):
+    if not is_admin(message.from_user.id):
+        return
+    args = command.args
+    if not args or not args.strip().isdigit():
+        await message.answer("Формат: /wipe <code>user_id</code>", parse_mode='HTML')
+        return
+    user_id = int(args.strip())
+    user = await get_user(user_id)
+    if user is None:
+        await message.answer(f"Пользователь <code>{user_id}</code> не найден.", parse_mode='HTML')
+        return
+    if user.xui_email:
+        try:
+            from services.xui_api import remove_client
+            await remove_client(user.xui_email)
+        except Exception as e:
+            logger.warning(f"Failed to remove XUI client on wipe for {user_id}: {e}")
+    await wipe_user(user_id)
+    await message.answer(
+        f"Пользователь <code>{user_id}</code> полностью стёрт.\n"
+        f"Баланс, подписка, платежи, рефералы — удалены.",
         parse_mode='HTML'
     )
 
