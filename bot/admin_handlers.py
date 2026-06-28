@@ -280,6 +280,15 @@ async def cmd_reset_sub(message: Message, command: CommandObject):
     user.subscription = 0
     user.subscription_start = 0
     user.trial_used = False
+    if user.xui_email:
+        try:
+            from services.xui_api import remove_client
+            await remove_client(user.xui_email)
+        except Exception as e:
+            logger.warning(f"Failed to remove XUI client on reset for {user_id}: {e}")
+        user.xui_email = ''
+        user.xui_uuid = ''
+        user.link = ''
     await update_user(user)
     await message.answer(
         f"Подписка пользователя <code>{user_id}</code> сброшена.",
