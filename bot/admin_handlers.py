@@ -301,9 +301,19 @@ async def cmd_ban(message: Message, command: CommandObject):
         await message.answer(f"Пользователь <code>{user_id}</code> не найден.", parse_mode='HTML')
         return
     user.banned = True
+    # Revoke VPN key
+    if user.xui_email:
+        try:
+            from services.xui_api import remove_client
+            await remove_client(user.xui_email)
+        except Exception as e:
+            logger.warning(f"Failed to remove XUI client for {user_id}: {e}")
+    user.xui_email = ''
+    user.xui_uuid = ''
+    user.link = ''
     await update_user(user)
     await message.answer(
-        f"Пользователь <code>{user_id}</code> заблокирован.",
+        f"Пользователь <code>{user_id}</code> заблокирован. Ключ отозван.",
         parse_mode='HTML'
     )
 
@@ -322,9 +332,29 @@ async def cmd_unban(message: Message, command: CommandObject):
         await message.answer(f"Пользователь <code>{user_id}</code> не найден.", parse_mode='HTML')
         return
     user.banned = False
+    # Re-create VPN key if there's an active subscription
+    now_ms = int(time.time() * 1000)
+    if user.subscription and user.subscription > now_ms and settings.XUI_URL and settings.XUI_PASSWORD:
+        email = f'user_{user_id}'
+        total_days = max(1, (user.subscription - now_ms) // 86400000)
+        try:
+            from services.xui_api import add_client, build_link_for_email, remove_client
+            if user.xui_email:
+                try:
+                    await remove_client(user.xui_email)
+                except Exception:
+                    pass
+            client = await add_client(email, total_days, user.xui_inbound_id or None)
+            user.xui_uuid = client['uuid']
+            user.xui_email = client['email']
+            user.link = client['link']
+            user.xui_inbound_id = client['inbound_id']
+        except Exception as e:
+            logger.error(f"Failed to recreate XUI client for {user_id}: {e}")
     await update_user(user)
     await message.answer(
-        f"Пользователь <code>{user_id}</code> разблокирован.",
+        f"Пользователь <code>{user_id}</code> разблокирован. Ключ восстановлен." if user.link
+        else f"Пользователь <code>{user_id}</code> разблокирован.",
         parse_mode='HTML'
     )
 

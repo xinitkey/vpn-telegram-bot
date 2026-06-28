@@ -187,7 +187,13 @@ body {
 .promo-error { color: #ef4444; }
 .old-price { text-decoration: line-through; color: #9ca3af; font-size: 16px; margin-right: 6px; }
 .discount-price { color: #22c55e; }
-.banned-overlay { text-align: center; padding: 80px 20px; }
-.banned-icon { font-size: 64px; margin-bottom: 20px; }
-.banned-overlay h2 { font-size: 24px; color: #ef4444; margin-bottom: 10px; }
-.banned-overlay p { color: #9ca3af; font-size: 16px; }
+.banned-overlay {
+    display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.92); z-index: 9999;
+    align-items: center; justify-content: center; flex-direction: column;
+    text-align: center; padding: 20px;
+}
+.banned-overlay.active { display: flex; }
+.banned-icon { font-size: 72px; margin-bottom: 20px; }
+.banned-overlay h2 { font-size: 28px; color: #ef4444; margin-bottom: 12px; }
+.banned-overlay p { color: #9ca3af; font-size: 18px; }
