@@ -39,11 +39,11 @@ async def init_db():
                 link TEXT DEFAULT ''
             )
         ''')
-        for col in ('trial_used', 'subscription_start', 'banned', 'xui_inbound_id', 'referral_code', 'referred_by', 'referral_earnings'):
+        for col in ('trial_used', 'subscription_start', 'banned', 'xui_inbound_id', 'referral_code', 'referred_by', 'referral_earnings', 'telegram_username'):
             try:
-                col_type = 'REAL' if col == 'referral_earnings' else 'INTEGER'
-                col_type = 'TEXT' if col == 'referral_code' else col_type
-                await db.execute(f'ALTER TABLE users ADD COLUMN {col} {col_type} DEFAULT {"0" if col != "referral_code" else "''"}')
+                col_type = 'TEXT' if col in ('referral_code', 'telegram_username') else 'REAL' if col == 'referral_earnings' else 'INTEGER'
+                default = "''" if col in ('referral_code', 'telegram_username') else '0'
+                await db.execute(f'ALTER TABLE users ADD COLUMN {col} {col_type} DEFAULT {default}')
             except Exception:
                 pass
         await db.execute('''
@@ -130,10 +130,10 @@ async def update_user(user: User):
         await db.execute(
             '''UPDATE users SET balance = ?, subscription = ?, xui_uuid = ?, xui_email = ?, link = ?,
                trial_used = ?, subscription_start = ?, banned = ?, xui_inbound_id = ?,
-               referral_code = ?, referred_by = ?, referral_earnings = ? WHERE user_id = ?''',
+               referral_code = ?, referred_by = ?, referral_earnings = ?, telegram_username = ? WHERE user_id = ?''',
             (user.balance, user.subscription, user.xui_uuid, user.xui_email, user.link,
              int(user.trial_used), user.subscription_start, int(user.banned), user.xui_inbound_id,
-             user.referral_code, user.referred_by, user.referral_earnings, user.user_id)
+             user.referral_code, user.referred_by, user.referral_earnings, user.telegram_username, user.user_id)
         )
         await db.commit()
 
@@ -352,9 +352,25 @@ async def get_users_by_id_or_email(query: str) -> list[User]:
                 if r:
                     rows.append(r)
             return [_user_from_row(r) for r in rows]
-        async with db.execute('SELECT * FROM users WHERE xui_email LIKE ?', (f'%{query}%',)) as cur:
+        clean = query.lstrip('@')
+        async with db.execute(
+            'SELECT * FROM users WHERE xui_email LIKE ? OR telegram_username = ?',
+            (f'%{query}%', clean)
+        ) as cur:
             rows = await cur.fetchall()
         return [_user_from_row(r) for r in rows]
+
+
+async def update_telegram_username(user_id: int, username: str | None):
+    if not username:
+        return
+    async with _db_lock:
+        db = await _get_db()
+        await db.execute(
+            'UPDATE users SET telegram_username = ? WHERE user_id = ? AND (telegram_username IS NULL OR telegram_username = \'\' OR telegram_username != ?)',
+            (username, user_id, username)
+        )
+        await db.commit()
 
 
 async def get_banned_count() -> int:
@@ -413,6 +429,7 @@ def _user_from_row(row) -> User:
         referral_code=row['referral_code'] or '',
         referred_by=row['referred_by'] if row['referred_by'] else None,
         referral_earnings=float(row['referral_earnings']),
+        telegram_username=row['telegram_username'] or '',
     )
 
 async def get_referral_stats(user_id: int) -> dict:

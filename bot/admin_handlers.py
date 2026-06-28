@@ -155,6 +155,7 @@ async def cmd_find(message: Message, command: CommandObject):
     await message.answer(
         f"<b>Пользователь {user.user_id}</b>\n\n"
         f"Баланс: <code>{user.balance:.0f} ₽</code>\n"
+        f"Username: @{user.telegram_username or '—'}\n"
         f"Забанен: <code>{ban}</code>\n"
         f"Триал: {'использован' if user.trial_used else 'доступен'}\n"
         f"Подписка: {status}\n"
@@ -212,7 +213,7 @@ async def cmd_search(message: Message, command: CommandObject):
         return
     query = (command.args or "").strip()
     if not query:
-        await message.answer("Формат: /search <code>id или email</code>", parse_mode='HTML')
+        await message.answer("Формат: /search <code>id, email или @username</code>", parse_mode='HTML')
         return
     users = await get_users_by_id_or_email(query)
     if not users:
@@ -223,7 +224,8 @@ async def cmd_search(message: Message, command: CommandObject):
     for u in users:
         status = "+" if u.subscription and u.subscription > now_ms else "-"
         ban = " [x]" if u.banned else ""
-        lines.append(f"{status} <code>{u.user_id}</code> — {u.balance:.0f}₽ — {u.days_left}дн.{ban}")
+        user_str = f"@{u.telegram_username}" if u.telegram_username else str(u.user_id)
+        lines.append(f"{status} <code>{u.user_id:>8}</code> {user_str:20} {u.balance:.0f}₽ {u.days_left}дн.{ban}")
     await message.answer("\n".join(lines), parse_mode='HTML')
 
 
