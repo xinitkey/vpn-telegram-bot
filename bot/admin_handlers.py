@@ -6,7 +6,7 @@ from config import settings
 from services.db import (
     get_user, get_all_users, get_user_count, get_active_sub_count,
     get_total_balance, get_payments_count, add_balance, set_subscription,
-    update_vpn_info, create_user, get_recent_payments, get_revenue,
+    update_vpn_info, create_user, get_recent_payments, get_all_completed_payments, get_revenue,
     get_users_by_id_or_email, get_banned_count, get_trial_used_count,
     update_user, create_promocode, delete_promocode, get_all_promocodes,
     reset_trial, wipe_user,
@@ -67,6 +67,7 @@ async def cmd_admin(message: Message):
         "/notify <code>id текст</code> — личное сообщение\n\n"
         "<b>Платежи и финансы:</b>\n"
         "/payments [количество] — последние платежи\n"
+        "/paymentsall — все успешные платежи (сводка)\n"
         "/revenue — доходы\n\n"
         "<b>Экспорт и система:</b>\n"
         "/export — выгрузить CSV\n"
@@ -449,6 +450,52 @@ async def cmd_payments(message: Message, command: CommandObject):
         ts = time.strftime('%d.%m %H:%M', time.localtime(p['created_at']))
         lines.append(f"{status} <code>{p['user_id']}</code> {p['amount']:.0f}₽ {p['method']} ({ts})")
     await message.answer("\n".join(lines), parse_mode='HTML')
+
+
+@router.message(Command("paymentsall"))
+async def cmd_payments_all(message: Message):
+    if not is_admin(message.from_user.id):
+        await message.answer(_NOT_ADMIN_MSG)
+        return
+    payments = await get_all_completed_payments()
+    if not payments:
+        await message.answer("Успешных платежей нет.", parse_mode='HTML')
+        return
+    total_amount = sum(p['amount'] for p in payments)
+    by_method = {}
+    for p in payments:
+        m = p['method'] or 'unknown'
+        by_method[m] = by_method.get(m, 0) + p['amount']
+    lines = [
+        f"<b>Успешные платежи — {len(payments)} шт.</b>\n",
+        f"На общую сумму: <code>{total_amount:.0f} ₽</code>\n",
+    ]
+    if len(by_method) > 1:
+        lines.append("По методам:")
+        for method, total in sorted(by_method.items(), key=lambda x: -x[1]):
+            lines.append(f"  {method}: <code>{total:.0f} ₽</code>")
+    lines.append("")
+    for p in payments:
+        ts = time.strftime('%d.%m.%Y %H:%M', time.localtime(p.get('completed_at') or p['created_at']))
+        user_bal = p.get('user_balance', 0) or 0
+        lines.append(
+            f"<code>{p['payment_id'][:20]:20}</code> "
+            f"<code>{p['user_id']:>8}</code> "
+            f"{p['amount']:>6.0f}₽ "
+            f"{p['method'] or '?':12} "
+            f"{ts}"
+        )
+    if len(lines) > 50:
+        text = "\n".join(lines)
+        import io
+        buf = io.StringIO(text)
+        from aiogram.types import BufferedInputFile
+        await message.answer_document(
+            BufferedInputFile(buf.getvalue().encode('utf-8-sig'), filename=f"payments_{int(time.time())}.txt"),
+            caption=f"Успешные платежи: {len(payments)} шт., {total_amount:.0f} ₽"
+        )
+    else:
+        await message.answer("\n".join(lines), parse_mode='HTML')
 
 
 @router.message(Command("revenue"))

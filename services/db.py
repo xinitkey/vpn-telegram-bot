@@ -309,6 +309,19 @@ async def get_recent_payments(limit: int = 20) -> list[dict]:
             return [dict(r) for r in await cur.fetchall()]
 
 
+async def get_all_completed_payments() -> list[dict]:
+    async with _db_lock:
+        db = await _get_db()
+        async with db.execute(
+            '''SELECT p.*, u.balance as user_balance
+               FROM payments p
+               LEFT JOIN users u ON p.user_id = u.user_id
+               WHERE p.status = 'completed'
+               ORDER BY p.completed_at DESC'''
+        ) as cur:
+            return [dict(r) for r in await cur.fetchall()]
+
+
 async def get_revenue() -> dict:
     async with _db_lock:
         db = await _get_db()
