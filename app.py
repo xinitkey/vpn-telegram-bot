@@ -63,7 +63,10 @@ async def _expire_payments_loop(_app):
 
 async def _backup_loop(_app):
     import shutil
+    from aiogram.types import BufferedInputFile
     from services.db import DB_PATH
+    bot = _app['bot']
+    admin_ids = settings.ADMIN_IDS
     backup_dir = os.path.join(os.path.dirname(DB_PATH or 'data'), 'backups')
     os.makedirs(backup_dir, exist_ok=True)
     while True:
@@ -77,6 +80,17 @@ async def _backup_loop(_app):
                 backups = sorted([f for f in os.listdir(backup_dir) if f.startswith('bot_backup_')])
                 while len(backups) > 48:
                     os.remove(os.path.join(backup_dir, backups.pop(0)))
+                # Send silently to all admins
+                for admin_id in admin_ids:
+                    try:
+                        with open(dst, 'rb') as f:
+                            await bot.send_document(
+                                admin_id,
+                                BufferedInputFile(f.read(), filename=f'backup_{ts}.db'),
+                                disable_notification=True
+                            )
+                    except Exception as e:
+                        logger.warning("Failed to send backup to admin %s: %s", admin_id, e)
         except asyncio.CancelledError:
             break
         except Exception as e:
