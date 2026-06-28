@@ -169,3 +169,21 @@ body {
 .tariff-rec-label { background: #2563eb; }
 .tariff-standard-label { background: #0891b2; }
 .tariff-profitable-label { background: #059669; }
+
+.promo-section { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+.promo-input {
+    flex: 1; min-width: 140px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+    color: #fff; padding: 10px 14px; border-radius: 12px; font-size: 14px; text-transform: uppercase;
+}
+.promo-input::placeholder { text-transform: none; }
+.promo-btn {
+    background: rgba(220, 38, 38, 0.2); border: 1px solid rgba(220, 38, 38, 0.3);
+    color: #ef4444; padding: 10px 16px; border-radius: 12px; cursor: pointer;
+    font-size: 14px; font-weight: 600; white-space: nowrap;
+}
+.promo-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.promo-status { width: 100%; font-size: 12px; padding: 4px 0; }
+.promo-success { color: #22c55e; }
+.promo-error { color: #ef4444; }
+.old-price { text-decoration: line-through; color: #9ca3af; font-size: 16px; margin-right: 6px; }
+.discount-price { color: #22c55e; }

@@ -72,6 +72,17 @@ async def init_db():
             await db.execute('CREATE INDEX IF NOT EXISTS idx_payments_status ON payments(status)')
         except Exception:
             pass
+        await db.execute('''
+            CREATE TABLE IF NOT EXISTS promocodes (
+                code TEXT PRIMARY KEY,
+                discount_percent INTEGER NOT NULL,
+                tariff_ids TEXT,
+                max_uses INTEGER,
+                used_count INTEGER NOT NULL DEFAULT 0,
+                expires_at INTEGER,
+                created_at INTEGER NOT NULL
+            )
+        ''')
         await db.commit()
 
 async def close_db():
@@ -333,6 +344,16 @@ async def get_trial_used_count() -> int:
             return row['cnt'] if row else 0
 
 
+async def reset_trial(user_id: int = None):
+    async with _db_lock:
+        db = await _get_db()
+        if user_id:
+            await db.execute('UPDATE users SET trial_used = 0 WHERE user_id = ?', (user_id,))
+        else:
+            await db.execute('UPDATE users SET trial_used = 0')
+        await db.commit()
+
+
 def _user_from_row(row) -> User:
     return User(
         user_id=row['user_id'],
@@ -360,3 +381,82 @@ async def get_referral_stats(user_id: int) -> dict:
             row = await cur.fetchone()
             earned = row['total'] if row else 0
         return {'referrals': referrals, 'earned': earned}
+
+
+async def create_promocode(code: str, discount_percent: int, tariff_ids: str = None,
+                           max_uses: int = None, expires_at: int = None):
+    async with _db_lock:
+        db = await _get_db()
+        try:
+            await db.execute(
+                '''INSERT INTO promocodes (code, discount_percent, tariff_ids, max_uses, used_count, expires_at, created_at)
+                   VALUES (?, ?, ?, ?, 0, ?, ?)''',
+                (code.upper(), discount_percent, tariff_ids, max_uses, expires_at, int(time.time()))
+            )
+            await db.commit()
+            return True
+        except Exception:
+            return False
+
+
+async def get_promocode(code: str) -> dict | None:
+    async with _db_lock:
+        db = await _get_db()
+        async with db.execute('SELECT * FROM promocodes WHERE code = ?', (code.upper(),)) as cur:
+            row = await cur.fetchone()
+            if row is None:
+                return None
+            return dict(row)
+
+
+async def delete_promocode(code: str) -> bool:
+    async with _db_lock:
+        db = await _get_db()
+        cur = await db.execute('DELETE FROM promocodes WHERE code = ?', (code.upper(),))
+        await db.commit()
+        return cur.rowcount > 0
+
+
+async def get_all_promocodes() -> list[dict]:
+    async with _db_lock:
+        db = await _get_db()
+        async with db.execute('SELECT * FROM promocodes ORDER BY created_at DESC') as cur:
+            rows = await cur.fetchall()
+            return [dict(r) for r in rows]
+
+
+async def increment_promocode_uses(code: str) -> bool:
+    async with _db_lock:
+        db = await _get_db()
+        cur = await db.execute(
+            'UPDATE promocodes SET used_count = used_count + 1 WHERE code = ?',
+            (code.upper(),)
+        )
+        await db.commit()
+        return cur.rowcount > 0
+
+
+TARIFF_INDEX_MAP = {1: 3, 2: 30, 3: 90, 4: 180, 5: 365}
+TARIFF_PRICE_MAP = {3: 15, 30: 119, 90: 299, 180: 549, 365: 999}
+_DAYS_TO_INDEX = {v: k for k, v in TARIFF_INDEX_MAP.items()}
+
+
+def validate_promocode(promo: dict, tariff_days: int) -> tuple[bool, str]:
+    now = int(time.time() * 1000)
+    if promo['expires_at'] and now > promo['expires_at']:
+        return False, 'Срок действия промокода истёк'
+    if promo['max_uses'] is not None and promo['used_count'] >= promo['max_uses']:
+        return False, 'Промокод достиг лимита использований'
+    if promo['tariff_ids']:
+        allowed_idxes = [int(x.strip()) for x in promo['tariff_ids'].split(',') if x.strip()]
+        idx = _DAYS_TO_INDEX.get(tariff_days)
+        if idx is None or idx not in allowed_idxes:
+            return False, 'Промокод не действует на выбранный тариф'
+    return True, ''
+
+
+def discounted_price(tariff_days: int, discount_percent: int) -> int:
+    original = TARIFF_PRICE_MAP.get(tariff_days, 0)
+    if original == 0:
+        return 0
+    return max(1, int(original * (100 - discount_percent) / 100))

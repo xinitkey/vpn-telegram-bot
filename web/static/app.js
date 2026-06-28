@@ -50,7 +50,10 @@ let selectedAmount = 0;
 let selectedMethod = '';
 let selectedTariffDays = 0;
 let selectedTariffPrice = 0;
-let globalUserData = { balance: 0, daysLeft: 0, vpnKey: 'Не создан', dailyPrice: 5 };
+let globalUserData = { balance: 0, daysLeft: 0, vpnKey: 'Не создан', dailyPrice: 5, trialUsed: false };
+let activePromoCode = '';
+let activePromoDiscount = 0;
+let activePromoTariffPrices = {};
 
 if (userRaw) {
     document.getElementById('user-id').innerText = userRaw.id || "Не определен";
@@ -84,6 +87,19 @@ async function loadUserData() {
                 document.getElementById('ref-count').innerText = globalUserData.referralCount || 0;
                 document.getElementById('ref-earned').innerText = (globalUserData.referralEarnings || 0) + " ₽";
                 window._referralUrl = globalUserData.referralUrl;
+            }
+            // Trial status — update 3-day tariff pricing
+            const trialOpt = document.querySelector('.tariff-option[data-days="3"]');
+            if (globalUserData.trialUsed) {
+                trialOpt.setAttribute('onclick', "selectTariff(3, 15)");
+                trialOpt.setAttribute('data-price', '15');
+                trialOpt.querySelector('.tariff-price').innerHTML = '15 &#x20BD;';
+                trialOpt.querySelector('.tariff-perday').innerText = '5 &#x20BD;/день';
+            } else {
+                trialOpt.setAttribute('onclick', "selectTariff(3, 0)");
+                trialOpt.setAttribute('data-price', '0');
+                trialOpt.querySelector('.tariff-price').innerHTML = '0 &#x20BD;';
+                trialOpt.querySelector('.tariff-perday').innerText = 'Бесплатно';
             }
         }
     } catch (e) { console.error(e); }
@@ -322,6 +338,114 @@ function openTariffsModal() {
     document.querySelectorAll('.tariff-option').forEach(b => b.classList.remove('active'));
     document.getElementById('btn-confirm-tariff').disabled = true;
     document.getElementById('btn-confirm-tariff').innerText = 'Выберите тариф';
+    document.getElementById('promo-input').value = '';
+    document.getElementById('promo-status').innerHTML = '';
+    document.getElementById('promo-status').className = 'promo-status';
+    document.getElementById('promo-btn').disabled = false;
+    if (activePromoCode) {
+        document.getElementById('promo-input').value = activePromoCode;
+        applyPromoCode(true);
+    }
+}
+
+function onPromoInput() {
+    const status = document.getElementById('promo-status');
+    status.innerHTML = '';
+    status.className = 'promo-status';
+}
+
+async function applyPromoCode(silent) {
+    const code = document.getElementById('promo-input').value.trim();
+    const btn = document.getElementById('promo-btn');
+    const status = document.getElementById('promo-status');
+    if (!code) {
+        clearPromoCode();
+        return;
+    }
+    if (!silent) tg.HapticFeedback.impactOccurred('light');
+    btn.disabled = true;
+    btn.innerText = 'Проверка...';
+    try {
+        const res = await fetch(workerUrl + '/api/apply-promo', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ code })
+        });
+        const data = await res.json();
+        if (res.ok && data.valid) {
+            activePromoCode = code;
+            activePromoDiscount = data.discountPercent;
+            activePromoTariffPrices = data.tariffPrices || {};
+            status.className = 'promo-status promo-success';
+            status.innerHTML = 'Промокод применён! Скидка ' + data.discountPercent + '%';
+            updateTariffPrices(data);
+        } else {
+            clearPromoCode();
+            status.className = 'promo-status promo-error';
+            status.innerHTML = data.error || 'Промокод недействителен';
+        }
+    } catch {
+        clearPromoCode();
+        status.className = 'promo-status promo-error';
+        status.innerHTML = 'Ошибка проверки промокода';
+    } finally {
+        btn.disabled = false;
+        btn.innerText = 'Применить';
+    }
+}
+
+function clearPromoCode() {
+    activePromoCode = '';
+    activePromoDiscount = 0;
+    activePromoTariffPrices = {};
+    document.querySelectorAll('.tariff-option').forEach(el => {
+        const origPrice = parseInt(el.getAttribute('data-price'));
+        el.querySelector('.tariff-price').innerHTML = origPrice + ' &#x20BD;';
+    });
+}
+
+function updateTariffPrices(data) {
+    const prices = data.tariffPrices || {};
+    document.querySelectorAll('.tariff-option').forEach(el => {
+        const days = parseInt(el.getAttribute('data-days'));
+        const origPrice = parseInt(el.getAttribute('data-price'));
+        const isFreeTrial = days === 3 && !globalUserData.trialUsed;
+        let discountInfo = null;
+        if (!isFreeTrial) {
+            for (const idx in prices) {
+                if (prices[idx].days === days) {
+                    discountInfo = prices[idx];
+                    break;
+                }
+            }
+        }
+        const priceEl = el.querySelector('.tariff-price');
+        if (discountInfo && discountInfo.discounted < origPrice) {
+            priceEl.innerHTML = '<span class="old-price">' + origPrice + ' &#x20BD;</span> <span class="discount-price">' + discountInfo.discounted + ' &#x20BD;</span>';
+        } else {
+            priceEl.innerHTML = origPrice + ' &#x20BD;';
+        }
+    });
+    // Re-select the currently selected tariff to update button text
+    if (selectedTariffDays) {
+        const origPrice = parseInt(document.querySelector('.tariff-option.active')?.getAttribute('data-price') || '0');
+        const days = selectedTariffDays;
+        const isFreeTrial = days === 3 && !globalUserData.trialUsed;
+        let discounted = null;
+        if (!isFreeTrial) {
+            for (const idx in prices) {
+                if (prices[idx].days === days) {
+                    discounted = prices[idx].discounted;
+                    break;
+                }
+            }
+        }
+        if (discounted !== null && discounted < origPrice) {
+            selectedTariffPrice = discounted;
+            const btn = document.getElementById('btn-confirm-tariff');
+            btn.innerText = 'Купить за ' + discounted + ' &#x20BD;';
+        }
+    }
 }
 
 function closeTariffsModal() {
@@ -330,17 +454,27 @@ function closeTariffsModal() {
 
 function selectTariff(days, price) {
     selectedTariffDays = days;
-    selectedTariffPrice = price;
+    // Check if promo discount applies (skip for free trial)
+    let finalPrice = price;
+    const isFreeTrial = days === 3 && !globalUserData.trialUsed;
+    if (activePromoCode && activePromoDiscount > 0 && !isFreeTrial) {
+        for (const idx in activePromoTariffPrices) {
+            if (activePromoTariffPrices[idx].days === days) {
+                finalPrice = activePromoTariffPrices[idx].discounted;
+                break;
+            }
+        }
+    }
+    selectedTariffPrice = finalPrice;
     document.querySelectorAll('.tariff-option').forEach(b => b.classList.remove('active'));
-    // Find and highlight the clicked option
     document.querySelectorAll('.tariff-option').forEach(b => {
-        if (parseInt(b.getAttribute('onclick').match(/selectTariff\((\d+)/)?.[1]) === days) {
+        if (parseInt(b.getAttribute('data-days')) === days) {
             b.classList.add('active');
         }
     });
     const btn = document.getElementById('btn-confirm-tariff');
     btn.disabled = false;
-    btn.innerText = price === 0 ? 'Активировать триал' : 'Купить за ' + price + ' ₽';
+    btn.innerText = finalPrice === 0 ? 'Активировать триал' : 'Купить за ' + finalPrice + ' ₽';
 }
 
 async function confirmTariffPurchase() {
@@ -363,11 +497,14 @@ async function confirmTariffPurchase() {
     btn.disabled = true;
     btn.innerText = 'Обработка...';
 
+    const body = { userId, days: selectedTariffDays, price: selectedTariffPrice, initData };
+    if (activePromoCode) body.promoCode = activePromoCode;
+
     try {
         const res = await fetch(workerUrl + "/api/buy-subscription", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ userId, days: selectedTariffDays, price: selectedTariffPrice, initData })
+            body: JSON.stringify(body)
         });
 
         if (res.ok) {

@@ -8,7 +8,8 @@ from services.db import (
     get_total_balance, get_payments_count, add_balance, set_subscription,
     update_vpn_info, create_user, get_recent_payments, get_revenue,
     get_users_by_id_or_email, get_banned_count, get_trial_used_count,
-    update_user
+    update_user, create_promocode, delete_promocode, get_all_promocodes,
+    reset_trial,
 )
 from services.xui_api import add_client as xui_add_client, update_client_expiry as xui_update_expiry, build_link_for_email as xui_build_link_for_email
 import time
@@ -53,7 +54,10 @@ async def cmd_admin(message: Message):
         "<b>Управление:</b>\n"
         "/add <code>id сумма</code> — пополнить баланс\n"
         "/give <code>id дней</code> — выдать подписку\n"
+        "/giveall <code>дни</code> — добавить дни всем\n"
         "/reset <code>id</code> — сбросить подписку\n"
+        "/resettrial <code>id</code> — обнулить триал\n"
+        "/resettrial all — обнулить триал всем\n"
         "/ban <code>id</code> — заблокировать\n"
         "/unban <code>id</code> — разблокировать\n"
         "/notify <code>id текст</code> — личное сообщение\n\n"
@@ -64,6 +68,10 @@ async def cmd_admin(message: Message):
         "/export — выгрузить CSV\n"
         "/backup — скачать БД\n"
         "/xui — статус 3x-UI панели\n\n"
+        "<b>Промокоды:</b>\n"
+        "/addpromo <code>код процент [тарифы] [макс] [дата]</code>\n"
+        "/delpromo <code>код</code>\n"
+        "/promos — список промокодов\n\n"
         "<b>Прочее:</b>\n"
         "/broadcast <code>текст</code> — рассылка всем",
         parse_mode='HTML'
@@ -465,3 +473,165 @@ async def cmd_broadcast(message: Message, command: CommandObject):
         f"Ошибок: <code>{failed}</code>",
         parse_mode='HTML'
     )
+
+
+@router.message(Command("addpromo"))
+async def cmd_addpromo(message: Message, command: CommandObject):
+    if not is_admin(message.from_user.id):
+        return
+    args = (command.args or "").strip().split()
+    if len(args) < 2:
+        await message.answer(
+            "Формат: /addpromo <code>код процент [тарифы] [макс_исп] [дата_до]\n\n"
+            "Примеры:\n"
+            "/addpromo WELCOME20 20 — 20% на все тарифы без ограничений\n"
+            "/addpromo SUMMER 30 2,3,5 100 — 30% на тарифы 2,3,5 на 100 активаций\n"
+            "/addpromo VIP10 10 '' 50 2026-12-31 — 10% на всё, 50 активаций, до 31.12.2026\n\n"
+            "Нумерация тарифов: 1=3д, 2=30д, 3=90д, 4=180д, 5=365д",
+            parse_mode='HTML'
+        )
+        return
+    code = args[0].upper()
+    if not args[1].isdigit():
+        await message.answer("Процент скидки должен быть числом", parse_mode='HTML')
+        return
+    discount = int(args[1])
+    if discount < 1 or discount > 99:
+        await message.answer("Процент скидки от 1 до 99", parse_mode='HTML')
+        return
+    tariff_ids = args[2] if len(args) > 2 and args[2] and args[2].strip("'\"") else None
+    max_uses = int(args[3]) if len(args) > 3 and args[3].isdigit() else None
+    expires_at = None
+    if len(args) > 4 and args[4]:
+        from datetime import datetime
+        try:
+            dt = datetime.strptime(args[4], '%Y-%m-%d')
+            expires_at = int(dt.timestamp() * 1000) + 86400000
+        except ValueError:
+            await message.answer("Неверный формат даты. Используйте ГГГГ-ММ-ДД", parse_mode='HTML')
+            return
+    ok = await create_promocode(code, discount, tariff_ids, max_uses, expires_at)
+    if ok:
+        parts = [f"Промокод <code>{code}</code> создан"]
+        parts.append(f"Скидка: {discount}%")
+        if tariff_ids:
+            parts.append(f"Тарифы: {tariff_ids}")
+        if max_uses:
+            parts.append(f"Макс. активаций: {max_uses}")
+        if expires_at:
+            parts.append(f"Действует до: {args[4]}")
+        await message.answer("\n".join(parts), parse_mode='HTML')
+    else:
+        await message.answer(f"Промокод <code>{code}</code> уже существует", parse_mode='HTML')
+
+
+@router.message(Command("delpromo"))
+async def cmd_delpromo(message: Message, command: CommandObject):
+    if not is_admin(message.from_user.id):
+        return
+    code = (command.args or "").strip().upper()
+    if not code:
+        await message.answer("Формат: /delpromo <code>код</code>", parse_mode='HTML')
+        return
+    ok = await delete_promocode(code)
+    if ok:
+        await message.answer(f"Промокод <code>{code}</code> удалён", parse_mode='HTML')
+    else:
+        await message.answer(f"Промокод <code>{code}</code> не найден", parse_mode='HTML')
+
+
+@router.message(Command("promos"))
+async def cmd_promos(message: Message):
+    if not is_admin(message.from_user.id):
+        return
+    promos = await get_all_promocodes()
+    if not promos:
+        await message.answer("Нет промокодов", parse_mode='HTML')
+        return
+    lines = [f"<b>Промокоды ({len(promos)})</b>\n"]
+    now = int(time.time() * 1000)
+    for p in promos:
+        expired = p['expires_at'] and now > p['expires_at']
+        exhausted = p['max_uses'] is not None and p['used_count'] >= p['max_uses']
+        status = '❌' if expired or exhausted else '✅'
+        active_str = f"{p['used_count']}"
+        if p['max_uses']:
+            active_str += f"/{p['max_uses']}"
+        info = f"{status} <code>{p['code']}</code> — {p['discount_percent']}%"
+        if p['tariff_ids']:
+            info += f" [тарифы {p['tariff_ids']}]"
+        info += f" | {active_str}"
+        if expired:
+            info += " <b>(просрочен)</b>"
+        lines.append(info)
+    await message.answer("\n".join(lines), parse_mode='HTML')
+
+
+@router.message(Command("giveall"))
+async def cmd_giveall(message: Message, command: CommandObject):
+    if not is_admin(message.from_user.id):
+        return
+    args = command.args
+    if not args or not args.strip().isdigit():
+        await message.answer("Формат: /giveall <code>дни</code>", parse_mode='HTML')
+        return
+    days = int(args.strip())
+    users = await get_all_users()
+    done = 0
+    for u in users:
+        try:
+            await set_subscription(u.user_id, days)
+            if settings.XUI_URL and settings.XUI_PASSWORD and (settings.XUI_INBOUND_ID is not None or settings.XUI_INBOUND_IDS):
+                email = f'user_{u.user_id}'
+                now_ms = int(time.time() * 1000)
+                sub = u.subscription or now_ms
+                total_days = max(1, (sub - now_ms) // 86400000) if sub > now_ms else days
+                try:
+                    if u.xui_email:
+                        await xui_update_expiry(u.xui_email, total_days)
+                        link = await xui_build_link_for_email(u.xui_email, u.xui_inbound_id or None)
+                        await update_vpn_info(u.user_id, link=link)
+                    else:
+                        client = await xui_add_client(email, total_days, u.xui_inbound_id or None)
+                        await update_vpn_info(u.user_id, uuid=client['uuid'], email=client['email'], link=client['link'])
+                        upd = await get_user(u.user_id)
+                        if upd:
+                            upd.xui_inbound_id = client['inbound_id']
+                            await update_user(upd)
+                except Exception:
+                    pass
+            done += 1
+        except Exception:
+            pass
+    await message.answer(
+        f"Подписка добавлена <code>{done}/{len(users)}</code> пользователям\n"
+        f"Каждому: +<code>{days}</code> дн.",
+        parse_mode='HTML'
+    )
+    if not is_admin(message.from_user.id):
+        return
+    arg = (command.args or "").strip()
+    if not arg:
+        await message.answer("Формат: /resettrial <code>id</code> или <code>all</code>", parse_mode='HTML')
+        return
+    if arg == 'all':
+        await reset_trial()
+        count = await get_trial_used_count()
+        await message.answer(
+            f"Триал обнулён всем пользователям.\n"
+            f"Теперь использовали триал: <code>{count}</code>",
+            parse_mode='HTML'
+        )
+    elif arg.isdigit():
+        user_id = int(arg)
+        user = await get_user(user_id)
+        if user is None:
+            await message.answer(f"Пользователь <code>{user_id}</code> не найден.", parse_mode='HTML')
+            return
+        await reset_trial(user_id)
+        await message.answer(
+            f"Триал обнулён для <code>{user_id}</code>.",
+            parse_mode='HTML'
+        )
+    else:
+        await message.answer("Формат: /resettrial <code>id</code> или <code>all</code>", parse_mode='HTML')

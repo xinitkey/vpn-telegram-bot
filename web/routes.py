@@ -8,7 +8,9 @@ from collections import defaultdict
 from aiogram import Bot, Dispatcher
 from services.db import (
     get_user, create_user, update_user, add_balance,
-    create_payment, get_payment, update_payment_status
+    create_payment, get_payment, update_payment_status,
+    get_promocode, increment_promocode_uses, validate_promocode,
+    discounted_price, TARIFF_INDEX_MAP, TARIFF_PRICE_MAP,
 )
 from services.xui_api import (
     add_client as xui_add_client,
@@ -92,6 +94,44 @@ def setup_routes(app: web.Application, bot: Bot, dp: Dispatcher):
             'referralUrl': user.referral_url if user else '',
             'referralCount': ref_stats['referrals'],
             'referralEarnings': user.referral_earnings if user else 0,
+            'trialUsed': user.trial_used if user else False,
+        })
+
+    async def api_apply_promo(request):
+        try:
+            raw = await request.json()
+        except Exception:
+            return web.json_response({'error': 'Invalid JSON'}, status=400)
+        code = raw.get('code', '').strip()
+        if not code:
+            return web.json_response({'error': 'Введите промокод'}, status=400)
+        promo = await get_promocode(code)
+        if promo is None:
+            return web.json_response({'error': 'Промокод не найден'}, status=404)
+        now = int(time.time() * 1000)
+        if promo['expires_at'] and now > promo['expires_at']:
+            return web.json_response({'error': 'Срок действия промокода истёк'}, status=400)
+        if promo['max_uses'] is not None and promo['used_count'] >= promo['max_uses']:
+            return web.json_response({'error': 'Промокод исчерпал лимит использований'}, status=400)
+        discount = promo['discount_percent']
+        applicable = []
+        if promo['tariff_ids']:
+            idxes = [int(x.strip()) for x in promo['tariff_ids'].split(',') if x.strip()]
+        else:
+            idxes = list(TARIFF_INDEX_MAP.keys())
+        tariff_prices = {}
+        for idx in idxes:
+            days = TARIFF_INDEX_MAP.get(idx)
+            if days:
+                original = TARIFF_PRICE_MAP.get(days, 0)
+                disc = discounted_price(days, discount)
+                applicable.append(idx)
+                tariff_prices[str(idx)] = {'days': days, 'original': original, 'discounted': disc}
+        return web.json_response({
+            'valid': True,
+            'discountPercent': discount,
+            'applicableTariffs': applicable,
+            'tariffPrices': tariff_prices,
         })
 
     async def api_buy_subscription(request):
@@ -104,6 +144,7 @@ def setup_routes(app: web.Application, bot: Bot, dp: Dispatcher):
         user_id = verified_id or int(raw.get('userId', 0))
         days = int(raw.get('days', 0))
         price = raw.get('price')
+        promo_code = raw.get('promoCode', '').strip()
         if not user_id or days <= 0:
             return web.json_response({'error': 'Invalid data'}, status=400)
         user = await get_user(user_id)
@@ -111,15 +152,23 @@ def setup_routes(app: web.Application, bot: Bot, dp: Dispatcher):
             return web.json_response({'error': 'User not found'}, status=404)
         if user.banned:
             return web.json_response({'error': 'Вы заблокированы'}, status=403)
-        is_trial = days == 3 and (price is None or price == 0)
+        is_trial = days == 3 and (price is None or price == 0) and not user.trial_used
         if is_trial:
-            if user.trial_used:
-                return web.json_response(
-                    {'error': 'Вы уже использовали триал. Купите тариф.'}, status=400
-                )
             total_price = 0
         else:
             total_price = price if price is not None else days * settings.TARIFF_DAILY_PRICE
+            # Apply promo code discount
+            if promo_code:
+                promo = await get_promocode(promo_code)
+                if promo is None:
+                    return web.json_response({'error': 'Промокод не найден'}, status=400)
+                valid, err = validate_promocode(promo, days)
+                if not valid:
+                    return web.json_response({'error': err}, status=400)
+                discounted = discounted_price(days, promo['discount_percent'])
+                if discounted > 0:
+                    total_price = discounted
+                await increment_promocode_uses(promo_code)
             if user.balance < total_price:
                 return web.json_response(
                     {'error': f'Недостаточно средств. Нужно {total_price}₽'}, status=400
@@ -222,6 +271,7 @@ def setup_routes(app: web.Application, bot: Bot, dp: Dispatcher):
         })
 
     app.router.add_get('/api/user-data', api_user_data)
+    app.router.add_post('/api/apply-promo', api_apply_promo)
     app.router.add_post('/api/buy-subscription', api_buy_subscription)
     app.router.add_post('/api/create-payment', api_create_payment)
 

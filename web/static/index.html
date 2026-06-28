@@ -122,9 +122,14 @@
         <div class="modal">
             <button class="modal-close" onclick="closeTariffsModal()">&times;</button>
             <h2>&#x1F4CB; Тарифы</h2>
+            <div class="promo-section">
+                <input type="text" class="promo-input" id="promo-input" placeholder="Введите промокод" oninput="onPromoInput()" maxlength="50">
+                <button class="promo-btn" id="promo-btn" onclick="applyPromoCode()">Применить</button>
+                <div class="promo-status" id="promo-status"></div>
+            </div>
             <div class="tariff-hint">Выберите срок подписки</div>
             <div class="tariff-list">
-                <div class="tariff-option" onclick="selectTariff(3, 0)">
+                <div class="tariff-option" onclick="selectTariff(3, 0)" data-days="3" data-price="0">
                     <div class="tariff-badge">&#x1F4A1;</div>
                     <div class="tariff-info-block">
                         <div class="tariff-days">3 дня</div>
@@ -133,7 +138,7 @@
                     <div class="tariff-price">0 &#x20BD;</div>
                     <div class="tariff-trial-label">Триал</div>
                 </div>
-                <div class="tariff-option tariff-recommended" onclick="selectTariff(30, 119)">
+                <div class="tariff-option tariff-recommended" onclick="selectTariff(30, 119)" data-days="30" data-price="119">
                     <div class="tariff-badge">&#x1F525;</div>
                     <div class="tariff-info-block">
                         <div class="tariff-days">30 дней</div>
@@ -142,7 +147,7 @@
                     <div class="tariff-price">119 &#x20BD;</div>
                     <div class="tariff-rec-label">Базовый</div>
                 </div>
-                <div class="tariff-option" onclick="selectTariff(90, 299)">
+                <div class="tariff-option" onclick="selectTariff(90, 299)" data-days="90" data-price="299">
                     <div class="tariff-badge">&#x1F31F;</div>
                     <div class="tariff-info-block">
                         <div class="tariff-days">90 дней</div>
@@ -151,7 +156,7 @@
                     <div class="tariff-price">299 &#x20BD;</div>
                     <div class="tariff-standard-label">Стандарт</div>
                 </div>
-                <div class="tariff-option" onclick="selectTariff(180, 549)">
+                <div class="tariff-option" onclick="selectTariff(180, 549)" data-days="180" data-price="549">
                     <div class="tariff-badge">&#x1F451;</div>
                     <div class="tariff-info-block">
                         <div class="tariff-days">180 дней</div>
@@ -160,7 +165,7 @@
                     <div class="tariff-price">549 &#x20BD;</div>
                     <div class="tariff-profitable-label">Выгодный</div>
                 </div>
-                <div class="tariff-option tariff-best" onclick="selectTariff(365, 999)">
+                <div class="tariff-option tariff-best" onclick="selectTariff(365, 999)" data-days="365" data-price="999">
                     <div class="tariff-badge">&#x1F31F;</div>
                     <div class="tariff-info-block">
                         <div class="tariff-days">365 дней</div>
