@@ -192,15 +192,17 @@ def setup_routes(app: web.Application, bot: Bot, dp: Dispatcher):
             email = f'user_{user_id}'
             total_days = max(1, (new_sub - now_ms) // 86400000)
             try:
-                if user.xui_email:
-                    await xui_update_expiry(user.xui_email, total_days)
-                    user.link = await xui_build_link_for_email(user.xui_email, user.xui_inbound_id or None)
-                else:
-                    client = await xui_add_client(email, total_days, user.xui_inbound_id or None)
-                    user.xui_uuid = client['uuid']
-                    user.xui_email = client['email']
-                    user.link = client['link']
-                    user.xui_inbound_id = client['inbound_id']
+                # Always remove old client first to prevent expiry accumulation
+                try:
+                    from services.xui_api import remove_client as _remove
+                    await _remove(email)
+                except Exception:
+                    pass
+                client = await xui_add_client(email, total_days, user.xui_inbound_id or None)
+                user.xui_uuid = client['uuid']
+                user.xui_email = client['email']
+                user.link = client['link']
+                user.xui_inbound_id = client['inbound_id']
             except Exception as e:
                 log.error(f"3x-UI error for user {user_id}: {e}")
                 xui_error = str(e)

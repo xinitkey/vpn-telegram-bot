@@ -282,7 +282,8 @@ async def cmd_reset_sub(message: Message, command: CommandObject):
     user.trial_used = False
     if user.xui_email:
         try:
-            from services.xui_api import remove_client
+            from services.xui_api import remove_client, update_client_expiry
+            await update_client_expiry(user.xui_email, 0)
             await remove_client(user.xui_email)
         except Exception as e:
             logger.warning(f"Failed to remove XUI client on reset for {user_id}: {e}")
