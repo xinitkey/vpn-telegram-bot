@@ -196,7 +196,19 @@ async def add_client(email: str, days: int, inbound_id: int | None = None) -> di
         "client": client,
         "inboundIds": ids,
     }
-    await _request("POST", "/panel/api/clients/add", data=payload)
+    try:
+        await _request("POST", "/panel/api/clients/add", data=payload)
+    except RuntimeError as e:
+        err_str = str(e)
+        if "email already in use" in err_str or "already exists" in err_str:
+            logger.warning("Email %s already exists in panel, removing and retrying...", email)
+            try:
+                await _request("POST", f"/panel/api/clients/del/{quote(email)}")
+            except Exception:
+                pass
+            await _request("POST", "/panel/api/clients/add", data=payload)
+        else:
+            raise
     link = await _build_link(uid, email, sub_id)
     return {"uuid": uid, "email": email, "link": link, "inbound_id": ids[0]}
 
