@@ -180,6 +180,14 @@ async def cmd_add_balance(message: Message, command: CommandObject):
         f"<code>{user_id}</code> — теперь <code>{user.balance:.0f} ₽</code>",
         parse_mode='HTML'
     )
+    try:
+        await message.bot.send_message(
+            user_id,
+            f"Ваш баланс пополнен на {amount:.0f} ₽ администратором.\n"
+            f"Текущий баланс: {user.balance:.0f} ₽",
+        )
+    except Exception as e:
+        logger.error(f"Failed to notify user {user_id}: {e}")
 
 
 @router.message(Command("give"))

@@ -1,5 +1,7 @@
 import asyncio
 import logging
+import os
+import time
 from aiohttp import web
 from aiogram import Bot, Dispatcher
 from aiogram.types import MenuButtonWebApp, WebAppInfo
@@ -43,18 +45,46 @@ async def on_startup(_app):
         menu_button=MenuButtonWebApp(text="BlackVPN", web_app=WebAppInfo(url=f"{settings.BASE_URL}/"))
     )
     logger.info("Webhook set to %s", webhook_url)
-    asyncio.create_task(_expire_payments_loop())
+    _app['bg_tasks'] = []
+    _app['bg_tasks'].append(asyncio.create_task(_expire_payments_loop(_app)))
+    _app['bg_tasks'].append(asyncio.create_task(_backup_loop(_app)))
 
-async def _expire_payments_loop():
+async def _expire_payments_loop(_app):
     from services.db import expire_old_payments
     while True:
         try:
             await expire_old_payments(30)
         except Exception as e:
             logger.error("Expire payments error: %s", e)
-        await asyncio.sleep(300)
+        try:
+            await asyncio.wait_for(asyncio.sleep(300), timeout=300)
+        except asyncio.CancelledError:
+            break
+
+async def _backup_loop(_app):
+    import shutil
+    from services.db import DB_PATH
+    backup_dir = os.path.join(os.path.dirname(DB_PATH or 'data'), 'backups')
+    os.makedirs(backup_dir, exist_ok=True)
+    while True:
+        try:
+            await asyncio.sleep(3600)
+            if DB_PATH and os.path.exists(DB_PATH):
+                ts = int(time.time())
+                dst = os.path.join(backup_dir, f'bot_backup_{ts}.db')
+                shutil.copy2(DB_PATH, dst)
+                # Keep only last 48 backups
+                backups = sorted([f for f in os.listdir(backup_dir) if f.startswith('bot_backup_')])
+                while len(backups) > 48:
+                    os.remove(os.path.join(backup_dir, backups.pop(0)))
+        except asyncio.CancelledError:
+            break
+        except Exception as e:
+            logger.error("Backup error: %s", e)
 
 async def on_shutdown(_app):
+    for task in _app.get('bg_tasks', []):
+        task.cancel()
     await close_db()
 
 def main():

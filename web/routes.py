@@ -322,22 +322,37 @@ def setup_routes(app: web.Application, bot: Bot, dp: Dispatcher):
         payload_id = raw.get("payload", "")
         if status == "CONFIRMED" and payload_id:
             payment = await get_payment(payload_id)
-            if payment and payment['status'] == 'pending':
-                wh_amount = float(raw.get("paymentDetails", {}).get("amount", 0))
-                if wh_amount and abs(wh_amount - payment['amount']) > 0.01:
-                    log.error(f"Platega amount mismatch for {payload_id}: expected {payment['amount']}, got {wh_amount}")
-                    return web.Response(status=400)
-                amount = wh_amount or payment['amount']
-                await update_payment_status(payload_id, 'completed')
-                await add_balance(payment['user_id'], amount)
-                try:
-                    await bot.send_message(
-                        payment['user_id'],
-                        f"Баланс пополнен через Platega!\nСумма: {amount} ₽\nСтатус: Успешно",
-                        parse_mode='HTML'
-                    )
-                except Exception as e:
-                    log.error(f"Failed to notify user: {e}")
+            if not payment:
+                return web.json_response({'error': 'Payment not found'}, status=404)
+            if payment['status'] != 'pending':
+                return web.json_response({'error': 'Already processed'}, status=409)
+            wh_amount = float(raw.get("paymentDetails", {}).get("amount", 0))
+            if wh_amount and abs(wh_amount - payment['amount']) > 0.01:
+                log.error(f"Platega amount mismatch for {payload_id}: expected {payment['amount']}, got {wh_amount}")
+                return web.Response(status=400)
+            amount = wh_amount or payment['amount']
+            await update_payment_status(payload_id, 'completed')
+            user = await add_balance(payment['user_id'], amount)
+            try:
+                await bot.send_message(
+                    payment['user_id'],
+                    f"Баланс пополнен через Platega!\nСумма: {amount} ₽\nСтатус: Успешно",
+                    parse_mode='HTML'
+                )
+            except Exception as e:
+                log.error(f"Failed to notify user: {e}")
+            # Notify referrer if this user was referred
+            if user.referred_by:
+                referrer = await get_user(user.referred_by)
+                if referrer:
+                    try:
+                        reward = settings.REFERRAL_REWARD
+                        await bot.send_message(
+                            referrer.user_id,
+                            f"Вам начислено {reward} ₽ за пополнение баланса приглашённым пользователем!",
+                        )
+                    except Exception as e:
+                        log.error(f"Failed to notify referrer {referrer.user_id}: {e}")
         return web.Response(text='OK')
 
     app.router.add_post('/platega-webhook', platega_webhook)

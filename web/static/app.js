@@ -255,6 +255,11 @@ async function confirmTopUp() {
     if (selectedAmount < 50 || !selectedMethod) return;
     tg.HapticFeedback.impactOccurred('medium');
 
+    const btn = document.getElementById('btn-confirm-topup');
+    const originalText = btn.innerText;
+    btn.disabled = true;
+    btn.innerText = 'Создание счёта...';
+
     const body = { userId, amount: selectedAmount, method: selectedMethod, initData };
     const pm = { platega_sbp: 2, platega_crypto: 13 }[selectedMethod];
     if (pm) body.paymentMethod = pm;
@@ -281,6 +286,9 @@ async function confirmTopUp() {
         }
     } catch {
         tg.showAlert("Произошла ошибка при соединении с сервером.");
+    } finally {
+        btn.disabled = false;
+        btn.innerText = originalText;
     }
 }
 
@@ -350,6 +358,11 @@ async function confirmTariffPurchase() {
         return;
     }
 
+    const btn = document.getElementById('btn-confirm-tariff');
+    const originalText = btn.innerText;
+    btn.disabled = true;
+    btn.innerText = 'Обработка...';
+
     try {
         const res = await fetch(workerUrl + "/api/buy-subscription", {
             method: "POST",
@@ -370,5 +383,8 @@ async function confirmTariffPurchase() {
         }
     } catch {
         tg.showAlert("Сбой сети.");
+    } finally {
+        btn.disabled = false;
+        btn.innerText = originalText;
     }
 }

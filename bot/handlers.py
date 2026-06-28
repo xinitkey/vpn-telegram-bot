@@ -1,6 +1,6 @@
 from aiogram import Router, F
 from aiogram.types import Message, CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup, WebAppInfo, LabeledPrice, PreCheckoutQuery
-from aiogram.filters import CommandStart, Command
+from aiogram.filters import CommandStart, Command, CommandObject
 from aiogram import Dispatcher
 from config import settings
 from services.db import add_balance, create_payment as db_create_payment, get_payment, update_payment_status, get_user, create_user
@@ -13,23 +13,22 @@ logger = logging.getLogger(__name__)
 
 
 @router.message(CommandStart())
-async def cmd_start(message: Message):
+async def cmd_start(message: Message, command: CommandObject = None):
     user = await get_user(message.from_user.id)
     if user and user.banned:
         await message.answer("Вы заблокированы.")
         return
 
     referred_by = None
-    if message.text and ' ' in message.text:
-        arg = message.text.split(' ', 1)[1]
-        if arg.startswith('ref_'):
-            try:
-                ref_code = arg[4:]
-                referred_id = _base36_decode(ref_code)
-                if referred_id and referred_id != message.from_user.id:
-                    referred_by = referred_id
-            except (ValueError, IndexError):
-                pass
+    arg = command.args if command else None
+    if arg and arg.startswith('ref_'):
+        try:
+            ref_code = arg[4:]
+            referred_id = _base36_decode(ref_code)
+            if referred_id and referred_id != message.from_user.id:
+                referred_by = referred_id
+        except (ValueError, IndexError):
+            pass
 
     if not user:
         await create_user(message.from_user.id, referred_by=referred_by)

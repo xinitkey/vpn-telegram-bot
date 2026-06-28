@@ -67,6 +67,11 @@ async def init_db():
                 completed_at INTEGER
             )
         ''')
+        try:
+            await db.execute('CREATE INDEX IF NOT EXISTS idx_payments_user_id ON payments(user_id)')
+            await db.execute('CREATE INDEX IF NOT EXISTS idx_payments_status ON payments(status)')
+        except Exception:
+            pass
         await db.commit()
 
 async def close_db():
@@ -127,8 +132,7 @@ async def add_balance(user_id: int, amount: float) -> User:
     return user
 
 async def _reward_referrer(referrer_id: int, referred_id: int, topup_amount: float):
-    from models.user import _base36_encode
-    REWARD = 50.0
+    REWARD = settings.REFERRAL_REWARD
     async with _db_lock:
         db = await _get_db()
         async with db.execute(
@@ -137,11 +141,14 @@ async def _reward_referrer(referrer_id: int, referred_id: int, topup_amount: flo
         ) as cur:
             if await cur.fetchone():
                 return
-        await db.execute(
-            'INSERT INTO referral_rewards (referrer_id, referred_id, amount, created_at) VALUES (?, ?, ?, ?)',
-            (referrer_id, referred_id, REWARD, int(time.time()))
-        )
-        await db.commit()
+        try:
+            await db.execute(
+                'INSERT INTO referral_rewards (referrer_id, referred_id, amount, created_at) VALUES (?, ?, ?, ?)',
+                (referrer_id, referred_id, REWARD, int(time.time()))
+            )
+            await db.commit()
+        except Exception:
+            return
     referrer = await get_user(referrer_id)
     if referrer:
         referrer.balance += REWARD

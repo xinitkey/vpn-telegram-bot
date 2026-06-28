@@ -45,6 +45,7 @@ if not BASE_URL:
 
 # Tariff
 TARIFF_DAILY_PRICE = int(os.getenv('TARIFF_DAILY_PRICE', '5'))
+REFERRAL_REWARD = int(os.getenv('REFERRAL_REWARD', '50'))
 
 # Exported settings object (optional)
 class Settings:
@@ -72,5 +73,6 @@ class Settings:
     USE_HTTPS = USE_HTTPS
     BASE_URL = BASE_URL
     TARIFF_DAILY_PRICE = TARIFF_DAILY_PRICE
+    REFERRAL_REWARD = REFERRAL_REWARD
 
 settings = Settings()
