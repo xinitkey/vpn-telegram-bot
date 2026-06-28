@@ -43,6 +43,16 @@ async def on_startup(_app):
         menu_button=MenuButtonWebApp(text="BlackVPN", web_app=WebAppInfo(url=f"{settings.BASE_URL}/"))
     )
     logger.info("Webhook set to %s", webhook_url)
+    asyncio.create_task(_expire_payments_loop())
+
+async def _expire_payments_loop():
+    from services.db import expire_old_payments
+    while True:
+        try:
+            await expire_old_payments(30)
+        except Exception as e:
+            logger.error("Expire payments error: %s", e)
+        await asyncio.sleep(300)
 
 async def on_shutdown(_app):
     await close_db()

@@ -76,7 +76,8 @@ async def cmd_stats(message: Message):
         f"Баланс всех: <code>{total_bal:.0f} ₽</code>\n"
         f"Платежей всего: <code>{payments['total']}</code>\n"
         f"Успешных: <code>{payments['completed']}</code>\n"
-        f"Ожидают: <code>{payments['total'] - payments['completed']}</code>"
+        f"В ожидании: <code>{payments['pending']}</code>\n"
+        f"Просрочено: <code>{payments['expired']}</code>"
     )
     await message.answer(text, parse_mode='HTML')
 

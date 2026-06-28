@@ -248,13 +248,31 @@ async def get_payments_count() -> dict:
         db = await _get_db()
         total = 0
         completed = 0
+        pending = 0
+        expired = 0
         async with db.execute('SELECT COUNT(*) as cnt FROM payments') as cur:
             row = await cur.fetchone()
             total = row['cnt'] if row else 0
         async with db.execute("SELECT COUNT(*) as cnt FROM payments WHERE status = 'completed'") as cur:
             row = await cur.fetchone()
             completed = row['cnt'] if row else 0
-        return {'total': total, 'completed': completed}
+        async with db.execute("SELECT COUNT(*) as cnt FROM payments WHERE status = 'pending'") as cur:
+            row = await cur.fetchone()
+            pending = row['cnt'] if row else 0
+        async with db.execute("SELECT COUNT(*) as cnt FROM payments WHERE status = 'expired'") as cur:
+            row = await cur.fetchone()
+            expired = row['cnt'] if row else 0
+        return {'total': total, 'completed': completed, 'pending': pending, 'expired': expired}
+
+async def expire_old_payments(minutes: int = 30):
+    cutoff = int(time.time()) - minutes * 60
+    async with _db_lock:
+        db = await _get_db()
+        await db.execute(
+            "UPDATE payments SET status = 'expired', completed_at = ? WHERE status = 'pending' AND created_at < ?",
+            (int(time.time()), cutoff)
+        )
+        await db.commit()
 
 
 async def get_recent_payments(limit: int = 20) -> list[dict]:

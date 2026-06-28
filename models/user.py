@@ -43,7 +43,8 @@ class User:
 
     @property
     def referral_url(self) -> str:
-        return f"https://t.me/BlackVPN_OfficialBot?start=ref_{self.referral_code}"
+        from config.settings import settings
+        return f"https://t.me/{settings.BOT_USERNAME}?start=ref_{self.referral_code}"
 
     @property
     def is_subscription_active(self) -> bool:

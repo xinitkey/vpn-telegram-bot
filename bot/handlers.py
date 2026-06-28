@@ -63,7 +63,7 @@ async def cmd_referral(message: Message):
     stats = await get_referral_stats(message.from_user.id) if user else {'referrals': 0, 'earned': 0}
 
     keyboard = InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="🔗 Поделиться ссылкой", url=f"https://t.me/share/url?url={user.referral_url}&text=BlackVPN — быстрый и надёжный VPN!")],
+        [InlineKeyboardButton(text="🔗 Поделиться ссылкой", url=f"https://t.me/share/url?url={user.referral_url}&text=BlackVPN — быстрый и надёжный VPN! Попробуй по моей ссылке!")],
         [InlineKeyboardButton(text="🚀 Открыть BlackVPN App", web_app=WebAppInfo(url=f"{settings.BASE_URL}/"))]
     ])
     await message.answer(

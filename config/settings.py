@@ -7,6 +7,7 @@ load_dotenv(BASE_DIR / '.env')
 
 # Telegram
 TELEGRAM_BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
+BOT_USERNAME = os.getenv('BOT_USERNAME', 'BlackVPN_OfficialBot')
 ADMIN_BOT_TOKEN = os.getenv('ADMIN_BOT_TOKEN')
 ADMIN_IDS = [int(x) for x in os.getenv('ADMIN_IDS', '').split(',') if x.strip()]
 
@@ -48,6 +49,7 @@ TARIFF_DAILY_PRICE = int(os.getenv('TARIFF_DAILY_PRICE', '5'))
 # Exported settings object (optional)
 class Settings:
     TELEGRAM_BOT_TOKEN = TELEGRAM_BOT_TOKEN
+    BOT_USERNAME = BOT_USERNAME
     ADMIN_BOT_TOKEN = ADMIN_BOT_TOKEN
     ADMIN_IDS = ADMIN_IDS
     XUI_URL = XUI_URL
