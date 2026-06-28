@@ -131,7 +131,9 @@ async def cmd_users(message: Message, command: CommandObject):
     for u in batch:
         status = "+" if u.subscription and u.subscription > now_ms else "-"
         ban = " [x]" if u.banned else ""
-        lines.append(f"{status} <code>{u.user_id}</code> — {u.balance:.0f}₽ — {u.days_left}дн.{ban}")
+        name = u.first_name or ''
+        tag = f" @{u.telegram_username}" if u.telegram_username else ''
+        lines.append(f"{status} <code>{u.user_id}</code> {name}{tag} — {u.balance:.0f}₽ — {u.days_left}дн.{ban}")
     lines.append(f"\n/users {page + 1} — след. страница")
     await message.answer("\n".join(lines), parse_mode='HTML')
 
@@ -155,6 +157,7 @@ async def cmd_find(message: Message, command: CommandObject):
     await message.answer(
         f"<b>Пользователь {user.user_id}</b>\n\n"
         f"Баланс: <code>{user.balance:.0f} ₽</code>\n"
+        f"Имя: {user.first_name or '—'}\n"
         f"Username: @{user.telegram_username or '—'}\n"
         f"Забанен: <code>{ban}</code>\n"
         f"Триал: {'использован' if user.trial_used else 'доступен'}\n"

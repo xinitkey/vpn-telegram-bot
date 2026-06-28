@@ -117,9 +117,12 @@ async def cmd_start(message: Message, command: CommandObject = None):
 
     if not user:
         await create_user(message.from_user.id, referred_by=referred_by)
-    if message.from_user.username:
-        from services.db import update_telegram_username
-        await update_telegram_username(message.from_user.id, message.from_user.username)
+    from services.db import update_user_profile
+    await update_user_profile(
+        message.from_user.id,
+        username=message.from_user.username,
+        first_name=message.from_user.first_name,
+    )
     if referred_by and not user.referred_by:
         from services.db import _get_db, _db_lock
         async with _db_lock:

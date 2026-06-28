@@ -37,6 +37,7 @@ class User:
     referred_by: Optional[int] = None
     referral_earnings: float = 0.0
     telegram_username: str = ''
+    first_name: str = ''
 
     def __post_init__(self):
         if not self.referral_code:
