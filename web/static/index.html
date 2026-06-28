@@ -34,7 +34,13 @@
             </div>
             <div class="referral-card">
                 <h3>Приглашай друзей и зарабатывай</h3>
-                <p>Получай <span>50₽</span> за каждого друга</p>
+                <p>Получай <span id="ref-reward-text">50₽</span> за каждого друга</p>
+                <div class="referral-stats">
+                    <span>Приглашено: <b id="ref-count">0</b></span>
+                    <span>Заработано: <b id="ref-earned">0 ₽</b></span>
+                </div>
+                <button class="btn-ref-link" onclick="copyReferralLink()">📋 Копировать ссылку</button>
+                <div class="ref-link-display" id="ref-link-display"></div>
             </div>
         </div>
 

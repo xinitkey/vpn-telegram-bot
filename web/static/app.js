@@ -79,8 +79,28 @@ async function loadUserData() {
             document.getElementById('profile-sub-start').innerText = formatTs(globalUserData.subscriptionStart);
             document.getElementById('profile-sub-end').innerText = formatTs(globalUserData.subscriptionEnd);
             document.getElementById('price-daily-text').innerText = globalUserData.dailyPrice + "₽ / день за устройство";
+            // Referral
+            if (globalUserData.referralUrl) {
+                document.getElementById('ref-count').innerText = globalUserData.referralCount || 0;
+                document.getElementById('ref-earned').innerText = (globalUserData.referralEarnings || 0) + " ₽";
+                window._referralUrl = globalUserData.referralUrl;
+            }
         }
     } catch (e) { console.error(e); }
+}
+
+function copyReferralLink() {
+    const url = window._referralUrl;
+    if (!url) return;
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(url).then(() => {
+            document.getElementById('ref-link-display').innerText = "Ссылка скопирована!";
+            setTimeout(() => document.getElementById('ref-link-display').innerText = '', 3000);
+        });
+    } else {
+        document.getElementById('ref-link-display').innerText = url;
+    }
+    tg.HapticFeedback.notificationOccurred('success');
 }
 
 loadUserData();

@@ -39,22 +39,23 @@ async def init_db():
                 link TEXT DEFAULT ''
             )
         ''')
-        try:
-            await db.execute('ALTER TABLE users ADD COLUMN trial_used INTEGER DEFAULT 0')
-        except Exception:
-            pass
-        try:
-            await db.execute('ALTER TABLE users ADD COLUMN subscription_start INTEGER DEFAULT 0')
-        except Exception:
-            pass
-        try:
-            await db.execute('ALTER TABLE users ADD COLUMN banned INTEGER DEFAULT 0')
-        except Exception:
-            pass
-        try:
-            await db.execute('ALTER TABLE users ADD COLUMN xui_inbound_id INTEGER DEFAULT 0')
-        except Exception:
-            pass
+        for col in ('trial_used', 'subscription_start', 'banned', 'xui_inbound_id', 'referral_code', 'referred_by', 'referral_earnings'):
+            try:
+                col_type = 'REAL' if col == 'referral_earnings' else 'INTEGER'
+                col_type = 'TEXT' if col == 'referral_code' else col_type
+                await db.execute(f'ALTER TABLE users ADD COLUMN {col} {col_type} DEFAULT {"0" if col != "referral_code" else "''"}')
+            except Exception:
+                pass
+        await db.execute('''
+            CREATE TABLE IF NOT EXISTS referral_rewards (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                referrer_id INTEGER NOT NULL,
+                referred_id INTEGER NOT NULL,
+                amount REAL NOT NULL,
+                created_at INTEGER NOT NULL,
+                UNIQUE(referrer_id, referred_id)
+            )
+        ''')
         await db.execute('''
             CREATE TABLE IF NOT EXISTS payments (
                 payment_id TEXT PRIMARY KEY,
@@ -82,37 +83,34 @@ async def get_user(user_id: int) -> Optional[User]:
             row = await cur.fetchone()
             if row is None:
                 return None
-            return User(
-                user_id=row['user_id'],
-                balance=row['balance'],
-                subscription=row['subscription'],
-                xui_uuid=row['xui_uuid'] or '',
-                xui_email=row['xui_email'] or '',
-                link=row['link'] or '',
-                trial_used=bool(row['trial_used']) if 'trial_used' in row.keys() else False,
-                subscription_start=row['subscription_start'] if 'subscription_start' in row.keys() else None,
-                banned=bool(row['banned']) if 'banned' in row.keys() else False,
-                xui_inbound_id=row['xui_inbound_id'] if 'xui_inbound_id' in row.keys() else 0
-            )
+            return _user_from_row(row)
 
-async def create_user(user_id: int):
+async def create_user(user_id: int, referred_by: int = None):
     async with _db_lock:
         db = await _get_db()
+        ref_code = await _generate_referral_code(user_id)
         await db.execute(
-            '''INSERT OR IGNORE INTO users (user_id, balance, subscription, xui_uuid, xui_email, link)
-               VALUES (?, 0, 0, '', '', '')''',
-            (user_id,)
+            '''INSERT OR IGNORE INTO users
+               (user_id, balance, subscription, xui_uuid, xui_email, link, referral_code, referred_by)
+               VALUES (?, 0, 0, '', '', '', ?, ?)''',
+            (user_id, ref_code, referred_by)
         )
         await db.commit()
+
+async def _generate_referral_code(user_id: int) -> str:
+    from models.user import _base36_encode
+    return _base36_encode(user_id)
 
 async def update_user(user: User):
     async with _db_lock:
         db = await _get_db()
         await db.execute(
             '''UPDATE users SET balance = ?, subscription = ?, xui_uuid = ?, xui_email = ?, link = ?,
-               trial_used = ?, subscription_start = ?, banned = ?, xui_inbound_id = ? WHERE user_id = ?''',
+               trial_used = ?, subscription_start = ?, banned = ?, xui_inbound_id = ?,
+               referral_code = ?, referred_by = ?, referral_earnings = ? WHERE user_id = ?''',
             (user.balance, user.subscription, user.xui_uuid, user.xui_email, user.link,
-             int(user.trial_used), user.subscription_start, int(user.banned), user.xui_inbound_id, user.user_id)
+             int(user.trial_used), user.subscription_start, int(user.banned), user.xui_inbound_id,
+             user.referral_code, user.referred_by, user.referral_earnings, user.user_id)
         )
         await db.commit()
 
@@ -123,7 +121,32 @@ async def add_balance(user_id: int, amount: float) -> User:
         user = await get_user(user_id)
     user.balance += amount
     await update_user(user)
+    # Referral reward: 50₽ to referrer on first top-up
+    if amount > 0 and user.referred_by:
+        await _reward_referrer(user.referred_by, user.user_id, amount)
     return user
+
+async def _reward_referrer(referrer_id: int, referred_id: int, topup_amount: float):
+    from models.user import _base36_encode
+    REWARD = 50.0
+    async with _db_lock:
+        db = await _get_db()
+        async with db.execute(
+            'SELECT id FROM referral_rewards WHERE referrer_id = ? AND referred_id = ?',
+            (referrer_id, referred_id)
+        ) as cur:
+            if await cur.fetchone():
+                return
+        await db.execute(
+            'INSERT INTO referral_rewards (referrer_id, referred_id, amount, created_at) VALUES (?, ?, ?, ?)',
+            (referrer_id, referred_id, REWARD, int(time.time()))
+        )
+        await db.commit()
+    referrer = await get_user(referrer_id)
+    if referrer:
+        referrer.balance += REWARD
+        referrer.referral_earnings += REWARD
+        await update_user(referrer)
 
 async def set_subscription(user_id: int, days: int):
     now_ms = int(time.time() * 1000)
@@ -196,18 +219,7 @@ async def get_all_users() -> list[User]:
         db = await _get_db()
         async with db.execute('SELECT * FROM users ORDER BY user_id') as cur:
             rows = await cur.fetchall()
-            return [User(
-                user_id=row['user_id'],
-                balance=row['balance'],
-                subscription=row['subscription'],
-                xui_uuid=row['xui_uuid'] or '',
-                xui_email=row['xui_email'] or '',
-                link=row['link'] or '',
-                trial_used=bool(row['trial_used']) if 'trial_used' in row.keys() else False,
-                subscription_start=row['subscription_start'] if 'subscription_start' in row.keys() else None,
-                banned=bool(row['banned']) if 'banned' in row.keys() else False,
-                xui_inbound_id=row['xui_inbound_id'] if 'xui_inbound_id' in row.keys() else 0
-            ) for row in rows]
+            return [_user_from_row(row) for row in rows]
 
 async def get_user_count() -> int:
     async with _db_lock:
@@ -307,5 +319,19 @@ def _user_from_row(row) -> User:
         trial_used=bool(row['trial_used']) if 'trial_used' in row.keys() else False,
         subscription_start=row['subscription_start'] if 'subscription_start' in row.keys() else None,
         banned=bool(row['banned']) if 'banned' in row.keys() else False,
-        xui_inbound_id=row['xui_inbound_id'] if 'xui_inbound_id' in row.keys() else 0
+        xui_inbound_id=row['xui_inbound_id'] if 'xui_inbound_id' in row.keys() else 0,
+        referral_code=row['referral_code'] or '' if 'referral_code' in row.keys() else '',
+        referred_by=row['referred_by'] if 'referred_by' in row.keys() and row['referred_by'] else None,
+        referral_earnings=float(row['referral_earnings']) if 'referral_earnings' in row.keys() else 0.0,
     )
+
+async def get_referral_stats(user_id: int) -> dict:
+    async with _db_lock:
+        db = await _get_db()
+        async with db.execute('SELECT COUNT(*) as cnt FROM referral_rewards WHERE referrer_id = ?', (user_id,)) as cur:
+            row = await cur.fetchone()
+            referrals = row['cnt'] if row else 0
+        async with db.execute('SELECT COALESCE(SUM(amount), 0) as total FROM referral_rewards WHERE referrer_id = ?', (user_id,)) as cur:
+            row = await cur.fetchone()
+            earned = row['total'] if row else 0
+        return {'referrals': referrals, 'earned': earned}

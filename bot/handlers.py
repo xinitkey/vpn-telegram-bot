@@ -1,9 +1,10 @@
 from aiogram import Router, F
 from aiogram.types import Message, CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup, WebAppInfo, LabeledPrice, PreCheckoutQuery
-from aiogram.filters import CommandStart
+from aiogram.filters import CommandStart, Command
 from aiogram import Dispatcher
 from config import settings
-from services.db import add_balance, create_payment as db_create_payment, get_payment, update_payment_status, get_user
+from services.db import add_balance, create_payment as db_create_payment, get_payment, update_payment_status, get_user, create_user
+from models.user import _base36_decode
 import json
 import logging
 
@@ -15,8 +16,30 @@ logger = logging.getLogger(__name__)
 async def cmd_start(message: Message):
     user = await get_user(message.from_user.id)
     if user and user.banned:
-        await message.answer("❌ Вы заблокированы.")
+        await message.answer("Вы заблокированы.")
         return
+
+    referred_by = None
+    if message.text and ' ' in message.text:
+        arg = message.text.split(' ', 1)[1]
+        if arg.startswith('ref_'):
+            try:
+                ref_code = arg[4:]
+                referred_id = _base36_decode(ref_code)
+                if referred_id and referred_id != message.from_user.id:
+                    referred_by = referred_id
+            except (ValueError, IndexError):
+                pass
+
+    if not user:
+        await create_user(message.from_user.id, referred_by=referred_by)
+    elif referred_by and not user.referred_by:
+        from services.db import _get_db, _db_lock
+        async with _db_lock:
+            db = await _get_db()
+            await db.execute('UPDATE users SET referred_by = ? WHERE user_id = ?', (referred_by, message.from_user.id))
+            await db.commit()
+
     keyboard = InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(text="🚀 Открыть BlackVPN App", web_app=WebAppInfo(url=f"{settings.BASE_URL}/"))]
     ])
@@ -24,6 +47,34 @@ async def cmd_start(message: Message):
         f"Добро пожаловать в <b>BlackVPN</b>!\n"
         f"Ваш ID: <code>{message.from_user.id}</code>\n"
         f"Нажмите кнопку ниже, чтобы открыть приложение управления VPN:",
+        reply_markup=keyboard,
+        parse_mode='HTML'
+    )
+
+
+@router.message(Command('referral'))
+async def cmd_referral(message: Message):
+    user = await get_user(message.from_user.id)
+    if not user:
+        await create_user(message.from_user.id)
+        user = await get_user(message.from_user.id)
+
+    from services.db import get_referral_stats
+    stats = await get_referral_stats(message.from_user.id) if user else {'referrals': 0, 'earned': 0}
+
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="🔗 Поделиться ссылкой", url=f"https://t.me/share/url?url={user.referral_url}&text=BlackVPN — быстрый и надёжный VPN!")],
+        [InlineKeyboardButton(text="🚀 Открыть BlackVPN App", web_app=WebAppInfo(url=f"{settings.BASE_URL}/"))]
+    ])
+    await message.answer(
+        f"<b>Реферальная программа</b>\n\n"
+        f"Приглашайте друзей и получайте <b>50₽</b> за каждого, кто пополнит баланс!\n\n"
+        f"<b>Ваша ссылка:</b>\n"
+        f"<code>{user.referral_url}</code>\n\n"
+        f"<b>Статистика:</b>\n"
+        f"• Приглашено: <b>{stats['referrals']}</b>\n"
+        f"• Заработано: <b>{stats['earned']} ₽</b>\n"
+        f"• Всего заработано: <b>{user.referral_earnings} ₽</b>",
         reply_markup=keyboard,
         parse_mode='HTML'
     )

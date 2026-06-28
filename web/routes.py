@@ -78,6 +78,8 @@ def setup_routes(app: web.Application, bot: Bot, dp: Dispatcher):
         if user is None:
             await create_user(user_id)
             user = await get_user(user_id)
+        from services.db import get_referral_stats
+        ref_stats = await get_referral_stats(user_id) if user else {'referrals': 0, 'earned': 0}
         return web.json_response({
             'balance': user.balance,
             'daysLeft': user.days_left,
@@ -86,7 +88,10 @@ def setup_routes(app: web.Application, bot: Bot, dp: Dispatcher):
             'subscriptionStart': user.subscription_start or 0,
             'vpnKey': user.link or 'Не создан',
             'dailyPrice': settings.TARIFF_DAILY_PRICE,
-            'banned': user.banned
+            'banned': user.banned,
+            'referralUrl': user.referral_url if user else '',
+            'referralCount': ref_stats['referrals'],
+            'referralEarnings': user.referral_earnings if user else 0,
         })
 
     async def api_buy_subscription(request):

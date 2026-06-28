@@ -1,6 +1,19 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Optional
+
+def _base36_encode(n: int) -> str:
+    chars = '0123456789abcdefghijklmnopqrstuvwxyz'
+    if n == 0:
+        return '0'
+    result = []
+    while n > 0:
+        result.append(chars[n % 36])
+        n //= 36
+    return ''.join(reversed(result))
+
+def _base36_decode(s: str) -> int:
+    return int(s, 36)
 
 def _fmt_ts(ts: int | None) -> str:
     if not ts or ts <= 0:
@@ -20,6 +33,17 @@ class User:
     xui_inbound_id: int = 0
     trial_used: bool = False
     banned: bool = False
+    referral_code: str = ''
+    referred_by: Optional[int] = None
+    referral_earnings: float = 0.0
+
+    def __post_init__(self):
+        if not self.referral_code:
+            self.referral_code = _base36_encode(self.user_id)
+
+    @property
+    def referral_url(self) -> str:
+        return f"https://t.me/BlackVPN_OfficialBot?start=ref_{self.referral_code}"
 
     @property
     def is_subscription_active(self) -> bool:

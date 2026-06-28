@@ -46,8 +46,20 @@ body {
     border-radius: 24px; padding: 20px; border: 1px solid rgba(220, 38, 38, 0.2);
 }
 .referral-card h3 { margin: 0 0 8px 0; font-size: 18px; }
-.referral-card p { margin: 0; font-size: 14px; color: #d1d5db; }
+.referral-card p { margin: 0 0 12px 0; font-size: 14px; color: #d1d5db; }
 .referral-card span { color: #ef4444; font-weight: 700; }
+.referral-stats { display: flex; gap: 16px; font-size: 13px; color: #9ca3af; margin-bottom: 12px; }
+.referral-stats b { color: #e5e7eb; }
+.btn-ref-link {
+    background: rgba(220, 38, 38, 0.2); border: 1px solid rgba(220, 38, 38, 0.3);
+    color: #ef4444; padding: 10px 20px; border-radius: 12px; cursor: pointer;
+    font-size: 14px; width: 100%; transition: all 0.2s;
+}
+.btn-ref-link:hover { background: rgba(220, 38, 38, 0.3); }
+.ref-link-display {
+    font-size: 11px; color: #6b7280; text-align: center; margin-top: 8px;
+    word-break: break-all;
+}
 
 .bottom-nav {
     position: fixed; bottom: 15px; left: 15px; right: 15px;
