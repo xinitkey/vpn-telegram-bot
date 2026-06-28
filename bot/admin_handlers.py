@@ -281,15 +281,12 @@ async def cmd_reset_sub(message: Message, command: CommandObject):
     user.subscription_start = 0
     user.trial_used = False
     if user.xui_email:
+        # Set expiry to now (0 days) in panel but keep the email reference
         try:
-            from services.xui_api import remove_client, update_client_expiry
+            from services.xui_api import update_client_expiry
             await update_client_expiry(user.xui_email, 0)
-            await remove_client(user.xui_email)
         except Exception as e:
-            logger.warning(f"Failed to remove XUI client on reset for {user_id}: {e}")
-        user.xui_email = ''
-        user.xui_uuid = ''
-        user.link = ''
+            logger.warning(f"Failed to zero XUI client expiry for {user_id}: {e}")
     await update_user(user)
     await message.answer(
         f"Подписка пользователя <code>{user_id}</code> сброшена.",
