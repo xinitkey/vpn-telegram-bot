@@ -37,7 +37,7 @@ APPS_STORE = {
     "computer": (
         "<b>Приложения для компьютера (Windows / macOS / Linux):</b>\n\n"
         "• Happ — https://github.com/Happ-proxy/happ-desktop/releases (рекомендуется)\n"
-        "• Incy — https://github.com/INCY-DEV/incy-platforms\n"
+        "• Incy — https://github.com/INCY-DEV/incy-platforms/releases\n"
         "• Hiddify — https://github.com/hiddify/hiddify-app/releases\n"
         "• Amnezia VPN — https://amnezia.org/downloads\n"
         "• Nekoray — https://github.com/MatsuriDayo/nekoray/releases"
