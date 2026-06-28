@@ -11,6 +11,88 @@ import logging
 router = Router()
 logger = logging.getLogger(__name__)
 
+APPS_STORE = {
+    "iphone": (
+        "<b>Приложения для iPhone / iPad:</b>\n\n"
+        "• Happ — https://apps.apple.com/ru/app/happ-proxy-utility-plus/id6746188973 (рекомендуется)\n"
+        "• Hiddify — https://apps.apple.com/app/hiddify-proxy/id6596777532\n"
+        "• sing-box VT — https://apps.apple.com/ru/app/sing-box-vt/id6673731168\n"
+        "  (App Store, не TestFlight! Profiles → Remote → URL подписки)\n"
+        "• DefaultVPN — https://apps.apple.com/ru/app/defaultvpn/id6744725017\n"
+        "  (+ → Insert → vless-ключ; при необходимости включите Use VLESS protocol)\n"
+        "• V2RayTun — https://apps.apple.com/app/v2raytun/id6476628951\n"
+        "• Streisand — https://apps.apple.com/app/streisand/id6450534064\n"
+        "• Amnezia VPN — https://apps.apple.com/app/amnezia-vpn/id1600529900"
+    ),
+    "android": (
+        "<b>Приложения для Android:</b>\n\n"
+        "• Happ — https://play.google.com/store/apps/details?id=com.happproxy (рекомендуется)\n"
+        "• Hiddify — https://play.google.com/store/apps/details?id=app.hiddify.com\n"
+        "• Amnezia VPN — https://play.google.com/store/apps/details?id=org.amnezia.vpn\n"
+        "• NekoBox — https://github.com/MatsuriDayo/NekoBoxForAndroid/releases\n"
+        "• Sing-box — https://play.google.com/store/apps/details?id=io.nekohasekai.sfa"
+    ),
+    "computer": (
+        "<b>Приложения для компьютера (Windows / macOS / Linux):</b>\n\n"
+        "• Happ — https://github.com/Happ-proxy/happ-desktop/releases (рекомендуется)\n"
+        "• Hiddify — https://github.com/hiddify/hiddify-app/releases\n"
+        "• Amnezia VPN — https://amnezia.org/downloads\n"
+        "• Nekoray — https://github.com/MatsuriDayo/nekoray/releases"
+    ),
+}
+
+PLATFORM_BUTTONS = [
+    ("iphone", "IOS"),
+    ("android", "Android"),
+    ("computer", "PC"),
+]
+
+
+def _platform_keyboard(selected: str = None):
+    buttons = []
+    for key, label in PLATFORM_BUTTONS:
+        text = f"✅ {label}" if selected == key else label
+        buttons.append([InlineKeyboardButton(text=text, callback_data=f"platform_{key}")])
+    buttons.append([InlineKeyboardButton(text="🚀 Открыть BlackVPN App", web_app=WebAppInfo(url=f"{settings.BASE_URL}/"))])
+    return InlineKeyboardMarkup(inline_keyboard=buttons)
+
+
+async def send_key_with_platforms(bot, chat_id: int, key: str, remaining_str: str):
+    await bot.send_message(
+        chat_id,
+        f"<b>Тариф успешно активирован!</b>\n\n"
+        f"<b>Ваш ключ:</b>\n"
+        f"{key}\n\n"
+        f"<b>Осталось:</b> {remaining_str}\n\n"
+        f"<b>Инструкция:</b> Выберите и установите приложение из списка "
+        f"поддерживаемых и перейдите по ссылке для копирования или подключения ключа\n\n"
+        f"<b>Выберите платформу:</b>",
+        reply_markup=_platform_keyboard(),
+        parse_mode='HTML'
+    )
+
+
+@router.callback_query(F.data.startswith("platform_"))
+async def cb_platform(callback: CallbackQuery):
+    await callback.answer()
+    platform = callback.data[len("platform_"):]
+    apps_text = APPS_STORE.get(platform)
+    if not apps_text:
+        return
+    message_text = callback.message.text or ""
+    # Find the instruction part before "Выберите платформу:"
+    if "<b>Выберите платформу:</b>" in message_text:
+        header = message_text.split("<b>Выберите платформу:</b>")[0]
+    else:
+        header = message_text
+    new_text = header + apps_text
+    await callback.message.edit_text(
+        new_text,
+        reply_markup=_platform_keyboard(selected=platform),
+        parse_mode='HTML',
+        disable_web_page_preview=True,
+    )
+
 
 @router.message(CommandStart())
 async def cmd_start(message: Message, command: CommandObject = None):

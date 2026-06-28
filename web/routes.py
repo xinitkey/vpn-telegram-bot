@@ -162,38 +162,9 @@ def setup_routes(app: web.Application, bot: Bot, dp: Dispatcher):
             user.trial_used = True
         await update_user(user)
         try:
-            await bot.send_message(
-                user_id,
-                f"<b>Тариф успешно активирован!</b>\n\n"
-                f"<b>Ваш ключ:</b>\n"
-                f"{user.link or '—'}\n\n"
-                f"<b>Осталось:</b> {user.remaining_str}\n\n"
-                f"<b>Инструкция:</b> Выберите и установите приложение из списка поддерживаемых "
-                f"и перейдите по ссылке для копирования или подключения ключа\n\n"
-                f"<b>Скачать приложения</b>\n\n"
-                f"<b>iPhone / iPad:</b>\n"
-                f"• Happ — https://apps.apple.com/ru/app/happ-proxy-utility-plus/id6746188973 (рекомендуется)\n"
-                f"• Hiddify — https://apps.apple.com/app/hiddify-proxy/id6596777532\n"
-                f"• sing-box VT — https://apps.apple.com/ru/app/sing-box-vt/id6673731168\n"
-                f"  (App Store, не TestFlight! Profiles → Remote → URL подписки)\n"
-                f"• DefaultVPN — https://apps.apple.com/ru/app/defaultvpn/id6744725017\n"
-                f"  (+ → Insert → vless-ключ; при необходимости включите Use VLESS protocol)\n"
-                f"• V2RayTun — https://apps.apple.com/app/v2raytun/id6476628951\n"
-                f"• Streisand — https://apps.apple.com/app/streisand/id6450534064\n"
-                f"• Amnezia VPN — https://apps.apple.com/app/amnezia-vpn/id1600529900\n\n"
-                f"<b>Android:</b>\n"
-                f"• Happ — https://play.google.com/store/apps/details?id=com.happproxy (рекомендуется)\n"
-                f"• Hiddify — https://play.google.com/store/apps/details?id=app.hiddify.com\n"
-                f"• Amnezia VPN — https://play.google.com/store/apps/details?id=org.amnezia.vpn\n"
-                f"• NekoBox — https://github.com/MatsuriDayo/NekoBoxForAndroid/releases\n"
-                f"• Sing-box — https://play.google.com/store/apps/details?id=io.nekohasekai.sfa\n\n"
-                f"<b>Компьютер (Windows / macOS / Linux):</b>\n"
-                f"• Happ — https://github.com/Happ-proxy/happ-desktop/releases (рекомендуется)\n"
-                f"• Hiddify — https://github.com/hiddify/hiddify-app/releases\n"
-                f"• Amnezia VPN — https://amnezia.org/downloads\n"
-                f"• Nekoray — https://github.com/MatsuriDayo/nekoray/releases",
-                parse_mode='HTML'
-            )
+            from bot.handlers import send_key_with_platforms
+            if user.link:
+                await send_key_with_platforms(bot, user_id, user.link, user.remaining_str)
         except Exception as e:
             log.error(f"Failed to send key to user {user_id}: {e}")
         resp = {
