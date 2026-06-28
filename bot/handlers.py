@@ -47,6 +47,8 @@ PLATFORM_BUTTONS = [
     ("computer", "PC"),
 ]
 
+_APPS_SEP = "\n\n---\n\n"
+
 
 def _platform_keyboard(selected: str = None):
     buttons = []
@@ -58,15 +60,18 @@ def _platform_keyboard(selected: str = None):
 
 
 async def send_key_with_platforms(bot, chat_id: int, key: str, remaining_str: str):
-    await bot.send_message(
-        chat_id,
+    header = (
         f"<b>Тариф успешно активирован!</b>\n\n"
         f"<b>Ваш ключ:</b>\n"
         f"{key}\n\n"
         f"<b>Осталось:</b> {remaining_str}\n\n"
         f"<b>Инструкция:</b> Выберите и установите приложение из списка "
         f"поддерживаемых и перейдите по ссылке для копирования или подключения ключа\n\n"
-        f"<b>Выберите платформу:</b>",
+        f"<b>Выберите платформу:</b>"
+    )
+    await bot.send_message(
+        chat_id,
+        header,
         reply_markup=_platform_keyboard(),
         parse_mode='HTML'
     )
@@ -80,14 +85,9 @@ async def cb_platform(callback: CallbackQuery):
     if not apps_text:
         return
     message_text = callback.message.text or ""
-    # Find the instruction part before "Выберите платформу:"
-    if "<b>Выберите платформу:</b>" in message_text:
-        header = message_text.split("<b>Выберите платформу:</b>")[0]
-    else:
-        header = message_text
-    new_text = header + apps_text
+    base = message_text.split(_APPS_SEP)[0] if _APPS_SEP in message_text else message_text
     await callback.message.edit_text(
-        new_text,
+        base + _APPS_SEP + apps_text,
         reply_markup=_platform_keyboard(selected=platform),
         parse_mode='HTML',
         disable_web_page_preview=True,
