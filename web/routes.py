@@ -194,11 +194,11 @@ def setup_routes(app: web.Application, bot: Bot, dp: Dispatcher):
             try:
                 # Always remove old client first to prevent expiry accumulation
                 try:
-                    from services.xui_api import remove_client as _remove
-                    await _remove(email)
+                    from services.xui_api import remove_client as _xrm
+                    await _xrm(email)
                 except Exception:
                     pass
-                client = await xui_add_client(email, total_days, user.xui_inbound_id or None)
+                client = await xui_add_client(email, total_days, user.xui_inbound_id or None, new_sub)
                 user.xui_uuid = client['uuid']
                 user.xui_email = client['email']
                 user.link = client['link']

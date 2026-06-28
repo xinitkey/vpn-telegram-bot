@@ -174,13 +174,13 @@ async def _request(method: str, path: str, data: dict | None = None, retries: in
                 raise
 
 
-async def add_client(email: str, days: int, inbound_id: int | None = None) -> dict[str, str]:
+async def add_client(email: str, days: int, inbound_id: int | None = None, expiry_time: int | None = None) -> dict[str, str]:
     ids = settings.XUI_INBOUND_IDS
     if not ids:
         raise RuntimeError("No inbounds configured (XUI_INBOUND_IDS)")
     uid = str(uuid_pkg.uuid4())
     sub_id = str(uuid_pkg.uuid4())[:16]
-    expiry = int(time.time() * 1000) + days * 86400000
+    expiry = expiry_time or (int(time.time() * 1000) + days * 86400000)
     client = {
         "email": email,
         "subId": sub_id,
