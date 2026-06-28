@@ -103,6 +103,14 @@ function copyReferralLink() {
     tg.HapticFeedback.notificationOccurred('success');
 }
 
+function showReferralInfo(event) {
+    tg.showPopup({
+        title: "Реферальная программа",
+        message: "50₽ начисляются после того, как приглашённый друг впервые пополнит баланс.",
+        buttons: [{ type: 'ok', text: "Понятно" }]
+    });
+}
+
 loadUserData();
 setInterval(loadUserData, 10000);
 
