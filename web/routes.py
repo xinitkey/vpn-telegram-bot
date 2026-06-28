@@ -102,6 +102,12 @@ def setup_routes(app: web.Application, bot: Bot, dp: Dispatcher):
             raw = await request.json()
         except Exception:
             return web.json_response({'error': 'Invalid JSON'}, status=400)
+        verified_id = _get_user_id_from_request(request, raw)
+        user_id = verified_id or int(raw.get('userId', 0))
+        if user_id:
+            user = await get_user(user_id)
+            if user and user.banned:
+                return web.json_response({'error': 'Вы заблокированы'}, status=403)
         code = raw.get('code', '').strip()
         if not code:
             return web.json_response({'error': 'Введите промокод'}, status=400)
@@ -243,6 +249,8 @@ def setup_routes(app: web.Application, bot: Bot, dp: Dispatcher):
         user = await get_user(user_id)
         if user is None:
             await create_user(user_id)
+        elif user.banned:
+            return web.json_response({'error': 'Вы заблокированы'}, status=403)
 
         payment_id = generate_payment_id()
         await create_payment(payment_id, user_id, amount, method)

@@ -608,6 +608,10 @@ async def cmd_giveall(message: Message, command: CommandObject):
         f"Каждому: +<code>{days}</code> дн.",
         parse_mode='HTML'
     )
+
+
+@router.message(Command("resettrial"))
+async def cmd_resettrial(message: Message, command: CommandObject):
     if not is_admin(message.from_user.id):
         return
     arg = (command.args or "").strip()

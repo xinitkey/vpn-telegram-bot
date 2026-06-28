@@ -123,7 +123,7 @@
             <button class="modal-close" onclick="closeTariffsModal()">&times;</button>
             <h2>&#x1F4CB; Тарифы</h2>
             <div class="promo-section">
-                <input type="text" class="promo-input" id="promo-input" placeholder="Введите промокод" oninput="onPromoInput()" maxlength="50">
+                <input type="text" class="promo-input" id="promo-input" placeholder="Промокод" oninput="onPromoInput()" maxlength="50">
                 <button class="promo-btn" id="promo-btn" onclick="applyPromoCode()">Применить</button>
                 <div class="promo-status" id="promo-status"></div>
             </div>
@@ -177,6 +177,12 @@
             </div>
             <button class="btn-confirm" id="btn-confirm-tariff" onclick="confirmTariffPurchase()" disabled>Выберите тариф</button>
         </div>
+    </div>
+
+    <div class="banned-overlay" id="banned-overlay">
+        <div class="banned-icon">&#x26D4;</div>
+        <h2>Вы заблокированы</h2>
+        <p>Обратитесь в поддержку</p>
     </div>
 
     <div class="bottom-nav">

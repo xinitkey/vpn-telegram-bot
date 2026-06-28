@@ -75,6 +75,13 @@ async function loadUserData() {
         });
         if (response.ok) {
             globalUserData = await response.json();
+            // Check ban status
+            if (globalUserData.banned) {
+                document.getElementById('banned-overlay').classList.add('active');
+                document.querySelectorAll('.btn-pay, .btn-primary-action, .btn-confirm').forEach(b => b.disabled = true);
+            } else {
+                document.getElementById('banned-overlay').classList.remove('active');
+            }
             document.getElementById('balance-display').innerText = globalUserData.balance + " ₽";
             document.getElementById('profile-balance').innerText = globalUserData.balance + " ₽";
             document.getElementById('days-count').innerHTML = globalUserData.remainingStr || globalUserData.daysLeft + " <span>дней</span>";
@@ -94,12 +101,12 @@ async function loadUserData() {
                 trialOpt.setAttribute('onclick', "selectTariff(3, 15)");
                 trialOpt.setAttribute('data-price', '15');
                 trialOpt.querySelector('.tariff-price').innerHTML = '15 &#x20BD;';
-                trialOpt.querySelector('.tariff-perday').innerText = '5 &#x20BD;/день';
+                trialOpt.querySelector('.tariff-perday').innerHTML = '5 ₽/день';
             } else {
                 trialOpt.setAttribute('onclick', "selectTariff(3, 0)");
                 trialOpt.setAttribute('data-price', '0');
-                trialOpt.querySelector('.tariff-price').innerHTML = '0 &#x20BD;';
-                trialOpt.querySelector('.tariff-perday').innerText = 'Бесплатно';
+                trialOpt.querySelector('.tariff-price').innerHTML = '0 ₽';
+                trialOpt.querySelector('.tariff-perday').innerHTML = 'Бесплатно';
             }
         }
     } catch (e) { console.error(e); }
