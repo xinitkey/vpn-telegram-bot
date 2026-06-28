@@ -291,6 +291,8 @@ async def _build_link(uuid: str, email: str, sub_id: str) -> str:
     parsed = urlparse(settings.XUI_URL)
     scheme = parsed.scheme or "http"
     host = sub_settings.get("webDomain") or sub_settings.get("subDomain") or parsed.hostname or ""
+    if not host:
+        host = sub_settings.get("webDomain") or sub_settings.get("subDomain") or parsed.hostname or "127.0.0.1"
     port = sub_settings.get("subPort") or 2096
     sub_path = (sub_settings.get("subPath") or "/use_happ/").strip('/')
     return f"{scheme}://{host}:{port}/{sub_path}/{sub_id}"

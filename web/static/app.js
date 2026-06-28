@@ -204,14 +204,14 @@ function buyDaysModal() {
                 const res = await fetch(workerUrl + "/api/buy-subscription", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ userId, days: 1, initData })
+                    body: JSON.stringify({ userId, days: 1, price: globalUserData.dailyPrice, initData })
                 });
                 if (res.ok) {
                     tg.HapticFeedback.notificationOccurred('success');
                     tg.showAlert("Подписка успешно продлена на 1 день!");
                     loadUserData();
                 } else {
-            const text = await response.text();
+            const text = await res.text();
                     let errData;
                     try { errData = JSON.parse(text); } catch { errData = { error: text }; }
                     tg.showAlert(errData.error || "Ошибка проведения платежа");

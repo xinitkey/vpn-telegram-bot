@@ -1,7 +1,7 @@
 import aiosqlite
 import asyncio
 from typing import Optional
-from models.user import User
+from models.user import User, _base36_encode
 from config.settings import settings
 import time
 import os
@@ -122,7 +122,6 @@ async def create_user(user_id: int, referred_by: int = None):
         await db.commit()
 
 async def _generate_referral_code(user_id: int) -> str:
-    from models.user import _base36_encode
     return _base36_encode(user_id)
 
 async def update_user(user: User):
@@ -385,13 +384,13 @@ def _user_from_row(row) -> User:
         xui_uuid=row['xui_uuid'] or '',
         xui_email=row['xui_email'] or '',
         link=row['link'] or '',
-        trial_used=bool(row['trial_used']) if 'trial_used' in row.keys() else False,
-        subscription_start=row['subscription_start'] if 'subscription_start' in row.keys() else None,
-        banned=bool(row['banned']) if 'banned' in row.keys() else False,
-        xui_inbound_id=row['xui_inbound_id'] if 'xui_inbound_id' in row.keys() else 0,
-        referral_code=row['referral_code'] or '' if 'referral_code' in row.keys() else '',
-        referred_by=row['referred_by'] if 'referred_by' in row.keys() and row['referred_by'] else None,
-        referral_earnings=float(row['referral_earnings']) if 'referral_earnings' in row.keys() else 0.0,
+        trial_used=bool(row['trial_used']),
+        subscription_start=row['subscription_start'],
+        banned=bool(row['banned']),
+        xui_inbound_id=row['xui_inbound_id'],
+        referral_code=row['referral_code'] or '',
+        referred_by=row['referred_by'] if row['referred_by'] else None,
+        referral_earnings=float(row['referral_earnings']),
     )
 
 async def get_referral_stats(user_id: int) -> dict:

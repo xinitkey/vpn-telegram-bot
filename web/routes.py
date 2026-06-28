@@ -177,8 +177,6 @@ def setup_routes(app: web.Application, bot: Bot, dp: Dispatcher):
                 discounted = discounted_price(days, promo['discount_percent'])
                 if discounted > 0:
                     total_price = discounted
-                await increment_promocode_uses(promo_code)
-                await record_promocode_use(promo_code, user_id)
             if user.balance < total_price:
                 return web.json_response(
                     {'error': f'Недостаточно средств. Нужно {total_price}₽'}, status=400
@@ -219,6 +217,9 @@ def setup_routes(app: web.Application, bot: Bot, dp: Dispatcher):
                 )
         if is_trial:
             user.trial_used = True
+        if promo_code:
+            await increment_promocode_uses(promo_code)
+            await record_promocode_use(promo_code, user_id)
         await update_user(user)
         try:
             from bot.handlers import send_key_with_platforms
@@ -410,8 +411,8 @@ def setup_routes(app: web.Application, bot: Bot, dp: Dispatcher):
     app.router.add_get('/terms', serve_terms)
 
     async def serve_static(request):
-        filename = request.match_info.get('filename', 'index.html') or 'index.html'
-        if '..' in filename or '/' in filename:
+        filename = os.path.basename(request.match_info.get('filename', 'index.html') or 'index.html')
+        if not filename:
             raise web.HTTPNotFound()
         try:
             with open(f'web/static/{filename}', 'rb') as f:

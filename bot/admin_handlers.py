@@ -21,6 +21,7 @@ import os
 router = Router()
 logger = logging.getLogger(__name__)
 
+_NOT_ADMIN_MSG = "Команда доступна только администраторам."
 
 def is_admin(user_id: int) -> bool:
     return user_id in settings.ADMIN_IDS
@@ -29,6 +30,7 @@ def is_admin(user_id: int) -> bool:
 @router.message(Command("admins"))
 async def cmd_admins(message: Message):
     if not is_admin(message.from_user.id):
+        await message.answer("Команда доступна только администраторам.")
         return
     if not settings.ADMIN_IDS:
         await message.answer("Нет администраторов.")
@@ -42,6 +44,7 @@ async def cmd_admins(message: Message):
 @router.message(Command("admin"))
 async def cmd_admin(message: Message):
     if not is_admin(message.from_user.id):
+        await message.answer(_NOT_ADMIN_MSG)
         return
     await message.answer(
         "<b>Admin Panel</b>\n\n"
@@ -82,6 +85,7 @@ async def cmd_admin(message: Message):
 @router.message(Command("stats"))
 async def cmd_stats(message: Message):
     if not is_admin(message.from_user.id):
+        await message.answer(_NOT_ADMIN_MSG)
         return
     total_users = await get_user_count()
     active_subs = await get_active_sub_count()
@@ -108,6 +112,7 @@ async def cmd_stats(message: Message):
 @router.message(Command("users"))
 async def cmd_users(message: Message, command: CommandObject):
     if not is_admin(message.from_user.id):
+        await message.answer(_NOT_ADMIN_MSG)
         return
     users = await get_all_users()
     now_ms = int(time.time() * 1000)
@@ -131,6 +136,7 @@ async def cmd_users(message: Message, command: CommandObject):
 @router.message(Command("find"))
 async def cmd_find(message: Message, command: CommandObject):
     if not is_admin(message.from_user.id):
+        await message.answer(_NOT_ADMIN_MSG)
         return
     args = command.args
     if not args or not args.strip().isdigit():
@@ -161,6 +167,7 @@ async def cmd_find(message: Message, command: CommandObject):
 @router.message(Command("search"))
 async def cmd_search(message: Message, command: CommandObject):
     if not is_admin(message.from_user.id):
+        await message.answer(_NOT_ADMIN_MSG)
         return
     query = (command.args or "").strip()
     if not query:
@@ -182,6 +189,7 @@ async def cmd_search(message: Message, command: CommandObject):
 @router.message(Command("add"))
 async def cmd_add_balance(message: Message, command: CommandObject):
     if not is_admin(message.from_user.id):
+        await message.answer(_NOT_ADMIN_MSG)
         return
     args = command.args
     if not args:
@@ -216,6 +224,7 @@ async def cmd_add_balance(message: Message, command: CommandObject):
 @router.message(Command("give"))
 async def cmd_give_sub(message: Message, command: CommandObject):
     if not is_admin(message.from_user.id):
+        await message.answer(_NOT_ADMIN_MSG)
         return
     args = command.args
     if not args:
@@ -232,11 +241,11 @@ async def cmd_give_sub(message: Message, command: CommandObject):
         await create_user(user_id)
         user = await get_user(user_id)
     await set_subscription(user_id, days)
+    user = await get_user(user_id)
     if settings.XUI_URL and settings.XUI_PASSWORD and (settings.XUI_INBOUND_ID is not None or settings.XUI_INBOUND_IDS):
         email = f'user_{user_id}'
         now_ms = int(time.time() * 1000)
-        sub = max(user.subscription or now_ms, now_ms) + days * 86400000
-        total_days = max(1, (sub - now_ms) // 86400000)
+        total_days = max(1, (user.subscription - now_ms) // 86400000) if user.subscription and user.subscription > now_ms else days
         try:
             if user.xui_email:
                 await xui_update_expiry(user.xui_email, total_days)
@@ -268,6 +277,7 @@ async def cmd_give_sub(message: Message, command: CommandObject):
 @router.message(Command("reset"))
 async def cmd_reset_sub(message: Message, command: CommandObject):
     if not is_admin(message.from_user.id):
+        await message.answer(_NOT_ADMIN_MSG)
         return
     args = command.args
     if not args or not args.strip().isdigit():
@@ -298,6 +308,7 @@ async def cmd_reset_sub(message: Message, command: CommandObject):
 @router.message(Command("wipe"))
 async def cmd_wipe(message: Message, command: CommandObject):
     if not is_admin(message.from_user.id):
+        await message.answer(_NOT_ADMIN_MSG)
         return
     args = command.args
     if not args or not args.strip().isdigit():
@@ -325,6 +336,7 @@ async def cmd_wipe(message: Message, command: CommandObject):
 @router.message(Command("ban"))
 async def cmd_ban(message: Message, command: CommandObject):
     if not is_admin(message.from_user.id):
+        await message.answer(_NOT_ADMIN_MSG)
         return
     args = command.args
     if not args or not args.strip().isdigit():
@@ -356,6 +368,7 @@ async def cmd_ban(message: Message, command: CommandObject):
 @router.message(Command("unban"))
 async def cmd_unban(message: Message, command: CommandObject):
     if not is_admin(message.from_user.id):
+        await message.answer(_NOT_ADMIN_MSG)
         return
     args = command.args
     if not args or not args.strip().isdigit():
@@ -399,6 +412,7 @@ async def cmd_unban(message: Message, command: CommandObject):
 @router.message(Command("notify"))
 async def cmd_notify(message: Message, command: CommandObject):
     if not is_admin(message.from_user.id):
+        await message.answer(_NOT_ADMIN_MSG)
         return
     args = command.args
     if not args:
@@ -420,6 +434,7 @@ async def cmd_notify(message: Message, command: CommandObject):
 @router.message(Command("payments"))
 async def cmd_payments(message: Message, command: CommandObject):
     if not is_admin(message.from_user.id):
+        await message.answer(_NOT_ADMIN_MSG)
         return
     limit = 20
     if command.args and command.args.strip().isdigit():
@@ -439,6 +454,7 @@ async def cmd_payments(message: Message, command: CommandObject):
 @router.message(Command("revenue"))
 async def cmd_revenue(message: Message):
     if not is_admin(message.from_user.id):
+        await message.answer(_NOT_ADMIN_MSG)
         return
     rev = await get_revenue()
     text = [
@@ -455,6 +471,7 @@ async def cmd_revenue(message: Message):
 @router.message(Command("export"))
 async def cmd_export(message: Message):
     if not is_admin(message.from_user.id):
+        await message.answer(_NOT_ADMIN_MSG)
         return
     users = await get_all_users()
     now_ms = int(time.time() * 1000)
@@ -479,6 +496,7 @@ async def cmd_export(message: Message):
 @router.message(Command("backup"))
 async def cmd_backup(message: Message):
     if not is_admin(message.from_user.id):
+        await message.answer(_NOT_ADMIN_MSG)
         return
     db_path = settings.DB_URL.replace('sqlite+aiosqlite:///', '')
     if not os.path.isfile(db_path):
@@ -495,6 +513,7 @@ async def cmd_backup(message: Message):
 @router.message(Command("xui"))
 async def cmd_xui(message: Message):
     if not is_admin(message.from_user.id):
+        await message.answer(_NOT_ADMIN_MSG)
         return
     if not settings.XUI_URL:
         await message.answer("XUI не настроен.")
@@ -520,6 +539,7 @@ async def cmd_xui(message: Message):
 @router.message(Command("broadcast"))
 async def cmd_broadcast(message: Message, command: CommandObject):
     if not is_admin(message.from_user.id):
+        await message.answer(_NOT_ADMIN_MSG)
         return
     text = command.args
     if not text:
@@ -545,6 +565,7 @@ async def cmd_broadcast(message: Message, command: CommandObject):
 @router.message(Command("addpromo"))
 async def cmd_addpromo(message: Message, command: CommandObject):
     if not is_admin(message.from_user.id):
+        await message.answer(_NOT_ADMIN_MSG)
         return
     args = (command.args or "").strip().split()
     if len(args) < 2:
@@ -595,6 +616,7 @@ async def cmd_addpromo(message: Message, command: CommandObject):
 @router.message(Command("delpromo"))
 async def cmd_delpromo(message: Message, command: CommandObject):
     if not is_admin(message.from_user.id):
+        await message.answer(_NOT_ADMIN_MSG)
         return
     code = (command.args or "").strip().upper()
     if not code:
@@ -610,6 +632,7 @@ async def cmd_delpromo(message: Message, command: CommandObject):
 @router.message(Command("promos"))
 async def cmd_promos(message: Message):
     if not is_admin(message.from_user.id):
+        await message.answer(_NOT_ADMIN_MSG)
         return
     promos = await get_all_promocodes()
     if not promos:
@@ -637,6 +660,7 @@ async def cmd_promos(message: Message):
 @router.message(Command("giveall"))
 async def cmd_giveall(message: Message, command: CommandObject):
     if not is_admin(message.from_user.id):
+        await message.answer(_NOT_ADMIN_MSG)
         return
     args = command.args
     if not args or not args.strip().isdigit():
@@ -648,11 +672,11 @@ async def cmd_giveall(message: Message, command: CommandObject):
     for u in users:
         try:
             await set_subscription(u.user_id, days)
+            u = await get_user(u.user_id)
             if settings.XUI_URL and settings.XUI_PASSWORD and (settings.XUI_INBOUND_ID is not None or settings.XUI_INBOUND_IDS):
                 email = f'user_{u.user_id}'
                 now_ms = int(time.time() * 1000)
-                sub = u.subscription or now_ms
-                total_days = max(1, (sub - now_ms) // 86400000) if sub > now_ms else days
+                total_days = max(1, (u.subscription - now_ms) // 86400000) if u.subscription and u.subscription > now_ms else days
                 try:
                     if u.xui_email:
                         await xui_update_expiry(u.xui_email, total_days)
@@ -680,6 +704,7 @@ async def cmd_giveall(message: Message, command: CommandObject):
 @router.message(Command("resettrial"))
 async def cmd_resettrial(message: Message, command: CommandObject):
     if not is_admin(message.from_user.id):
+        await message.answer(_NOT_ADMIN_MSG)
         return
     arg = (command.args or "").strip()
     if not arg:

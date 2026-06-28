@@ -71,7 +71,6 @@ async def _backup_loop(_app):
     os.makedirs(backup_dir, exist_ok=True)
     while True:
         try:
-            await asyncio.sleep(3600)
             if DB_PATH and os.path.exists(DB_PATH):
                 ts = int(time.time())
                 dst = os.path.join(backup_dir, f'bot_backup_{ts}.db')
@@ -95,6 +94,7 @@ async def _backup_loop(_app):
             break
         except Exception as e:
             logger.error("Backup error: %s", e)
+        await asyncio.sleep(3600)
 
 async def on_shutdown(_app):
     for task in _app.get('bg_tasks', []):
