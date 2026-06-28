@@ -25,6 +25,19 @@ def is_admin(user_id: int) -> bool:
     return user_id in settings.ADMIN_IDS
 
 
+@router.message(Command("admins"))
+async def cmd_admins(message: Message):
+    if not is_admin(message.from_user.id):
+        return
+    if not settings.ADMIN_IDS:
+        await message.answer("Нет администраторов.")
+        return
+    lines = [f"<b>Администраторы ({len(settings.ADMIN_IDS)})</b>"]
+    for uid in settings.ADMIN_IDS:
+        lines.append(f"• <code>{uid}</code>")
+    await message.answer("\n".join(lines), parse_mode='HTML')
+
+
 @router.message(Command("admin"))
 async def cmd_admin(message: Message):
     if not is_admin(message.from_user.id):
@@ -35,7 +48,8 @@ async def cmd_admin(message: Message):
         "/stats — статистика\n"
         "/users [страница] — список пользователей\n"
         "/find <code>id</code> — информация о пользователе\n"
-        "/search <code>запрос</code> — поиск по ID или email\n\n"
+        "/search <code>запрос</code> — поиск по ID или email\n"
+        "/admins — список администраторов\n\n"
         "<b>Управление:</b>\n"
         "/add <code>id сумма</code> — пополнить баланс\n"
         "/give <code>id дней</code> — выдать подписку\n"
