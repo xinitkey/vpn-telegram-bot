@@ -517,6 +517,7 @@ async function confirmTariffPurchase() {
         if (res.ok) {
             tg.HapticFeedback.notificationOccurred('success');
             tg.showAlert("Тариф успешно активирован на " + selectedTariffDays + " дней!");
+            clearPromoCode();
             closeTariffsModal();
             loadUserData();
         } else {
