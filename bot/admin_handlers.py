@@ -366,10 +366,9 @@ async def cmd_unban(message: Message, command: CommandObject):
     if user is None:
         await message.answer(f"Пользователь <code>{user_id}</code> не найден.", parse_mode='HTML')
         return
-    user.banned = False
-    # Re-create VPN key if there's an active subscription
     now_ms = int(time.time() * 1000)
-    if user.subscription and user.subscription > now_ms and settings.XUI_URL and settings.XUI_PASSWORD:
+    key_restored = False
+    if user.subscription and user.subscription > now_ms:
         email = f'user_{user_id}'
         total_days = max(1, (user.subscription - now_ms) // 86400000)
         try:
@@ -384,14 +383,17 @@ async def cmd_unban(message: Message, command: CommandObject):
             user.xui_email = client['email']
             user.link = client['link']
             user.xui_inbound_id = client['inbound_id']
+            key_restored = True
         except Exception as e:
             logger.error(f"Failed to recreate XUI client for {user_id}: {e}")
+    user.banned = False
     await update_user(user)
-    await message.answer(
-        f"Пользователь <code>{user_id}</code> разблокирован. Ключ восстановлен." if user.link
-        else f"Пользователь <code>{user_id}</code> разблокирован.",
-        parse_mode='HTML'
-    )
+    msg = f"Пользователь <code>{user_id}</code> разблокирован."
+    if key_restored:
+        msg += " Ключ восстановлен."
+    elif user.subscription and user.subscription > now_ms:
+        msg += " Не удалось восстановить ключ (ошибка XUI)."
+    await message.answer(msg, parse_mode='HTML')
 
 
 @router.message(Command("notify"))

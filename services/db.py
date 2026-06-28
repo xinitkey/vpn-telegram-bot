@@ -83,6 +83,14 @@ async def init_db():
                 created_at INTEGER NOT NULL
             )
         ''')
+        await db.execute('''
+            CREATE TABLE IF NOT EXISTS promocode_uses (
+                code TEXT NOT NULL,
+                user_id INTEGER NOT NULL,
+                used_at INTEGER NOT NULL,
+                PRIMARY KEY (code, user_id)
+            )
+        ''')
         await db.commit()
 
 async def close_db():
@@ -451,22 +459,44 @@ async def increment_promocode_uses(code: str) -> bool:
         return cur.rowcount > 0
 
 
+async def user_used_promocode(code: str, user_id: int) -> bool:
+    async with _db_lock:
+        db = await _get_db()
+        async with db.execute(
+            'SELECT 1 FROM promocode_uses WHERE code = ? AND user_id = ?',
+            (code.upper(), user_id)
+        ) as cur:
+            return await cur.fetchone() is not None
+
+
+async def record_promocode_use(code: str, user_id: int):
+    async with _db_lock:
+        db = await _get_db()
+        await db.execute(
+            'INSERT OR IGNORE INTO promocode_uses (code, user_id, used_at) VALUES (?, ?, ?)',
+            (code.upper(), user_id, int(time.time()))
+        )
+        await db.commit()
+
+
 TARIFF_INDEX_MAP = {1: 3, 2: 30, 3: 90, 4: 180, 5: 365}
 TARIFF_PRICE_MAP = {3: 15, 30: 119, 90: 299, 180: 549, 365: 999}
 _DAYS_TO_INDEX = {v: k for k, v in TARIFF_INDEX_MAP.items()}
 
 
-def validate_promocode(promo: dict, tariff_days: int) -> tuple[bool, str]:
+async def validate_promocode(promo: dict, tariff_days: int, user_id: int = None) -> tuple[bool, str]:
     now = int(time.time() * 1000)
     if promo['expires_at'] and now > promo['expires_at']:
         return False, 'Срок действия промокода истёк'
     if promo['max_uses'] is not None and promo['used_count'] >= promo['max_uses']:
-        return False, 'Промокод достиг лимита использований'
+        return False, 'Промокод исчерпал лимит использований'
     if promo['tariff_ids']:
         allowed_idxes = [int(x.strip()) for x in promo['tariff_ids'].split(',') if x.strip()]
         idx = _DAYS_TO_INDEX.get(tariff_days)
         if idx is None or idx not in allowed_idxes:
             return False, 'Промокод не действует на выбранный тариф'
+    if user_id is not None and await user_used_promocode(promo['code'], user_id):
+        return False, 'Вы уже использовали этот промокод'
     return True, ''
 
 

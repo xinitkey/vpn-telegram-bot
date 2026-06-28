@@ -10,7 +10,8 @@ from services.db import (
     get_user, create_user, update_user, add_balance,
     create_payment, get_payment, update_payment_status,
     get_promocode, increment_promocode_uses, validate_promocode,
-    discounted_price, TARIFF_INDEX_MAP, TARIFF_PRICE_MAP,
+    discounted_price, record_promocode_use, user_used_promocode,
+    TARIFF_INDEX_MAP, TARIFF_PRICE_MAP,
 )
 from services.xui_api import (
     add_client as xui_add_client,
@@ -119,6 +120,8 @@ def setup_routes(app: web.Application, bot: Bot, dp: Dispatcher):
             return web.json_response({'error': 'Срок действия промокода истёк'}, status=400)
         if promo['max_uses'] is not None and promo['used_count'] >= promo['max_uses']:
             return web.json_response({'error': 'Промокод исчерпал лимит использований'}, status=400)
+        if user_id and await user_used_promocode(code, user_id):
+            return web.json_response({'error': 'Вы уже использовали этот промокод'}, status=400)
         discount = promo['discount_percent']
         applicable = []
         if promo['tariff_ids']:
@@ -168,13 +171,14 @@ def setup_routes(app: web.Application, bot: Bot, dp: Dispatcher):
                 promo = await get_promocode(promo_code)
                 if promo is None:
                     return web.json_response({'error': 'Промокод не найден'}, status=400)
-                valid, err = validate_promocode(promo, days)
+                valid, err = await validate_promocode(promo, days, user_id)
                 if not valid:
                     return web.json_response({'error': err}, status=400)
                 discounted = discounted_price(days, promo['discount_percent'])
                 if discounted > 0:
                     total_price = discounted
                 await increment_promocode_uses(promo_code)
+                await record_promocode_use(promo_code, user_id)
             if user.balance < total_price:
                 return web.json_response(
                     {'error': f'Недостаточно средств. Нужно {total_price}₽'}, status=400
