@@ -15,6 +15,7 @@ APPS_STORE = {
     "iphone": (
         "<b>Приложения для iPhone / iPad:</b>\n\n"
         "• Happ — https://apps.apple.com/ru/app/happ-proxy-utility-plus/id6746188973 (рекомендуется)\n"
+        "• Incy — https://apps.apple.com/us/app/incy/id6756943388\n"
         "• Hiddify — https://apps.apple.com/app/hiddify-proxy/id6596777532\n"
         "• sing-box VT — https://apps.apple.com/ru/app/sing-box-vt/id6673731168\n"
         "  (App Store, не TestFlight! Profiles → Remote → URL подписки)\n"
@@ -27,6 +28,7 @@ APPS_STORE = {
     "android": (
         "<b>Приложения для Android:</b>\n\n"
         "• Happ — https://play.google.com/store/apps/details?id=com.happproxy (рекомендуется)\n"
+        "• Incy — https://play.google.com/store/apps/details?id=llc.itdev.incy&hl=ru\n"
         "• Hiddify — https://play.google.com/store/apps/details?id=app.hiddify.com\n"
         "• Amnezia VPN — https://play.google.com/store/apps/details?id=org.amnezia.vpn\n"
         "• NekoBox — https://github.com/MatsuriDayo/NekoBoxForAndroid/releases\n"
@@ -35,6 +37,7 @@ APPS_STORE = {
     "computer": (
         "<b>Приложения для компьютера (Windows / macOS / Linux):</b>\n\n"
         "• Happ — https://github.com/Happ-proxy/happ-desktop/releases (рекомендуется)\n"
+        "• Incy — https://github.com/INCY-DEV/incy-platforms\n"
         "• Hiddify — https://github.com/hiddify/hiddify-app/releases\n"
         "• Amnezia VPN — https://amnezia.org/downloads\n"
         "• Nekoray — https://github.com/MatsuriDayo/nekoray/releases"
