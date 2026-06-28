@@ -376,7 +376,7 @@ async function applyPromoCode(silent) {
         const res = await fetch(workerUrl + '/api/apply-promo', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ code })
+            body: JSON.stringify({ code, userId, initData })
         });
         const data = await res.json();
         if (res.ok && data.valid) {
