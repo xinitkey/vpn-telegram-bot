@@ -355,8 +355,8 @@ async def get_users_by_id_or_email(query: str) -> list[User]:
             return [_user_from_row(r) for r in rows]
         clean = query.lstrip('@')
         async with db.execute(
-            'SELECT * FROM users WHERE xui_email LIKE ? OR telegram_username = ?',
-            (f'%{query}%', clean)
+            'SELECT * FROM users WHERE xui_email LIKE ? OR telegram_username LIKE ? OR first_name LIKE ?',
+            (f'%{query}%', f'%{clean}%', f'%{query}%')
         ) as cur:
             rows = await cur.fetchall()
         return [_user_from_row(r) for r in rows]

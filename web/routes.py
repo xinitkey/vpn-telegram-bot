@@ -70,6 +70,7 @@ def setup_routes(app: web.Application, bot: Bot, dp: Dispatcher):
 
     async def api_user_data(request):
         user_id = _get_user_id_from_request(request)
+        telegram_user = None
         if user_id is None:
             try:
                 user_id = int(request.query.get('userId', 0))
@@ -77,11 +78,23 @@ def setup_routes(app: web.Application, bot: Bot, dp: Dispatcher):
                 return web.json_response({'error': 'Invalid user_id'}, status=400)
             if user_id == 0:
                 return web.json_response({'error': 'Missing authentication'}, status=401)
+        else:
+            init_data = request.headers.get('X-Init-Data') or ''
+            verified = verify_telegram_init_data(init_data, settings.TELEGRAM_BOT_TOKEN)
+            if verified and isinstance(verified.get('user'), dict):
+                telegram_user = verified['user']
 
         user = await get_user(user_id)
         if user is None:
             await create_user(user_id)
             user = await get_user(user_id)
+        if telegram_user:
+            from services.db import update_user_profile
+            await update_user_profile(
+                user_id,
+                username=telegram_user.get('username'),
+                first_name=telegram_user.get('first_name'),
+            )
         from services.db import get_referral_stats
         ref_stats = await get_referral_stats(user_id) if user else {'referrals': 0, 'earned': 0}
         return web.json_response({
