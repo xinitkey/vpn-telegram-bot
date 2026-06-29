@@ -105,6 +105,34 @@ def main():
     _validate_settings()
     bot = Bot(token=settings.TELEGRAM_BOT_TOKEN)
     dp = Dispatcher()
+
+    from aiogram import BaseMiddleware
+    from aiogram.types import Message, CallbackQuery, TelegramObject
+    from services.db import update_user_profile
+    from typing import Callable, Dict, Any, Awaitable
+
+    class SaveProfileMiddleware(BaseMiddleware):
+        async def __call__(
+            self,
+            handler: Callable[[TelegramObject, Dict[str, Any]], Awaitable[Any]],
+            event: TelegramObject,
+            data: Dict[str, Any],
+        ) -> Any:
+            user = None
+            if isinstance(event, Message) and event.from_user:
+                user = event.from_user
+            elif isinstance(event, CallbackQuery) and event.from_user:
+                user = event.from_user
+            if user:
+                await update_user_profile(
+                    user.id,
+                    username=user.username,
+                    first_name=user.first_name,
+                )
+            return await handler(event, data)
+
+    dp.message.middleware(SaveProfileMiddleware())
+    dp.callback_query.middleware(SaveProfileMiddleware())
     dp.include_router(admin_router)
     register_router(dp)
 
