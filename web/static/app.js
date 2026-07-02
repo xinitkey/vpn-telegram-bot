@@ -316,7 +316,33 @@ async function confirmTopUp() {
 }
 
 function openDevices() {
-    tg.showPopup({ title: "Устройства", message: "Раздел находится в разработке", buttons: [{type: 'ok'}] });
+    document.getElementById('devices-modal').classList.add('active');
+    document.getElementById('devices-content').innerHTML = '<div class="devices-loading">Загрузка...</div>';
+    fetch(workerUrl + "/api/user-devices?userId=" + userId, {
+        headers: { "X-Init-Data": initData }
+    })
+    .then(r => r.json())
+    .then(data => {
+        const container = document.getElementById('devices-content');
+        if (data.count === 0) {
+            container.innerHTML = '<div class="devices-empty">Нет подключённых устройств</div>';
+            return;
+        }
+        let html = '<div class="devices-count">Подключено устройств: <b>' + data.count + '</b></div>';
+        html += '<div class="devices-list">';
+        data.ips.forEach((ip, i) => {
+            html += '<div class="device-item"><span class="device-num">' + (i + 1) + '.</span> ' + ip + '</div>';
+        });
+        html += '</div>';
+        container.innerHTML = html;
+    })
+    .catch(() => {
+        document.getElementById('devices-content').innerHTML = '<div class="devices-empty">Ошибка загрузки</div>';
+    });
+}
+
+function closeDevicesModal() {
+    document.getElementById('devices-modal').classList.remove('active');
 }
 function openInstructions() {
     tg.showPopup({ title: "Инструкция", message: "Выберите и установите приложение из списка поддерживаемых и перейдите по ссылке для копирования или подключения ключа", buttons: [{type: 'ok'}] });

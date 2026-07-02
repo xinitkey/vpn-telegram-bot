@@ -174,6 +174,22 @@ async def _request(method: str, path: str, data: dict | None = None, retries: in
                 raise
 
 
+async def get_client_ips(email: str) -> list[str]:
+    """Return list of currently connected IPs for the given client email."""
+    for iid in settings.XUI_INBOUND_IDS:
+        inbound = await get_inbound_info(iid)
+        clients = inbound.get("clientStats", [])
+        for client in clients:
+            if isinstance(client, dict) and client.get("email") == email:
+                raw = client.get("ip", [])
+                if isinstance(raw, list):
+                    return [str(ip) for ip in raw if ip]
+                if isinstance(raw, str) and raw:
+                    return [raw]
+                return []
+    return []
+
+
 async def add_client(email: str, days: int, inbound_id: int | None = None) -> dict[str, str]:
     ids = settings.XUI_INBOUND_IDS
     if not ids:

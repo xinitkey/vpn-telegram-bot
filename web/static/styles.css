@@ -197,3 +197,15 @@ body {
 .banned-icon { font-size: 72px; margin-bottom: 20px; }
 .banned-overlay h2 { font-size: 28px; color: #ef4444; margin-bottom: 12px; }
 .banned-overlay p { color: #9ca3af; font-size: 18px; }
+
+.devices-content { min-height: 80px; }
+.devices-loading, .devices-empty { text-align: center; color: #9ca3af; padding: 24px 0; font-size: 15px; }
+.devices-count { text-align: center; font-size: 16px; margin-bottom: 16px; color: #e5e7eb; }
+.devices-count b { color: #ef4444; font-size: 20px; }
+.devices-list { display: flex; flex-direction: column; gap: 8px; }
+.device-item {
+    background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 12px; padding: 12px 16px; font-size: 14px; font-family: monospace;
+    color: #d1d5db;
+}
+.device-num { color: #6b7280; margin-right: 8px; }

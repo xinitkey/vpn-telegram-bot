@@ -18,6 +18,7 @@ from services.xui_api import (
     add_client as xui_add_client,
     update_client_expiry as xui_update_expiry,
     build_link_for_email as xui_build_link_for_email,
+    get_client_ips as xui_get_client_ips,
 )
 from services.payment import generate_payment_id
 from services.auth import verify_telegram_init_data
@@ -111,6 +112,25 @@ def setup_routes(app: web.Application, bot: Bot, dp: Dispatcher):
             'referralEarnings': user.referral_earnings if user else 0,
             'trialUsed': user.trial_used if user else False,
         })
+
+    async def api_user_devices(request):
+        user_id = _get_user_id_from_request(request)
+        if user_id is None:
+            try:
+                user_id = int(request.query.get('userId', 0))
+            except ValueError:
+                return web.json_response({'error': 'Invalid user_id'}, status=400)
+            if user_id == 0:
+                return web.json_response({'error': 'Missing authentication'}, status=401)
+        user = await get_user(user_id)
+        if user is None or not user.xui_email or not user.is_subscription_active:
+            return web.json_response({'ips': [], 'count': 0})
+        try:
+            ips = await xui_get_client_ips(user.xui_email)
+        except Exception as e:
+            log.warning(f"Failed to get client IPs for {user.xui_email}: {e}")
+            ips = []
+        return web.json_response({'ips': ips, 'count': len(ips)})
 
     async def api_apply_promo(request):
         try:
@@ -298,6 +318,7 @@ def setup_routes(app: web.Application, bot: Bot, dp: Dispatcher):
         })
 
     app.router.add_get('/api/user-data', api_user_data)
+    app.router.add_get('/api/user-devices', api_user_devices)
     app.router.add_post('/api/apply-promo', api_apply_promo)
     app.router.add_post('/api/buy-subscription', api_buy_subscription)
     app.router.add_post('/api/create-payment', api_create_payment)
