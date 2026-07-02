@@ -650,48 +650,30 @@ async def cmd_devices(message: Message, command: CommandObject):
         await message.answer(f"У пользователя {user_id} нет email в XUI")
         return
 
-    from urllib.parse import quote
-    from services.xui_api import _get_session, _make_session, _session_cookies, _csrf_token
-    # ensure session exists
-    await _get_session()
-    email_q = quote(user.xui_email)
-    lines = [f"<b>Диагностика устройств</b>\nUser: {user_id}\nEmail: {user.xui_email}\n"]
+    from services.xui_api import _request, get_inbound_info
+    email = user.xui_email
+    lines = [f"<b>Диагностика устройств</b>\nUser: {user_id}\nEmail: {email}\n"]
 
-    base = settings.XUI_URL.rstrip('/')
-    tests = [
-        ("POST", f"/panel/api/inbounds/clientIps/{email_q}", "clientIps POST"),
-        ("GET", f"/panel/api/inbounds/clientIps/{email_q}", "clientIps GET"),
-        ("POST", f"/panel/api/inbounds/getClientIps/{email_q}", "getClientIps POST"),
-        ("GET", f"/panel/api/inbounds/getClientIps/{email_q}", "getClientIps GET"),
-        ("POST", "/panel/api/inbounds/onlines", "onlines POST"),
-        ("GET", "/panel/api/inbounds/onlines", "onlines GET"),
-        ("POST", "/panel/api/inbounds/list", "inbounds/list POST"),
-        ("GET", "/panel/api/inbounds/list", "inbounds/list GET"),
-    ]
-    for method, path, tag in tests:
+    async def try_r(method: str, path: str, tag: str):
         try:
-            if not _session_cookies:
-                lines.append(f"<b>{tag}:</b> нет сессии")
-                continue
-            cookie_h = "; ".join(f"{k}={v}" for k, v in _session_cookies.items())
-            async with _make_session() as sess:
-                async with sess.request(method, f"{base}{path}", headers={
-                    "Cookie": cookie_h,
-                    "X-Requested-With": "XMLHttpRequest",
-                    "Content-Type": "application/json",
-                    "X-CSRF-Token": _csrf_token or "",
-                }) as resp:
-                    body = await resp.text()
-                    lines.append(f"<b>{tag}:</b> {resp.status} <code>{body[:400]}</code>")
+            import json
+            data = await _request(method, path)
+            lines.append(f"<b>{tag}:</b> <code>{json.dumps(data, default=str)[:400]}</code>")
         except Exception as e:
-            lines.append(f"<b>{tag}:</b> {e}")
+            lines.append(f"<b>{tag}:</b> <code>{str(e)[:200]}</code>")
 
-    from services.xui_api import get_inbound_info
+    await try_r("POST", f"/panel/api/inbounds/clientIps/{email}", "clientIps POST")
+    await try_r("GET", f"/panel/api/inbounds/clientIps/{email}", "clientIps GET")
+    await try_r("POST", "/panel/api/inbounds/onlines", "onlines POST")
+    await try_r("GET", "/panel/api/inbounds/onlines", "onlines GET")
+    await try_r("GET", "/panel/api/inbounds/list", "inbounds list")
+
     for iid in settings.XUI_INBOUND_IDS:
         inbound = await get_inbound_info(iid)
         for cl in inbound.get("clientStats", []):
-            if isinstance(cl, dict) and cl.get("email") == user.xui_email:
-                lines.append(f"<b>clientStats:</b> <code>{str(cl)[:600]}</code>")
+            if isinstance(cl, dict) and cl.get("email") == email:
+                import json
+                lines.append(f"<b>clientStats:</b> <code>{json.dumps(cl, default=str)[:600]}</code>")
                 break
 
     await message.answer("\n".join(lines), parse_mode='HTML')
