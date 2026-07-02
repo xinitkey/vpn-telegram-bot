@@ -12,7 +12,7 @@ from services.db import (
     update_user, create_promocode, delete_promocode, get_all_promocodes,
     reset_trial, wipe_user,
 )
-from services.xui_api import add_client as xui_add_client, update_client_expiry as xui_update_expiry, build_link_for_email as xui_build_link_for_email
+from services.xui_api import add_client as xui_add_client, update_client_expiry as xui_update_expiry, build_link_for_email as xui_build_link_for_email, get_client_ips as xui_get_client_ips
 import time
 import logging
 import csv
@@ -626,6 +626,64 @@ async def cmd_xui(message: Message):
         await message.answer("\n".join(lines), parse_mode='HTML')
     except Exception as e:
         await message.answer(f"Ошибка: {e}", parse_mode='HTML')
+
+
+@router.message(Command("devices"))
+async def cmd_devices(message: Message, command: CommandObject):
+    if not is_admin(message.from_user.id):
+        await message.answer(_NOT_ADMIN_MSG)
+        return
+    args = command.args.strip() if command.args else ""
+    if not args:
+        await message.answer("Использование: /devices <user_id>")
+        return
+    try:
+        user_id = int(args.split()[0])
+    except ValueError:
+        await message.answer("Неверный ID пользователя")
+        return
+    user = await get_user(user_id)
+    if user is None:
+        await message.answer("Пользователь не найден")
+        return
+    if not user.xui_email:
+        await message.answer(f"У пользователя {user_id} нет email в XUI")
+        return
+    try:
+        from services.xui_api import _request
+        # clientIps
+        try:
+            data = await _request("POST", f"/panel/api/inbounds/clientIps/{user.xui_email}")
+            ci = str(data)[:600]
+        except Exception as e:
+            ci = f"Ошибка: {e}"
+        # onlines
+        try:
+            data = await _request("POST", "/panel/api/inbounds/onlines")
+            onl = str(data)[:600]
+        except Exception as e:
+            onl = f"Ошибка: {e}"
+        # clientStats
+        from services.xui_api import get_inbound_info
+        cs = ""
+        for iid in settings.XUI_INBOUND_IDS:
+            inbound = await get_inbound_info(iid)
+            for cl in inbound.get("clientStats", []):
+                if isinstance(cl, dict) and cl.get("email") == user.xui_email:
+                    cs = str(cl)[:600]
+                    break
+        msg = (
+            f"<b>Диагностика устройств</b>\n"
+            f"Пользователь: {user_id}\n"
+            f"Email: {user.xui_email}\n"
+            f"Подписка: {'активна' if user.is_subscription_active else 'не активна'}\n\n"
+            f"<b>clientIps:</b> <code>{ci}</code>\n\n"
+            f"<b>onlines:</b> <code>{onl}</code>\n\n"
+            f"<b>clientStats:</b> <code>{cs}</code>"
+        )
+        await message.answer(msg, parse_mode='HTML')
+    except Exception as e:
+        await message.answer(f"Ошибка диагностики: {e}", parse_mode='HTML')
 
 
 @router.message(Command("broadcast"))
