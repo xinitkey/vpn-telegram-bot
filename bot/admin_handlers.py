@@ -662,11 +662,22 @@ async def cmd_devices(message: Message, command: CommandObject):
         except Exception as e:
             lines.append(f"<b>{tag}:</b> <code>{str(e)[:200]}</code>")
 
-    await try_r("POST", f"/panel/api/inbounds/clientIps/{email}", "clientIps POST")
-    await try_r("GET", f"/panel/api/inbounds/clientIps/{email}", "clientIps GET")
+    await try_r("POST", f"/panel/api/inbounds/clientIps/{email}", "clientIps path POST")
+    await try_r("GET", f"/panel/api/inbounds/clientIps/{email}", "clientIps path GET")
+    await try_r("POST", f"/panel/api/inbounds/clientIps?email={email}", "clientIps query POST")
     await try_r("POST", "/panel/api/inbounds/onlines", "onlines POST")
     await try_r("GET", "/panel/api/inbounds/onlines", "onlines GET")
+    await try_r("POST", "/panel/api/inbounds/onlines?email={email}", "onlines with email POST")
     await try_r("GET", "/panel/api/inbounds/list", "inbounds list")
+    # Show a couple other clients to compare structure
+    inbounds_data = await _request("GET", "/panel/api/inbounds/list")
+    if inbounds_data:
+        for ib in inbounds_data if isinstance(inbounds_data, list) else []:
+            for cl in ib.get("clientStats", [])[:3]:
+                if isinstance(cl, dict) and cl.get("email") != email:
+                    import json
+                    lines.append(f"<b>other client:</b> <code>{json.dumps(cl, default=str)[:400]}</code>")
+                    break
 
     for iid in settings.XUI_INBOUND_IDS:
         inbound = await get_inbound_info(iid)
