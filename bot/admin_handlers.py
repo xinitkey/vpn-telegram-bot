@@ -649,41 +649,52 @@ async def cmd_devices(message: Message, command: CommandObject):
     if not user.xui_email:
         await message.answer(f"У пользователя {user_id} нет email в XUI")
         return
-    try:
-        from services.xui_api import _request
-        # clientIps
+
+    from urllib.parse import quote
+    from services.xui_api import _get_session, _make_session, _session_cookies, _csrf_token
+    # ensure session exists
+    await _get_session()
+    email_q = quote(user.xui_email)
+    lines = [f"<b>Диагностика устройств</b>\nUser: {user_id}\nEmail: {user.xui_email}\n"]
+
+    base = settings.XUI_URL.rstrip('/')
+    tests = [
+        ("POST", f"/panel/api/inbounds/clientIps/{email_q}", "clientIps POST"),
+        ("GET", f"/panel/api/inbounds/clientIps/{email_q}", "clientIps GET"),
+        ("POST", f"/panel/api/inbounds/getClientIps/{email_q}", "getClientIps POST"),
+        ("GET", f"/panel/api/inbounds/getClientIps/{email_q}", "getClientIps GET"),
+        ("POST", "/panel/api/inbounds/onlines", "onlines POST"),
+        ("GET", "/panel/api/inbounds/onlines", "onlines GET"),
+        ("POST", "/panel/api/inbounds/list", "inbounds/list POST"),
+        ("GET", "/panel/api/inbounds/list", "inbounds/list GET"),
+    ]
+    for method, path, tag in tests:
         try:
-            data = await _request("POST", f"/panel/api/inbounds/clientIps/{user.xui_email}")
-            ci = str(data)[:600]
+            if not _session_cookies:
+                lines.append(f"<b>{tag}:</b> нет сессии")
+                continue
+            cookie_h = "; ".join(f"{k}={v}" for k, v in _session_cookies.items())
+            async with _make_session() as sess:
+                async with sess.request(method, f"{base}{path}", headers={
+                    "Cookie": cookie_h,
+                    "X-Requested-With": "XMLHttpRequest",
+                    "Content-Type": "application/json",
+                    "X-CSRF-Token": _csrf_token or "",
+                }) as resp:
+                    body = await resp.text()
+                    lines.append(f"<b>{tag}:</b> {resp.status} <code>{body[:400]}</code>")
         except Exception as e:
-            ci = f"Ошибка: {e}"
-        # onlines
-        try:
-            data = await _request("POST", "/panel/api/inbounds/onlines")
-            onl = str(data)[:600]
-        except Exception as e:
-            onl = f"Ошибка: {e}"
-        # clientStats
-        from services.xui_api import get_inbound_info
-        cs = ""
-        for iid in settings.XUI_INBOUND_IDS:
-            inbound = await get_inbound_info(iid)
-            for cl in inbound.get("clientStats", []):
-                if isinstance(cl, dict) and cl.get("email") == user.xui_email:
-                    cs = str(cl)[:600]
-                    break
-        msg = (
-            f"<b>Диагностика устройств</b>\n"
-            f"Пользователь: {user_id}\n"
-            f"Email: {user.xui_email}\n"
-            f"Подписка: {'активна' if user.is_subscription_active else 'не активна'}\n\n"
-            f"<b>clientIps:</b> <code>{ci}</code>\n\n"
-            f"<b>onlines:</b> <code>{onl}</code>\n\n"
-            f"<b>clientStats:</b> <code>{cs}</code>"
-        )
-        await message.answer(msg, parse_mode='HTML')
-    except Exception as e:
-        await message.answer(f"Ошибка диагностики: {e}", parse_mode='HTML')
+            lines.append(f"<b>{tag}:</b> {e}")
+
+    from services.xui_api import get_inbound_info
+    for iid in settings.XUI_INBOUND_IDS:
+        inbound = await get_inbound_info(iid)
+        for cl in inbound.get("clientStats", []):
+            if isinstance(cl, dict) and cl.get("email") == user.xui_email:
+                lines.append(f"<b>clientStats:</b> <code>{str(cl)[:600]}</code>")
+                break
+
+    await message.answer("\n".join(lines), parse_mode='HTML')
 
 
 @router.message(Command("broadcast"))
