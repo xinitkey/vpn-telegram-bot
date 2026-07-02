@@ -174,54 +174,45 @@ async def _request(method: str, path: str, data: dict | None = None, retries: in
                 raise
 
 
-async def get_client_ips(email: str) -> list[str]:
-    """Return list of source IPs for the given client.
-    Tries: clientIps → onlines → clientStats."""
-    # 1. clientIps — historical IPs from MHSanaei/3x-ui
+async def get_client_activity(email: str) -> dict:
+    """Return dict with activity info: active, lastOnline, trafficUp, trafficDown, ips."""
+    result = {"active": False, "lastOnline": 0, "trafficUp": 0, "trafficDown": 0, "ips": []}
+
+    # 1. Try clientIps endpoint
     try:
         data = await _request("POST", f"/panel/api/inbounds/clientIps/{quote(email)}")
         if isinstance(data, dict):
             ips = data.get("ips", data.get("obj", []))
             if isinstance(ips, list):
-                result = [str(ip) for ip in ips if ip]
-                if result:
-                    logger.info("clientIps: %d IPs for %s", len(result), email)
-                    return result
-    except Exception as e:
-        logger.debug("clientIps failed for %s: %s", email, e)
+                result["ips"] = [str(ip) for ip in ips if ip]
+    except Exception:
+        pass
 
-    # 2. onlines — currently online clients (MHSanaei/3x-ui map format)
-    try:
-        data = await _request("POST", "/panel/api/inbounds/onlines")
-        if isinstance(data, dict):
-            entry = data.get(email)
-            if isinstance(entry, dict):
-                ips = entry.get("ips", [])
-                if isinstance(ips, list):
-                    result = [str(ip) for ip in ips if ip]
-                    if result:
-                        logger.info("onlines: %d IPs for %s", len(result), email)
-                        return result
-    except Exception as e:
-        logger.debug("onlines failed: %s", e)
-
-    # 3. Fallback: clientStats IP field
+    # 2. Get activity from clientStats
+    now_ms = int(time.time() * 1000)
     for iid in settings.XUI_INBOUND_IDS:
         inbound = await get_inbound_info(iid)
         for client in inbound.get("clientStats", []):
             if isinstance(client, dict) and client.get("email") == email:
-                for field in ("ips", "ip"):
-                    raw = client.get(field)
-                    if isinstance(raw, list):
-                        result = [str(ip) for ip in raw if ip]
-                        if result:
-                            logger.info("clientStats: %d IPs for %s", len(result), email)
-                            return result
-                    if isinstance(raw, str) and raw:
-                        logger.info("clientStats: 1 IP for %s: %s", email, raw)
-                        return [raw]
-    logger.info("No IPs found for %s", email)
-    return []
+                result["trafficUp"] = client.get("up", 0)
+                result["trafficDown"] = client.get("down", 0)
+                last = client.get("lastOnline", 0)
+                result["lastOnline"] = last if isinstance(last, (int, float)) else 0
+                if not result["ips"]:
+                    for field in ("ips", "ip"):
+                        raw = client.get(field)
+                        if isinstance(raw, list):
+                            result["ips"] = [str(ip) for ip in raw if ip]
+                            break
+                        if isinstance(raw, str) and raw:
+                            result["ips"] = [raw]
+                            break
+                break
+
+    # Active = has traffic in last 24h or has IPs
+    total = result["trafficUp"] + result["trafficDown"]
+    result["active"] = bool(result["ips"]) or (total > 0 and result["lastOnline"] > now_ms - 86400000)
+    return result
 
 
 async def add_client(email: str, days: int, inbound_id: int | None = None) -> dict[str, str]:

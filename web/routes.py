@@ -18,7 +18,7 @@ from services.xui_api import (
     add_client as xui_add_client,
     update_client_expiry as xui_update_expiry,
     build_link_for_email as xui_build_link_for_email,
-    get_client_ips as xui_get_client_ips,
+    get_client_activity as xui_get_client_activity,
 )
 from services.payment import generate_payment_id
 from services.auth import verify_telegram_init_data
@@ -123,21 +123,18 @@ def setup_routes(app: web.Application, bot: Bot, dp: Dispatcher):
             if user_id == 0:
                 return web.json_response({'error': 'Missing authentication'}, status=401)
         user = await get_user(user_id)
-        if user is None:
-            return web.json_response({'ips': [], 'count': 0})
-        if not user.xui_email:
-            log.info("User %d has no xui_email", user_id)
-            return web.json_response({'ips': [], 'count': 0})
-        if not user.is_subscription_active:
-            log.info("User %d subscription not active", user_id)
-            return web.json_response({'ips': [], 'count': 0})
+        if user is None or not user.xui_email or not user.is_subscription_active:
+            return web.json_response({
+                'active': False, 'lastOnline': 0,
+                'trafficUp': 0, 'trafficDown': 0, 'ips': [], 'devices': 0,
+            })
         try:
-            ips = await xui_get_client_ips(user.xui_email)
-            log.info("Devices for user %d (%s): %d IPs — %s", user_id, user.xui_email, len(ips), ips)
+            info = await xui_get_client_activity(user.xui_email)
         except Exception as e:
-            log.warning(f"Failed to get client IPs for {user.xui_email}: {e}")
-            ips = []
-        return web.json_response({'ips': ips, 'count': len(ips)})
+            log.warning(f"Failed to get client activity for {user.xui_email}: {e}")
+            info = {"active": False, "lastOnline": 0, "trafficUp": 0, "trafficDown": 0, "ips": []}
+        info["devices"] = len(info["ips"])
+        return web.json_response(info)
 
     async def api_apply_promo(request):
         try:

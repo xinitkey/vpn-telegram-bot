@@ -200,8 +200,16 @@ body {
 
 .devices-content { min-height: 80px; }
 .devices-loading, .devices-empty { text-align: center; color: #9ca3af; padding: 24px 0; font-size: 15px; }
-.devices-count { text-align: center; font-size: 16px; margin-bottom: 16px; color: #e5e7eb; }
-.devices-count b { color: #ef4444; font-size: 20px; }
+.devices-status-row { text-align: center; font-size: 20px; margin-bottom: 20px; }
+.devices-status-icon { font-size: 24px; vertical-align: middle; }
+.devices-info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+.devices-info-item {
+    background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 12px; padding: 14px; text-align: center;
+}
+.di-label { font-size: 12px; color: #9ca3af; margin-bottom: 4px; }
+.di-value { font-size: 16px; font-weight: 700; color: #e5e7eb; }
+.devices-ips-label { font-size: 13px; color: #9ca3af; margin-bottom: 8px; }
 .devices-list { display: flex; flex-direction: column; gap: 8px; }
 .device-item {
     background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06);

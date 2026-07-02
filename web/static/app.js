@@ -315,29 +315,55 @@ async function confirmTopUp() {
     }
 }
 
+function formatTraffic(bytes) {
+    if (!bytes || bytes <= 0) return '0 B';
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
+    if (bytes < 1073741824) return (bytes / 1048576).toFixed(1) + ' MB';
+    return (bytes / 1073741824).toFixed(2) + ' GB';
+}
+
+function formatLastOnline(ts) {
+    if (!ts || ts <= 0) return '—';
+    const d = new Date(ts);
+    const now = Date.now();
+    const diff = now - d.getTime();
+    if (diff < 60000) return 'только что';
+    if (diff < 3600000) return Math.floor(diff / 60000) + ' мин. назад';
+    if (diff < 86400000) return Math.floor(diff / 3600000) + ' ч. назад';
+    return formatTs(ts);
+}
+
 function openDevices() {
     document.getElementById('devices-modal').classList.add('active');
-    document.getElementById('devices-content').innerHTML = '<div class="devices-loading">Загрузка...</div>';
+    const container = document.getElementById('devices-content');
+    container.innerHTML = '<div class="devices-loading">Загрузка...</div>';
     fetch(workerUrl + "/api/user-devices?userId=" + userId, {
         headers: { "X-Init-Data": initData }
     })
     .then(r => r.json())
     .then(data => {
-        const container = document.getElementById('devices-content');
-        if (data.count === 0) {
-            container.innerHTML = '<div class="devices-empty">Нет подключённых устройств</div>';
-            return;
-        }
-        let html = '<div class="devices-count">Подключено устройств: <b>' + data.count + '</b></div>';
-        html += '<div class="devices-list">';
-        data.ips.forEach((ip, i) => {
-            html += '<div class="device-item"><span class="device-num">' + (i + 1) + '.</span> ' + ip + '</div>';
-        });
+        const activeIcon = data.active ? '🟢' : '🔴';
+        const activeText = data.active ? 'Активен' : 'Не активен';
+        const totalTraffic = (data.trafficUp || 0) + (data.trafficDown || 0);
+        let html = '<div class="devices-status-row"><span class="devices-status-icon">' + activeIcon + '</span> <b>' + activeText + '</b></div>';
+        html += '<div class="devices-info-grid">';
+        html += '<div class="devices-info-item"><div class="di-label">Последний раз</div><div class="di-value">' + formatLastOnline(data.lastOnline) + '</div></div>';
+        html += '<div class="devices-info-item"><div class="di-label">Загружено</div><div class="di-value">' + formatTraffic(data.trafficUp) + '</div></div>';
+        html += '<div class="devices-info-item"><div class="di-label">Скачано</div><div class="di-value">' + formatTraffic(data.trafficDown) + '</div></div>';
+        html += '<div class="devices-info-item"><div class="di-label">Всего трафика</div><div class="di-value">' + formatTraffic(totalTraffic) + '</div></div>';
         html += '</div>';
+        if (data.ips && data.ips.length > 0) {
+            html += '<div class="devices-ips-label">Подключенные IP:</div><div class="devices-list">';
+            data.ips.forEach((ip, i) => {
+                html += '<div class="device-item"><span class="device-num">' + (i + 1) + '.</span> ' + ip + '</div>';
+            });
+            html += '</div>';
+        }
         container.innerHTML = html;
     })
     .catch(() => {
-        document.getElementById('devices-content').innerHTML = '<div class="devices-empty">Ошибка загрузки</div>';
+        container.innerHTML = '<div class="devices-empty">Ошибка загрузки</div>';
     });
 }
 

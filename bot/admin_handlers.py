@@ -12,7 +12,7 @@ from services.db import (
     update_user, create_promocode, delete_promocode, get_all_promocodes,
     reset_trial, wipe_user,
 )
-from services.xui_api import add_client as xui_add_client, update_client_expiry as xui_update_expiry, build_link_for_email as xui_build_link_for_email, get_client_ips as xui_get_client_ips
+from services.xui_api import add_client as xui_add_client, update_client_expiry as xui_update_expiry, build_link_for_email as xui_build_link_for_email
 import time
 import logging
 import csv
