@@ -123,10 +123,17 @@ def setup_routes(app: web.Application, bot: Bot, dp: Dispatcher):
             if user_id == 0:
                 return web.json_response({'error': 'Missing authentication'}, status=401)
         user = await get_user(user_id)
-        if user is None or not user.xui_email or not user.is_subscription_active:
+        if user is None:
+            return web.json_response({'ips': [], 'count': 0})
+        if not user.xui_email:
+            log.info("User %d has no xui_email", user_id)
+            return web.json_response({'ips': [], 'count': 0})
+        if not user.is_subscription_active:
+            log.info("User %d subscription not active", user_id)
             return web.json_response({'ips': [], 'count': 0})
         try:
             ips = await xui_get_client_ips(user.xui_email)
+            log.info("Devices for user %d (%s): %d IPs — %s", user_id, user.xui_email, len(ips), ips)
         except Exception as e:
             log.warning(f"Failed to get client IPs for {user.xui_email}: {e}")
             ips = []

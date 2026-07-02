@@ -175,31 +175,53 @@ async def _request(method: str, path: str, data: dict | None = None, retries: in
 
 
 async def get_client_ips(email: str) -> list[str]:
-    """Return list of source IPs used by the given client via clientIps API."""
+    """Return list of source IPs for the given client.
+    Tries: clientIps → onlines → clientStats."""
+    # 1. clientIps — historical IPs from MHSanaei/3x-ui
     try:
         data = await _request("POST", f"/panel/api/inbounds/clientIps/{quote(email)}")
         if isinstance(data, dict):
-            ips = data.get("ips", [])
+            ips = data.get("ips", data.get("obj", []))
             if isinstance(ips, list):
-                return [str(ip) for ip in ips if ip]
-            if isinstance(ips, str) and ips:
-                return [ips]
-        return []
+                result = [str(ip) for ip in ips if ip]
+                if result:
+                    logger.info("clientIps: %d IPs for %s", len(result), email)
+                    return result
     except Exception as e:
-        logger.warning("clientIps API call failed for %s: %s", email, e)
-        # Fallback: try clientStats
-        for iid in settings.XUI_INBOUND_IDS:
-            inbound = await get_inbound_info(iid)
-            clients = inbound.get("clientStats", [])
-            for client in clients:
-                if isinstance(client, dict) and client.get("email") == email:
-                    raw = client.get("ip", [])
+        logger.debug("clientIps failed for %s: %s", email, e)
+
+    # 2. onlines — currently online clients (MHSanaei/3x-ui map format)
+    try:
+        data = await _request("POST", "/panel/api/inbounds/onlines")
+        if isinstance(data, dict):
+            entry = data.get(email)
+            if isinstance(entry, dict):
+                ips = entry.get("ips", [])
+                if isinstance(ips, list):
+                    result = [str(ip) for ip in ips if ip]
+                    if result:
+                        logger.info("onlines: %d IPs for %s", len(result), email)
+                        return result
+    except Exception as e:
+        logger.debug("onlines failed: %s", e)
+
+    # 3. Fallback: clientStats IP field
+    for iid in settings.XUI_INBOUND_IDS:
+        inbound = await get_inbound_info(iid)
+        for client in inbound.get("clientStats", []):
+            if isinstance(client, dict) and client.get("email") == email:
+                for field in ("ips", "ip"):
+                    raw = client.get(field)
                     if isinstance(raw, list):
-                        return [str(ip) for ip in raw if ip]
+                        result = [str(ip) for ip in raw if ip]
+                        if result:
+                            logger.info("clientStats: %d IPs for %s", len(result), email)
+                            return result
                     if isinstance(raw, str) and raw:
+                        logger.info("clientStats: 1 IP for %s: %s", email, raw)
                         return [raw]
-                    return []
-        return []
+    logger.info("No IPs found for %s", email)
+    return []
 
 
 async def add_client(email: str, days: int, inbound_id: int | None = None) -> dict[str, str]:
