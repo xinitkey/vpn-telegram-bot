@@ -650,44 +650,37 @@ async def cmd_devices(message: Message, command: CommandObject):
         await message.answer(f"У пользователя {user_id} нет email в XUI")
         return
 
-    from services.xui_api import _request, get_inbound_info
-    email = user.xui_email
-    lines = [f"<b>Диагностика устройств</b>\nUser: {user_id}\nEmail: {email}\n"]
+    try:
+        from services.xui_api import _request, get_inbound_info
+        import json
+        email = user.xui_email
+        lines = [f"<b>Диагностика устройств</b>\nUser: {user_id}\nEmail: {email}\n"]
 
-    async def try_r(method: str, path: str, tag: str):
-        try:
-            import json
-            data = await _request(method, path)
-            lines.append(f"<b>{tag}:</b> <code>{json.dumps(data, default=str)[:400]}</code>")
-        except Exception as e:
-            lines.append(f"<b>{tag}:</b> <code>{str(e)[:200]}</code>")
+        async def try_r(method: str, path: str, tag: str):
+            try:
+                data = await _request(method, path)
+                lines.append(f"<b>{tag}:</b> <code>{json.dumps(data, default=str)[:400]}</code>")
+            except Exception as e:
+                lines.append(f"<b>{tag}:</b> <code>{str(e)[:200]}</code>")
 
-    await try_r("POST", f"/panel/api/inbounds/clientIps/{email}", "clientIps path POST")
-    await try_r("GET", f"/panel/api/inbounds/clientIps/{email}", "clientIps path GET")
-    await try_r("POST", f"/panel/api/inbounds/clientIps?email={email}", "clientIps query POST")
-    await try_r("POST", "/panel/api/inbounds/onlines", "onlines POST")
-    await try_r("GET", "/panel/api/inbounds/onlines", "onlines GET")
-    await try_r("POST", "/panel/api/inbounds/onlines?email={email}", "onlines with email POST")
-    await try_r("GET", "/panel/api/inbounds/list", "inbounds list")
-    # Show a couple other clients to compare structure
-    inbounds_data = await _request("GET", "/panel/api/inbounds/list")
-    if inbounds_data:
-        for ib in inbounds_data if isinstance(inbounds_data, list) else []:
-            for cl in ib.get("clientStats", [])[:3]:
-                if isinstance(cl, dict) and cl.get("email") != email:
-                    import json
-                    lines.append(f"<b>other client:</b> <code>{json.dumps(cl, default=str)[:400]}</code>")
+        await try_r("POST", f"/panel/api/inbounds/clientIps/{email}", "clientIps path POST")
+        await try_r("GET", f"/panel/api/inbounds/clientIps/{email}", "clientIps path GET")
+        await try_r("POST", f"/panel/api/inbounds/clientIps?email={email}", "clientIps query POST")
+        await try_r("POST", "/panel/api/inbounds/onlines", "onlines POST")
+        await try_r("GET", "/panel/api/inbounds/onlines", "onlines GET")
+        await try_r("POST", "/panel/api/inbounds/onlines?email={email}", "onlines with email POST")
+        await try_r("GET", "/panel/api/inbounds/list", "inbounds list")
+
+        for iid in settings.XUI_INBOUND_IDS:
+            inbound = await get_inbound_info(iid)
+            for cl in inbound.get("clientStats", []):
+                if isinstance(cl, dict) and cl.get("email") == email:
+                    lines.append(f"<b>clientStats:</b> <code>{json.dumps(cl, default=str)[:600]}</code>")
                     break
 
-    for iid in settings.XUI_INBOUND_IDS:
-        inbound = await get_inbound_info(iid)
-        for cl in inbound.get("clientStats", []):
-            if isinstance(cl, dict) and cl.get("email") == email:
-                import json
-                lines.append(f"<b>clientStats:</b> <code>{json.dumps(cl, default=str)[:600]}</code>")
-                break
-
-    await message.answer("\n".join(lines), parse_mode='HTML')
+        await message.answer("\n".join(lines), parse_mode='HTML')
+    except Exception as e:
+        await message.answer(f"Ошибка: {e}", parse_mode='HTML')
 
 
 @router.message(Command("broadcast"))
