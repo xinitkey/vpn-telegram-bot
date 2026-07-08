@@ -91,7 +91,8 @@ async function loadUserData() {
             if (globalUserData.vpnKey && globalUserData.vpnKey !== 'Не создан') {
                 keyRow.style.display = '';
                 keyValue.dataset.key = globalUserData.vpnKey;
-                keyValue.innerText = hideKey ? getHiddenKeyDots() : globalUserData.vpnKey;
+                keyValue.innerText = hideKey ? '•'.repeat(18) : globalUserData.vpnKey;
+                keyValue.classList.toggle('key-hidden', hideKey);
                 if (hideKey) setTimeout(() => { keyValue.innerText = getHiddenKeyDots(); }, 100);
                 keyValue.classList.toggle('key-hidden', hideKey);
                 document.getElementById('key-toggle-btn').innerText = hideKey ? 'показать' : 'скрыть';
@@ -151,9 +152,9 @@ setInterval(loadUserData, 10000);
 
 function getHiddenKeyDots() {
     const el = document.getElementById('profile-key-value');
-    if (!el) return '•'.repeat(24);
+    if (!el || el.offsetWidth === 0) return '•'.repeat(18);
     const avail = el.offsetWidth - 24;
-    const count = Math.max(16, Math.floor(avail / 8));
+    const count = Math.max(8, Math.min(32, Math.floor(avail / 8)));
     return '•'.repeat(count);
 }
 
