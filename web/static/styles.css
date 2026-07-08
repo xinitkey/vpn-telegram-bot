@@ -99,6 +99,7 @@ body {
 }
 .profile-key-value:hover { background: rgba(0,0,0,0.5); }
 .profile-key-value:active { background: rgba(220, 38, 38, 0.2); }
+.profile-key-value.key-hidden { text-align: center; letter-spacing: 2px; }
 
 .info-section {
     background: rgba(15, 15, 15, 0.85); backdrop-filter: blur(10px);

@@ -92,6 +92,7 @@ async function loadUserData() {
                 keyRow.style.display = '';
                 keyValue.dataset.key = globalUserData.vpnKey;
                 keyValue.innerText = hideKey ? '••••••••••••••••••••••••••••••••' : globalUserData.vpnKey;
+                keyValue.classList.toggle('key-hidden', hideKey);
                 document.getElementById('key-toggle-btn').innerText = hideKey ? 'показать' : 'скрыть';
             } else {
                 keyRow.style.display = 'none';
@@ -152,10 +153,12 @@ function toggleKeyVisibility() {
     const el = document.getElementById('profile-key-value');
     const btn = document.getElementById('key-toggle-btn');
     if (hideKey) {
-        el.innerText = '••••••••••••••••';
+        el.innerText = '••••••••••••••••••••••••••••••••';
+        el.classList.add('key-hidden');
         btn.innerText = 'показать';
     } else {
         el.innerText = el.dataset.key || globalUserData.vpnKey;
+        el.classList.remove('key-hidden');
         btn.innerText = 'скрыть';
     }
 }
