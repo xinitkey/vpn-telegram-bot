@@ -91,7 +91,7 @@ async function loadUserData() {
             if (globalUserData.vpnKey && globalUserData.vpnKey !== 'Не создан') {
                 keyRow.style.display = '';
                 keyValue.dataset.key = globalUserData.vpnKey;
-                keyValue.innerText = hideKey ? '••••••••••••••••••••••••••••••••' : globalUserData.vpnKey;
+                keyValue.innerText = hideKey ? getHiddenKeyDots() : globalUserData.vpnKey;
                 keyValue.classList.toggle('key-hidden', hideKey);
                 document.getElementById('key-toggle-btn').innerText = hideKey ? 'показать' : 'скрыть';
             } else {
@@ -148,12 +148,27 @@ function showReferralInfo(event) {
 loadUserData();
 setInterval(loadUserData, 10000);
 
+function getHiddenKeyDots() {
+    const el = document.getElementById('profile-key-value');
+    if (!el) return '••••••••••••••••';
+    const temp = document.createElement('span');
+    temp.style.cssText = 'font-family: monospace; font-size: 13px; visibility: hidden; white-space: nowrap; position: absolute;';
+    temp.textContent = '•';
+    document.body.appendChild(temp);
+    const dotW = temp.getBoundingClientRect().width;
+    document.body.removeChild(temp);
+    const padW = 24; // padding left + right (12px each)
+    const avail = el.clientWidth - padW;
+    const count = Math.max(4, Math.floor(avail / dotW));
+    return '•'.repeat(count);
+}
+
 function toggleKeyVisibility() {
     hideKey = !hideKey;
     const el = document.getElementById('profile-key-value');
     const btn = document.getElementById('key-toggle-btn');
     if (hideKey) {
-        el.innerText = '••••••••••••••••••••••••••••••••';
+        el.innerText = getHiddenKeyDots();
         el.classList.add('key-hidden');
         btn.innerText = 'показать';
     } else {
