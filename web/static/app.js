@@ -91,7 +91,7 @@ async function loadUserData() {
             if (globalUserData.vpnKey && globalUserData.vpnKey !== 'Не создан') {
                 keyRow.style.display = '';
                 keyValue.dataset.key = globalUserData.vpnKey;
-                keyValue.innerText = hideKey ? '••••••••••••••••' : globalUserData.vpnKey;
+                keyValue.innerText = hideKey ? '••••••••••••••••••••••••••••••••' : globalUserData.vpnKey;
                 document.getElementById('key-toggle-btn').innerText = hideKey ? 'показать' : 'скрыть';
             } else {
                 keyRow.style.display = 'none';
