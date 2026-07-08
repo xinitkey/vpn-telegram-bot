@@ -90,7 +90,8 @@ body {
 .profile-info-block span a { color: #3b82f6; text-decoration: underline; }
 .profile-key-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
 .profile-key-header .di-label { font-size: 12px; color: #9ca3af; }
-.key-toggle-btn { cursor: pointer; font-size: 18px; user-select: none; }
+.key-toggle-btn { cursor: pointer; font-size: 12px; color: #9ca3af; user-select: none; transition: color 0.2s; }
+.key-toggle-btn:hover { color: #e5e7eb; }
 .profile-key-value {
     background: rgba(0,0,0,0.3); border-radius: 10px; padding: 10px 12px;
     font-family: monospace; font-size: 13px; color: #ef4444; word-break: break-all;

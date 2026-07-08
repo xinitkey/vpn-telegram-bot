@@ -92,7 +92,7 @@ async function loadUserData() {
                 keyRow.style.display = '';
                 keyValue.dataset.key = globalUserData.vpnKey;
                 keyValue.innerText = hideKey ? '••••••••••••••••' : globalUserData.vpnKey;
-                document.getElementById('key-toggle-btn').innerText = hideKey ? '👁' : '👁‍🗨';
+                document.getElementById('key-toggle-btn').innerText = hideKey ? 'показать' : 'скрыть';
             } else {
                 keyRow.style.display = 'none';
             }
@@ -153,10 +153,10 @@ function toggleKeyVisibility() {
     const btn = document.getElementById('key-toggle-btn');
     if (hideKey) {
         el.innerText = '••••••••••••••••';
-        btn.innerText = '👁';
+        btn.innerText = 'показать';
     } else {
         el.innerText = el.dataset.key || globalUserData.vpnKey;
-        btn.innerText = '👁‍🗨';
+        btn.innerText = 'скрыть';
     }
 }
 
