@@ -92,6 +92,7 @@ async function loadUserData() {
                 keyRow.style.display = '';
                 keyValue.dataset.key = globalUserData.vpnKey;
                 keyValue.innerText = hideKey ? getHiddenKeyDots() : globalUserData.vpnKey;
+                if (hideKey) setTimeout(() => { keyValue.innerText = getHiddenKeyDots(); }, 100);
                 keyValue.classList.toggle('key-hidden', hideKey);
                 document.getElementById('key-toggle-btn').innerText = hideKey ? 'показать' : 'скрыть';
             } else {
@@ -151,15 +152,8 @@ setInterval(loadUserData, 10000);
 function getHiddenKeyDots() {
     const el = document.getElementById('profile-key-value');
     if (!el) return '••••••••••••••••';
-    const temp = document.createElement('span');
-    temp.style.cssText = 'font-family: monospace; font-size: 13px; visibility: hidden; white-space: nowrap; position: absolute;';
-    temp.textContent = '•';
-    document.body.appendChild(temp);
-    const dotW = temp.getBoundingClientRect().width;
-    document.body.removeChild(temp);
-    const padW = 24; // padding left + right (12px each)
-    const avail = el.clientWidth - padW;
-    const count = Math.max(4, Math.floor(avail / dotW));
+    const avail = el.offsetWidth - 24;
+    const count = Math.max(16, Math.floor(avail / 8));
     return '•'.repeat(count);
 }
 
@@ -176,6 +170,7 @@ function toggleKeyVisibility() {
         el.classList.remove('key-hidden');
         btn.innerText = 'скрыть';
     }
+    setTimeout(() => { if (hideKey) el.innerText = getHiddenKeyDots(); }, 50);
 }
 
 function copyKey() {
