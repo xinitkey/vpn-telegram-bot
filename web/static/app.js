@@ -151,7 +151,7 @@ setInterval(loadUserData, 10000);
 
 function getHiddenKeyDots() {
     const el = document.getElementById('profile-key-value');
-    if (!el) return '••••••••••••••••';
+    if (!el) return '•'.repeat(24);
     const avail = el.offsetWidth - 24;
     const count = Math.max(16, Math.floor(avail / 8));
     return '•'.repeat(count);
