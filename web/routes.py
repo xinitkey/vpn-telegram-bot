@@ -17,7 +17,7 @@ from services.db import (
 from services.xui_api import (
     add_client as xui_add_client,
     update_client_expiry as xui_update_expiry,
-    build_link_for_email as xui_build_link_for_email,
+    sync_or_create_client as xui_sync_or_create,
     get_client_activity as xui_get_client_activity,
 )
 from services.payment import generate_payment_id
@@ -233,8 +233,12 @@ def setup_routes(app: web.Application, bot: Bot, dp: Dispatcher):
             total_days = max(1, (new_sub - now_ms) // 86400000)
             try:
                 if user.xui_email:
-                    await xui_update_expiry(user.xui_email, total_days)
-                    user.link = await xui_build_link_for_email(user.xui_email, user.xui_inbound_id or None)
+                    result = await xui_sync_or_create(user.xui_email, total_days, user.xui_inbound_id or None)
+                    user.xui_email = result['email']
+                    user.link = result['link']
+                    if result.get('recreated'):
+                        user.xui_uuid = result.get('uuid', user.xui_uuid)
+                        user.xui_inbound_id = result.get('inbound_id', user.xui_inbound_id)
                 else:
                     client = await xui_add_client(email, total_days, user.xui_inbound_id or None)
                     user.xui_uuid = client['uuid']

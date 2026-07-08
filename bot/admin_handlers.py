@@ -12,7 +12,7 @@ from services.db import (
     update_user, create_promocode, delete_promocode, get_all_promocodes,
     reset_trial, wipe_user,
 )
-from services.xui_api import add_client as xui_add_client, update_client_expiry as xui_update_expiry, build_link_for_email as xui_build_link_for_email
+from services.xui_api import add_client as xui_add_client, update_client_expiry as xui_update_expiry, build_link_for_email as xui_build_link_for_email, sync_or_create_client as xui_sync_or_create
 import time
 import logging
 import csv
@@ -294,9 +294,14 @@ async def cmd_give_sub(message: Message, command: CommandObject):
         total_days = max(1, (user.subscription - now_ms) // 86400000) if user.subscription and user.subscription > now_ms else days
         try:
             if user.xui_email:
-                await xui_update_expiry(user.xui_email, total_days)
-                link = await xui_build_link_for_email(user.xui_email, user.xui_inbound_id or None)
-                await update_vpn_info(user_id, link=link)
+                result = await xui_sync_or_create(user.xui_email, total_days, user.xui_inbound_id or None)
+                await update_vpn_info(user_id, email=result['email'], link=result['link'])
+                if result.get('recreated'):
+                    u_upd = await get_user(user_id)
+                    if u_upd:
+                        u_upd.xui_uuid = result.get('uuid', u_upd.xui_uuid)
+                        u_upd.xui_inbound_id = result.get('inbound_id', u_upd.xui_inbound_id)
+                        await update_user(u_upd)
             else:
                 client = await xui_add_client(email, total_days, user.xui_inbound_id or None)
                 await update_vpn_info(user_id, uuid=client['uuid'], email=client['email'], link=client['link'])
@@ -624,6 +629,36 @@ async def cmd_xui(message: Message):
                 f"<code>{len(clients)}</code> клиентов"
             )
         await message.answer("\n".join(lines), parse_mode='HTML')
+    except Exception as e:
+        await message.answer(f"Ошибка: {e}", parse_mode='HTML')
+
+
+@router.message(Command("resync"))
+async def cmd_resync(message: Message, command: CommandObject):
+    if not is_admin(message.from_user.id):
+        await message.answer(_NOT_ADMIN_MSG)
+        return
+    args = command.args.strip() if command.args else ""
+    if not args or not args.isdigit():
+        await message.answer("Использование: /resync <user_id>")
+        return
+    user_id = int(args)
+    user = await get_user(user_id)
+    if user is None:
+        await message.answer("Пользователь не найден")
+        return
+    email = f'user_{user_id}'
+    try:
+        client = await xui_add_client(email, 1, user.xui_inbound_id or None)
+        user.xui_uuid = client['uuid']
+        user.xui_email = client['email']
+        user.link = client['link']
+        user.xui_inbound_id = client['inbound_id']
+        await update_user(user)
+        await message.answer(
+            f"Клиент пересоздан.\nEmail: {client['email']}\nСсылка: {client['link']}",
+            parse_mode='HTML'
+        )
     except Exception as e:
         await message.answer(f"Ошибка: {e}", parse_mode='HTML')
 

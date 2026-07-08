@@ -254,6 +254,27 @@ async def add_client(email: str, days: int, inbound_id: int | None = None) -> di
     return {"uuid": uid, "email": email, "link": link, "inbound_id": ids[0]}
 
 
+async def sync_or_create_client(email: str, days: int, inbound_id: int | None = None) -> dict[str, str]:
+    """Try to update client expiry. If client was deleted from panel, re-create it."""
+    try:
+        await update_client_expiry(email, days)
+        link = await build_link_for_email(email, inbound_id)
+        return {"email": email, "link": link, "recreated": False}
+    except (RuntimeError, Exception) as e:
+        err = str(e).lower()
+        if "record not found" in err or "client not found" in err:
+            logger.warning("Client %s not found in panel, re-creating...", email)
+            # Remove stale email if partial data exists, then create fresh
+            try:
+                await _request("POST", f"/panel/api/clients/del/{quote(email)}")
+            except Exception:
+                pass
+            result = await add_client(email, days, inbound_id)
+            result["recreated"] = True
+            return result
+        raise
+
+
 async def update_client_expiry(email: str, days: int):
     expiry = int(time.time() * 1000) + days * 86400000
     payload = {
