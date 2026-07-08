@@ -136,52 +136,67 @@ body {
 .custom-amount { width: 100%; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #fff; padding: 14px; border-radius: 12px; font-size: 16px; margin-bottom: 15px; text-align: center; }
 .payment-methods { margin-bottom: 20px; }
 .payment-methods h3 { font-size: 16px; margin-bottom: 10px; color: #9ca3af; }
-@keyframes gradientBlue {
+@keyframes shimmer {
     0% { background-position: 0% 50%; }
     50% { background-position: 100% 50%; }
     100% { background-position: 0% 50%; }
 }
-@keyframes gradientRed {
-    0% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
+@keyframes pulseGlow {
+    0%, 100% { opacity: 0.4; }
+    50% { opacity: 1; }
 }
 .method-btn {
-    width: 100%; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
-    color: #fff; padding: 14px; border-radius: 12px; font-size: 15px; font-weight: 600;
-    cursor: pointer; margin-bottom: 10px; display: flex; align-items: center; gap: 12px; transition: all 0.3s;
+    width: 100%; position: relative; overflow: hidden;
+    background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+    color: #fff; padding: 14px; border-radius: 14px; font-size: 15px; font-weight: 600;
+    cursor: pointer; margin-bottom: 10px; display: flex; align-items: center; gap: 12px;
+    transition: all 0.3s ease; backdrop-filter: blur(4px); z-index: 0;
 }
-#method-platega_sbp {
-    border: 1px solid rgba(59, 130, 246, 0.2);
-    background: linear-gradient(135deg, #1a2a4a, #1e40af, #2563eb, #1e40af, #1a2a4a);
-    background-size: 300% 300%;
-    animation: gradientBlue 8s ease infinite;
+.method-btn::before {
+    content: ''; position: absolute; inset: 0; border-radius: 14px;
+    opacity: 0; transition: opacity 0.4s ease; z-index: -1;
+}
+.method-btn:hover::before,
+.method-btn.active::before {
+    opacity: 1;
+}
+#method-platega_sbp::before {
+    background: linear-gradient(135deg, rgba(59,130,246,0.15), rgba(147,197,253,0.1), rgba(59,130,246,0.05), rgba(147,197,253,0.1), rgba(59,130,246,0.15));
+    background-size: 200% 200%;
+    animation: shimmer 8s ease infinite;
 }
 #method-platega_sbp:hover {
-    border: 1.5px solid rgba(59, 130, 246, 0.6);
+    border-color: rgba(59, 130, 246, 0.3);
+    background: rgba(59, 130, 246, 0.06);
 }
 #method-platega_sbp.active {
-    border: 1.5px solid #60a5fa;
-    background: linear-gradient(135deg, #1e3a5f, #2563eb, #3b82f6, #2563eb, #1e3a5f);
-    background-size: 300% 300%;
-    animation: gradientBlue 6s ease infinite;
-    box-shadow: 0 0 12px rgba(59, 130, 246, 0.3);
+    border-color: rgba(96, 165, 250, 0.5);
+    background: rgba(59, 130, 246, 0.08);
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.15), inset 0 0 20px rgba(59, 130, 246, 0.05);
 }
-#method-platega_crypto {
-    border: 1px solid rgba(239, 68, 68, 0.2);
-    background: linear-gradient(135deg, #2a0a0a, #991b1b, #b91c1c, #991b1b, #2a0a0a);
-    background-size: 300% 300%;
-    animation: gradientRed 8s ease infinite;
+#method-platega_sbp.active::before {
+    background: linear-gradient(135deg, rgba(59,130,246,0.25), rgba(147,197,253,0.15), rgba(59,130,246,0.1), rgba(147,197,253,0.15), rgba(59,130,246,0.25));
+    background-size: 200% 200%;
+    animation: shimmer 6s ease infinite;
+}
+#method-platega_crypto::before {
+    background: linear-gradient(135deg, rgba(239,68,68,0.15), rgba(248,113,113,0.1), rgba(239,68,68,0.05), rgba(248,113,113,0.1), rgba(239,68,68,0.15));
+    background-size: 200% 200%;
+    animation: shimmer 8s ease infinite;
 }
 #method-platega_crypto:hover {
-    border: 1.5px solid rgba(239, 68, 68, 0.6);
+    border-color: rgba(239, 68, 68, 0.3);
+    background: rgba(239, 68, 68, 0.06);
 }
 #method-platega_crypto.active {
-    border: 1.5px solid #f87171;
-    background: linear-gradient(135deg, #3a0f0f, #b91c1c, #dc2626, #b91c1c, #3a0f0f);
-    background-size: 300% 300%;
-    animation: gradientRed 6s ease infinite;
-    box-shadow: 0 0 12px rgba(239, 68, 68, 0.3);
+    border-color: rgba(248, 113, 113, 0.5);
+    background: rgba(239, 68, 68, 0.08);
+    box-shadow: 0 0 20px rgba(239, 68, 68, 0.15), inset 0 0 20px rgba(239, 68, 68, 0.05);
+}
+#method-platega_crypto.active::before {
+    background: linear-gradient(135deg, rgba(239,68,68,0.25), rgba(248,113,113,0.15), rgba(239,68,68,0.1), rgba(248,113,113,0.15), rgba(239,68,68,0.25));
+    background-size: 200% 200%;
+    animation: shimmer 6s ease infinite;
 }
 .method-icon { font-size: 24px; }
 .method-info { text-align: left; }
