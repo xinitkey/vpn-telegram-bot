@@ -55,7 +55,10 @@
             </div>
             <div class="profile-info-block">Telegram ID: <span id="user-id">...</span></div>
             <div class="profile-info-block">Баланс: <span id="profile-balance">0 &#x20BD;</span></div>
-            <div class="profile-info-block">Ключ: <span id="profile-key">Загрузка...</span></div>
+            <div class="profile-info-block" id="profile-key-row" style="display:none;">
+                <div class="di-label">Ключ</div>
+                <button class="btn-open-key" id="btn-open-key" onclick="openLink(globalUserData.vpnKey)">Открыть ключ</button>
+            </div>
             <div class="profile-info-block">Начало: <span id="profile-sub-start">—</span></div>
             <div class="profile-info-block">Заканчивается: <span id="profile-sub-end">—</span></div>
         </div>

@@ -85,7 +85,14 @@ async function loadUserData() {
             document.getElementById('balance-display').innerText = globalUserData.balance + " ₽";
             document.getElementById('profile-balance').innerText = globalUserData.balance + " ₽";
             document.getElementById('days-count').innerHTML = globalUserData.remainingStr || globalUserData.daysLeft + " <span>дней</span>";
-            document.getElementById('profile-key').innerHTML = formatLink(globalUserData.vpnKey);
+            const keyRow = document.getElementById('profile-key-row');
+            const keyBtn = document.getElementById('btn-open-key');
+            if (globalUserData.vpnKey && globalUserData.vpnKey !== 'Не создан') {
+                keyRow.style.display = '';
+                keyBtn.onclick = function() { openLink(globalUserData.vpnKey); };
+            } else {
+                keyRow.style.display = 'none';
+            }
             document.getElementById('profile-sub-start').innerText = formatTs(globalUserData.subscriptionStart);
             document.getElementById('profile-sub-end').innerText = formatTs(globalUserData.subscriptionEnd);
             document.getElementById('price-daily-text').innerText = globalUserData.dailyPrice + "₽ / день за устройство";
