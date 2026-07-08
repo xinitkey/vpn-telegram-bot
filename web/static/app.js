@@ -54,6 +54,7 @@ let globalUserData = { balance: 0, daysLeft: 0, vpnKey: 'Не создан', dai
 let activePromoCode = '';
 let activePromoDiscount = 0;
 let activePromoTariffPrices = {};
+let hideKey = true;
 
 if (userRaw) {
     document.getElementById('user-id').innerText = userRaw.id || "Не определен";
@@ -86,10 +87,12 @@ async function loadUserData() {
             document.getElementById('profile-balance').innerText = globalUserData.balance + " ₽";
             document.getElementById('days-count').innerHTML = globalUserData.remainingStr || globalUserData.daysLeft + " <span>дней</span>";
             const keyRow = document.getElementById('profile-key-row');
-            const keyBtn = document.getElementById('btn-open-key');
+            const keyValue = document.getElementById('profile-key-value');
             if (globalUserData.vpnKey && globalUserData.vpnKey !== 'Не создан') {
                 keyRow.style.display = '';
-                keyBtn.onclick = function() { openLink(globalUserData.vpnKey); };
+                keyValue.dataset.key = globalUserData.vpnKey;
+                keyValue.innerText = hideKey ? '••••••••••••••••' : globalUserData.vpnKey;
+                document.getElementById('key-toggle-btn').innerText = hideKey ? '👁' : '👁‍🗨';
             } else {
                 keyRow.style.display = 'none';
             }
@@ -143,6 +146,30 @@ function showReferralInfo(event) {
 
 loadUserData();
 setInterval(loadUserData, 10000);
+
+function toggleKeyVisibility() {
+    hideKey = !hideKey;
+    const el = document.getElementById('profile-key-value');
+    const btn = document.getElementById('key-toggle-btn');
+    if (hideKey) {
+        el.innerText = '••••••••••••••••';
+        btn.innerText = '👁';
+    } else {
+        el.innerText = el.dataset.key || globalUserData.vpnKey;
+        btn.innerText = '👁‍🗨';
+    }
+}
+
+function copyKey() {
+    const key = globalUserData.vpnKey;
+    if (!key || key === 'Не создан') return;
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(key).then(() => {
+            tg.HapticFeedback.notificationOccurred('success');
+            tg.showAlert('Ключ скопирован');
+        });
+    }
+}
 
 function switchTab(tab) {
     const homeContent = document.getElementById('tab-home-content');
