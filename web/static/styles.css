@@ -149,30 +149,39 @@ body {
 .method-btn {
     width: 100%; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
     color: #fff; padding: 14px; border-radius: 12px; font-size: 15px; font-weight: 600;
-    cursor: pointer; margin-bottom: 10px; display: flex; align-items: center; gap: 12px; transition: all 0.2s;
+    cursor: pointer; margin-bottom: 10px; display: flex; align-items: center; gap: 12px; transition: all 0.3s;
 }
-.method-btn.active { border-color: #fff; }
 #method-platega_sbp {
-    background: linear-gradient(135deg, #1e3a5f, #3b82f6, #60a5fa, #3b82f6, #1e3a5f);
+    border: 1px solid rgba(59, 130, 246, 0.2);
+    background: linear-gradient(135deg, #1a2a4a, #1e40af, #2563eb, #1e40af, #1a2a4a);
     background-size: 300% 300%;
-    animation: gradientBlue 4s ease infinite;
+    animation: gradientBlue 8s ease infinite;
+}
+#method-platega_sbp:hover {
+    border: 1.5px solid rgba(59, 130, 246, 0.6);
 }
 #method-platega_sbp.active {
-    background: linear-gradient(135deg, #2563eb, #60a5fa, #93c5fd, #60a5fa, #2563eb);
+    border: 1.5px solid #60a5fa;
+    background: linear-gradient(135deg, #1e3a5f, #2563eb, #3b82f6, #2563eb, #1e3a5f);
     background-size: 300% 300%;
-    animation: gradientBlue 3s ease infinite;
-    box-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
+    animation: gradientBlue 6s ease infinite;
+    box-shadow: 0 0 12px rgba(59, 130, 246, 0.3);
 }
 #method-platega_crypto {
-    background: linear-gradient(135deg, #450a0a, #dc2626, #ef4444, #dc2626, #450a0a);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    background: linear-gradient(135deg, #2a0a0a, #991b1b, #b91c1c, #991b1b, #2a0a0a);
     background-size: 300% 300%;
-    animation: gradientRed 4s ease infinite;
+    animation: gradientRed 8s ease infinite;
+}
+#method-platega_crypto:hover {
+    border: 1.5px solid rgba(239, 68, 68, 0.6);
 }
 #method-platega_crypto.active {
-    background: linear-gradient(135deg, #7f1d1d, #ef4444, #f87171, #ef4444, #7f1d1d);
+    border: 1.5px solid #f87171;
+    background: linear-gradient(135deg, #3a0f0f, #b91c1c, #dc2626, #b91c1c, #3a0f0f);
     background-size: 300% 300%;
-    animation: gradientRed 3s ease infinite;
-    box-shadow: 0 0 20px rgba(239, 68, 68, 0.5);
+    animation: gradientRed 6s ease infinite;
+    box-shadow: 0 0 12px rgba(239, 68, 68, 0.3);
 }
 .method-icon { font-size: 24px; }
 .method-info { text-align: left; }
