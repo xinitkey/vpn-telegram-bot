@@ -101,7 +101,7 @@ async function loadUserData() {
             }
             document.getElementById('profile-sub-start').innerText = formatTs(globalUserData.subscriptionStart);
             document.getElementById('profile-sub-end').innerText = formatTs(globalUserData.subscriptionEnd);
-            document.getElementById('price-daily-text').innerText = globalUserData.dailyPrice + "₽ / день за устройство";
+            document.getElementById('price-daily-text').innerText = globalUserData.dailyPrice + "₽ / день";
             // Referral
             if (globalUserData.referralUrl) {
                 document.getElementById('ref-count').innerText = globalUserData.referralCount || 0;
