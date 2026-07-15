@@ -1,4 +1,5 @@
 from dataclasses import dataclass, field
+import time
 from datetime import datetime, timezone
 from typing import Optional
 
@@ -52,7 +53,7 @@ class User:
     def is_subscription_active(self) -> bool:
         if self.subscription is None:
             return False
-        return self.subscription > int(datetime.now().timestamp() * 1000)
+        return self.subscription > int(time.time() * 1000)
 
     @property
     def remaining_ms(self) -> int:
