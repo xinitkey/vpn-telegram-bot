@@ -31,7 +31,15 @@ body {
 .tariff-info { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
 .days-left { font-size: 32px; font-weight: 800; }
 .days-left span { font-size: 18px; font-weight: 500; color: #9ca3af; }
-.price-text { color: #ef4444; font-size: 14px; margin-bottom: 20px; font-weight: 500; }
+.price-text { color: #ef4444; font-size: 14px; margin-bottom: 16px; font-weight: 500; }
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+.info-cell{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:10px 12px}
+.info-lbl{font-size:11px;color:#888;font-weight:500;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;display:flex;align-items:center;gap:5px}
+.info-val{font-size:14px;font-weight:600}
+.badge{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:700;padding:3px 8px;border-radius:999px}
+.b-active{background:rgba(61,184,110,.12);color:#3db86e}
+.b-inactive{background:rgba(224,53,53,.12);color:#e03535}
+.b-expiring{background:rgba(224,160,32,.12);color:#e0a020}
 .card-actions { display: flex; gap: 12px; margin-bottom: 15px; }
 .btn-secondary {
     flex: 1; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1);

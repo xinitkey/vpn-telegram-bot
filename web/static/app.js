@@ -86,6 +86,14 @@ async function loadUserData() {
             document.getElementById('balance-display').innerText = globalUserData.balance + " ₽";
             document.getElementById('profile-balance').innerText = globalUserData.balance + " ₽";
             document.getElementById('days-count').innerHTML = globalUserData.remainingStr || globalUserData.daysLeft + " <span>дней</span>";
+            document.getElementById('home-username').textContent = (userRaw?.username ? "@" + userRaw.username : globalUserData.username) || "—";
+            document.getElementById('home-expiry').textContent = formatTs(globalUserData.subscriptionEnd);
+            document.getElementById('home-traffic').textContent = formatTraffic(globalUserData.trafficUsed || 0);
+            var sb = document.getElementById('statusBadge');
+            if (globalUserData.daysLeft > 30) { sb.textContent = '\u25CF Активна'; sb.className = 'badge b-active'; }
+            else if (globalUserData.daysLeft > 0) { sb.textContent = '\u25CF Скоро истекает'; sb.className = 'badge b-expiring'; }
+            else if (globalUserData.daysLeft <= 0 && globalUserData.subscriptionEnd && globalUserData.subscriptionEnd > 0) { sb.textContent = '\u25CF Истекла'; sb.className = 'badge b-inactive'; }
+            else { sb.textContent = '\u25CF Нет подписки'; sb.className = 'badge b-inactive'; }
             const keyRow = document.getElementById('profile-key-row');
             const keyValue = document.getElementById('profile-key-value');
             if (globalUserData.vpnKey && globalUserData.vpnKey !== 'Не создан') {

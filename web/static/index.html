@@ -30,6 +30,36 @@
                     <button class="btn-pay" onclick="openTariffsModal()">Тарифы</button>
                 </div>
                 <div class="price-text" id="price-daily-text">от 5₽ / день</div>
+                <div class="info-grid">
+                    <div class="info-cell">
+                        <div class="info-lbl">
+                            <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                            Пользователь
+                        </div>
+                        <div class="info-val" id="home-username" style="font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">—</div>
+                    </div>
+                    <div class="info-cell">
+                        <div class="info-lbl">
+                            <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+                            Статус
+                        </div>
+                        <div class="info-val"><span class="badge b-inactive" id="statusBadge">&#9679; Загрузка...</span></div>
+                    </div>
+                    <div class="info-cell">
+                        <div class="info-lbl">
+                            <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+                            Истекает
+                        </div>
+                        <div class="info-val" id="home-expiry">—</div>
+                    </div>
+                    <div class="info-cell">
+                        <div class="info-lbl">
+                            <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+                            Трафик
+                        </div>
+                        <div class="info-val" id="home-traffic">0 B</div>
+                    </div>
+                </div>
                 <div class="card-actions">
                     <div class="btn-secondary" onclick="openDevices()"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 18h.01"/></svg> Устройства</div>
                     <div class="btn-secondary" onclick="openInstructions()"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 12.55a11 11 0 0114.08 0"/><path d="M1.42 9a16 16 0 0121.16 0"/><path d="M8.53 16.11a6 6 0 016.95 0"/><circle cx="12" cy="20" r="1"/></svg> Подключение</div>
@@ -207,7 +237,6 @@
 
     <div class="bottom-nav">
         <div class="nav-item active" id="nav-home" onclick="switchTab('home')"><div class="nav-icon"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div><div>Главная</div></div>
-        <div class="nav-item" id="nav-subs" onclick="showSubscriptionInfo()"><div class="nav-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 2 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg></div><div>Подписки</div></div>
         <div class="nav-item" id="nav-info" onclick="switchTab('info')"><div class="nav-icon"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg></div><div>Инфо</div></div>
         <div class="nav-item" id="nav-profile" onclick="switchTab('profile')"><div class="nav-icon"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div><div>Профиль</div></div>
     </div>
