@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 _inbound_cache: dict[int, dict] = {}
 _inbound_cache_ts: dict[int, float] = {}
-_INBOUND_CACHE_TTL = 300
+_INBOUND_CACHE_TTL = 10
 
 _sub_settings_cache: Optional[dict] = None
 _sub_settings_cache_ts: float = 0
