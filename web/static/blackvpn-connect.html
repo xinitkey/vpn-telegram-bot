@@ -729,7 +729,6 @@ function selectApp(id) {
 }
 
 // ── APP DEEPLINK SCHEMES ──────────────────────────────────────────────
-var DESKTOP_PLATFORMS = { macos: 1, windows: 1, linux: 1 };
 var APP_SCHEMES = {
   happ:         'clash://install-config?url=',
   shadowrocket: 'shadowrocket://add?url=',
@@ -748,12 +747,9 @@ function importSub(btn) {
 
   navigator.clipboard.writeText(url);
 
-  // Desktop apps rarely support URL schemes — clipboard only
-  var scheme = !DESKTOP_PLATFORMS[state.platId] && APP_SCHEMES[app.id];
+  var scheme = APP_SCHEMES[app.id];
   if (scheme) {
-    var a = document.createElement('a');
-    a.href = scheme + encodeURIComponent(url);
-    a.click();
+    window.location.href = scheme + encodeURIComponent(url);
   }
 
   btn.classList.add('copied');
