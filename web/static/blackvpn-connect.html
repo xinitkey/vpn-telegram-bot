@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="ru" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>BlackVPN — Подключение</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0e0d0c;
+  --surface:#161513;
+  --surface2:#1c1a18;
+  --border:rgba(255,255,255,.07);
+  --text:#e8e6e2;
+  --muted:#7a7774;
+  --faint:#3a3835;
+  --red:#c0392b;
+  --red2:#e74c3c;
+  --red-glow:rgba(192,57,43,.18);
+  --green:#27ae60;
+  --yellow:#e67e22;
+  --radius:12px;
+  --font:'Inter',sans-serif;
+}
+html{-webkit-font-smoothing:antialiased;scroll-behavior:smooth}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100dvh;font-size:15px;line-height:1.5}
+
+/* ── BACKGROUND ── */
+.bg-mesh{
+  position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;
+}
+.bg-mesh::before{
+  content:'';position:absolute;inset:0;
+  background:
+    radial-gradient(ellipse 80% 50% at 50% -10%, rgba(180,30,20,.22) 0%, transparent 70%),
+    radial-gradient(ellipse 50% 40% at 100% 20%, rgba(150,20,10,.14) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 40% at 0% 80%, rgba(120,15,8,.1) 0%, transparent 60%);
+}
+.bg-mesh::after{
+  content:'';position:absolute;inset:0;
+  background:repeating-linear-gradient(
+    0deg,transparent,transparent 40px,rgba(255,255,255,.012) 40px,rgba(255,255,255,.012) 41px
+  ),repeating-linear-gradient(
+    90deg,transparent,transparent 40px,rgba(255,255,255,.012) 40px,rgba(255,255,255,.012) 41px
+  );
+}
+
+/* ── LAYOUT ── */
+.wrap{position:relative;z-index:1;max-width:680px;margin:0 auto;padding:0 16px 64px}
+
+/* ── HEADER ── */
+header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:18px 0 16px;
+  border-bottom:1px solid var(--border);
+  margin-bottom:24px;
+}
+.brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:17px;letter-spacing:-.02em}
+.brand svg{color:var(--red2)}
+.header-actions{display:flex;gap:8px}
+.icon-btn{
+  display:flex;align-items:center;justify-content:center;
+  width:36px;height:36px;border-radius:8px;
+  border:1px solid var(--border);background:var(--surface);
+  color:var(--muted);cursor:pointer;
+  transition:color .15s,border-color .15s,background .15s;
+}
+.icon-btn:hover{color:var(--text);border-color:rgba(255,255,255,.15);background:var(--surface2)}
+
+/* ── SUBSCRIPTION CARD ── */
+.sub-card{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:18px;
+  margin-bottom:16px;
+}
+.sub-header{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.sub-avatar{
+  width:38px;height:38px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:15px;font-weight:700;flex-shrink:0;
+}
+.sub-avatar.expired{background:rgba(192,57,43,.18);color:var(--red2)}
+.sub-avatar.active{background:rgba(39,174,96,.18);color:var(--green)}
+.sub-info h2{font-size:14px;font-weight:600;margin:0 0 2px}
+.sub-info p{font-size:12px;color:var(--muted);margin:0}
+.sub-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.sub-field{
+  background:var(--surface2);border:1px solid var(--border);
+  border-radius:8px;padding:10px 12px;
+}
+.sub-field label{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted);margin-bottom:4px}
+.sub-field label svg{flex-shrink:0}
+.sub-field span{font-size:13px;font-weight:500}
+.status-active{color:var(--green)}
+.status-expired{color:var(--red2)}
+.status-inactive{color:var(--yellow)}
+
+/* Traffic bar */
+.traffic-bar{margin-top:6px;height:3px;background:var(--faint);border-radius:2px;overflow:hidden}
+.traffic-fill{height:100%;border-radius:2px;background:var(--red2);transition:width .4s}
+
+/* ── SECTION CARD ── */
+.section-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius);padding:18px;margin-bottom:12px;
+}
+.section-card+.section-card{margin-top:8px}
+.section-title-row{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:16px;
+}
+.section-title{font-size:15px;font-weight:700;letter-spacing:-.01em}
+
+/* ── PLATFORM SELECT ── */
+.platform-select{
+  display:flex;align-items:center;gap:6px;
+  background:var(--surface2);border:1px solid var(--border);
+  border-radius:8px;padding:6px 10px;
+  font-size:13px;font-weight:500;color:var(--text);
+  cursor:pointer;min-width:130px;justify-content:space-between;
+  position:relative;
+}
+.platform-select svg{color:var(--muted);flex-shrink:0}
+.plat-icon{width:14px;height:14px;flex-shrink:0}
+
+.plat-dropdown{
+  position:absolute;top:calc(100% + 6px);right:0;z-index:100;
+  background:#1e1c1a;border:1px solid var(--border);
+  border-radius:10px;padding:4px;min-width:150px;
+  box-shadow:0 12px 32px rgba(0,0,0,.5);
+  display:none;
+}
+.plat-dropdown.open{display:block}
+.plat-opt{
+  display:flex;align-items:center;gap:8px;
+  padding:8px 10px;border-radius:6px;cursor:pointer;font-size:13px;
+  transition:background .12s;
+}
+.plat-opt:hover{background:var(--surface)}
+.plat-opt.active{color:var(--red2)}
+.plat-opt .plat-icon{width:14px;height:14px}
+
+/* ── CLIENT TABS ── */
+.ctabs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+.ctab{
+  position:relative;overflow:hidden;
+  display:flex;align-items:center;gap:8px;
+  padding:9px 12px;border-radius:8px;cursor:pointer;
+  background:var(--surface2);border:1px solid var(--border);
+  font-size:13px;font-weight:500;color:var(--muted);
+  transition:all .15s;flex:1;min-width:120px;max-width:calc(50% - 3px);
+}
+.ctab:hover{color:var(--text);border-color:rgba(255,255,255,.12)}
+.ctab.on{
+  background:rgba(192,57,43,.1);border-color:rgba(192,57,43,.35);
+  color:var(--text);
+}
+.ctab-dot{
+  width:7px;height:7px;border-radius:50%;flex-shrink:0;
+  background:var(--faint);
+}
+.ctab.on .ctab-dot{background:var(--red2)}
+.ctab-name{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* Background logo */
+.ctab-logo{
+  position:absolute;right:-2px;top:50%;transform:translateY(-50%);
+  width:54px;height:54px;opacity:.14;pointer-events:none;
+}
+.ctab.on .ctab-logo{opacity:.5}
+.ctab-logo img{width:54px;height:54px;object-fit:contain;border-radius:10px;display:block}
+.ctab-logo svg{width:54px;height:54px;color:var(--text)}
+
+/* ── STEP CARDS ── */
+.step-card{
+  background:var(--surface2);border:1px solid var(--border);
+  border-radius:10px;padding:16px;margin-bottom:8px;
+}
+.step-card:last-child{margin-bottom:0}
+.step-header{display:flex;align-items:center;gap:12px;margin-bottom:8px}
+.step-icon{
+  width:36px;height:36px;border-radius:9px;flex-shrink:0;
+  background:rgba(192,57,43,.12);border:1px solid rgba(192,57,43,.2);
+  display:flex;align-items:center;justify-content:center;color:var(--red2);
+}
+.step-title{font-size:13px;font-weight:600}
+.step-desc{font-size:13px;color:var(--muted);line-height:1.5;margin-bottom:10px}
+.step-actions{display:flex;flex-wrap:wrap;gap:6px}
+
+/* ── BUTTONS ── */
+.btn{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:8px 14px;border-radius:7px;font-size:13px;font-weight:500;
+  cursor:pointer;border:1px solid var(--border);
+  background:var(--surface);color:var(--text);
+  transition:all .15s;text-decoration:none;white-space:nowrap;
+}
+.btn:hover{background:var(--surface2);border-color:rgba(255,255,255,.15)}
+.btn-primary{
+  background:var(--red);border-color:var(--red);color:#fff;
+}
+.btn-primary:hover{background:var(--red2);border-color:var(--red2)}
+.btn svg{flex-shrink:0;width:14px;height:14px}
+.btn-icon{width:14px;height:14px}
+
+/* copy feedback */
+.btn.copied{background:rgba(39,174,96,.15);border-color:rgba(39,174,96,.3);color:var(--green)}
+
+/* ── SUBSCRIPTION ACTIONS ── */
+.sub-import-block{
+  background:rgba(192,57,43,.07);border:1px solid rgba(192,57,43,.2);
+  border-radius:10px;padding:14px;margin-bottom:8px;
+}
+.sub-import-block h4{font-size:13px;font-weight:600;margin-bottom:4px}
+.sub-import-block p{font-size:13px;color:var(--muted);margin-bottom:10px}
+.sub-url-row{
+  display:flex;align-items:center;gap:6px;
+  background:var(--bg);border:1px solid var(--border);border-radius:7px;
+  padding:8px 10px;margin-bottom:8px;font-size:12px;color:var(--muted);
+  word-break:break-all;
+}
+.sub-url-row code{flex:1;font-family:monospace;color:var(--text);font-size:11px}
+
+/* ── EXPIRED BANNER ── */
+.expired-banner{
+  background:rgba(192,57,43,.1);border:1px solid rgba(192,57,43,.25);
+  border-radius:10px;padding:14px 16px;margin-bottom:12px;
+  display:flex;align-items:center;gap:10px;font-size:13px;
+}
+.expired-banner svg{color:var(--red2);flex-shrink:0}
+
+/* ── RESPONSIVE ── */
+@media(max-width:480px){
+  .sub-grid{grid-template-columns:1fr 1fr}
+  .ctab{min-width:calc(50% - 3px)}
+  .step-actions{flex-direction:column}
+  .step-actions .btn{width:100%;justify-content:center}
+}
+</style>
+</head>
+<body>
+<div class="bg-mesh"></div>
+<div class="wrap">
+
+<!-- HEADER -->
+<header>
+  <div class="brand">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M3 3h7v7H3zm11 0h7v7h-7zM3 14h7v7H3zm11 3h2v-2h2v2h2v2h-2v2h-2v-2h-2v-2z"/>
+    </svg>
+    BlackVPN
+  </div>
+  <div class="header-actions">
+    <button class="icon-btn" id="btnCopyLink" title="Скопировать ссылку" onclick="copyLink(this)">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+    </button>
+    <button class="icon-btn" onclick="goBack()" title="Назад">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+    </button>
+  </div>
+</header>
+
+<!-- SUBSCRIPTION CARD -->
+<div id="subCard" class="sub-card"></div>
+
+<!-- INSTALLATION SECTION -->
+<div class="section-card">
+  <div class="section-title-row">
+    <span class="section-title">Установка</span>
+    <div style="position:relative">
+      <div class="platform-select" id="platBtn" onclick="togglePlatDropdown()">
+        <span id="platIcon" class="plat-icon"></span>
+        <span id="platLabel">iOS</span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="plat-dropdown" id="platDropdown"></div>
+    </div>
+  </div>
+
+  <!-- CLIENT TABS -->
+  <div class="ctabs" id="ctabs"></div>
+
+  <!-- STEP CARDS -->
+  <div id="steps"></div>
+</div>
+
+</div><!-- /wrap -->
+
+<script>
+// ── Telegram WebApp Init ───────────────────────────────────────────────
+var tg = window.Telegram?.WebApp || {
+    expand: function(){},
+    setHeaderColor: function(){},
+    initDataUnsafe: { user: { id: 1, first_name: 'Dev', username: 'dev' } },
+    initData: '',
+    BackButton: { show: function(){}, hide: function(){}, onClick: function(){} },
+    openLink: function(url){ window.open(url, '_blank'); },
+    HapticFeedback: { impactOccurred: function(){}, notificationOccurred: function(){} },
+};
+var isBrowser = !tg.initData;
+var userId = tg.initDataUnsafe?.user?.id;
+var initData = tg.initData || '';
+
+if (!isBrowser) {
+    tg.expand();
+    tg.setHeaderColor('#0e0d0c');
+    tg.BackButton.show();
+    tg.BackButton.onClick(function(){ window.location.href = '/'; });
+}
+
+// ── USER DATA (filled from API) ────────────────────────────────────────
+var USER = {
+    username: tg.initDataUnsafe?.user?.username || 'user',
+    status: 'active',
+    expires: '—',
+    trafficUsed: 0,
+    subUrl: '',
+};
+
+// ── REAL APP ICONS ─────────────────────────────────────────────────────
+var ICONS = {
+  happ:         'https://is1-ssl.mzstatic.com/image/thumb/Purple221/v4/53/a8/9a/53a89a23-9c9d-779f-3ba8-4c0bd6ccce9b/AppIcon-0-0-1x_U007epad-0-0-0-1-0-0-sRGB-85-220.png/512x512bb.jpg',
+  shadowrocket: 'https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/44/d3/df/44d3df14-cf72-37d1-6e61-582f7023b90e/AppIcon-0-0-1x_U007epad-0-1-0-sRGB-85-220.png/512x512bb.jpg',
+  streisand:    'https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/fb/fd/e7/fbfde74a-55a9-6dc5-e0dc-38b927b0f46f/AppIcon-0-0-1x_U007epad-0-0-0-1-0-85-220.png/512x512bb.jpg',
+  v2raytun:     'https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/dc/17/de/dc17de36-3c79-0d89-aca3-09e2b600ed25/AppIcon-0-0-1x_U007epad-0-1-85-220.png/512x512bb.jpg',
+  clashmi:      'https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/26/60/7a/26607aaf-ae8e-fe67-b366-a8f47fd34e57/AppIcon-0-1x_U007emarketing-0-11-0-85-220-0.png/512x512bb.jpg',
+  rabbithole:   'https://is1-ssl.mzstatic.com/image/thumb/Purple221/v4/66/53/50/665350c1-f4bb-08e9-653b-d1266d7c4c41/AppIcon-0-0-1x_U007epad-0-0-0-1-0-0-85-220.png/512x512bb.jpg',
+  incy:         'https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/0f/03/cd/0f03cd56-3128-216b-83ea-2a85aef0fd52/AppIcon-0-0-1x_U007epad-0-11-0-85-220.png/512x512bb.jpg',
+  hiddify:      'https://raw.githubusercontent.com/hiddify/hiddify-app/main/assets/images/logo.svg',
+  clashverge:   'https://raw.githubusercontent.com/clash-verge-rev/clash-verge-rev/main/src-tauri/icons/icon.png',
+  nekobox:      'https://raw.githubusercontent.com/MatsuriDayo/NekoBoxForAndroid/main/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png',
+  v2rayng:      'https://raw.githubusercontent.com/2dust/v2rayNG/master/V2rayNG/app/src/main/res/mipmap-xhdpi/ic_launcher.png',
+  flclashx:     'https://raw.githubusercontent.com/chen08209/FlClash/main/assets/images/icon.png',
+  singbox:      'https://raw.githubusercontent.com/SagerNet/sing-box/testing/docs/assets/icon.svg',
+  // SVG fallbacks for Russia-only apps not in public stores
+  koalaclash: null,
+  prizrakbox: null,
+};
+
+var SVG_FALLBACK = {
+  koalaclash: '<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="32" cy="34" r="18"/><circle cx="14" cy="22" r="8"/><circle cx="50" cy="22" r="8"/><circle cx="26" cy="30" r="3"/><circle cx="38" cy="30" r="3"/><ellipse cx="32" cy="40" rx="5" ry="3.5"/></svg>',
+  prizrakbox:  '<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 54V28a16 16 0 0132 0v26l-8-6-8 6-8-6-8 6z"/><circle cx="25" cy="28" r="3"/><circle cx="39" cy="28" r="3"/></svg>',
+};
+
+function logoEl(id) {
+  if (ICONS[id]) {
+    return '<div class="ctab-logo"><img src="' + ICONS[id] + '" alt="" loading="lazy" width="54" height="54"></div>';
+  }
+  if (SVG_FALLBACK[id]) {
+    return '<div class="ctab-logo">' + SVG_FALLBACK[id] + '</div>';
+  }
+  return '';
+}
+
+// ── PLATFORM ICONS (SVG inline) ────────────────────────────────────────
+var PLAT_ICONS = {
+  ios:        '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11"/></svg>',
+  android:    '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.523 15.34a.993.993 0 01-.992.99.993.993 0 01-.993-.99V10.5a.993.993 0 01.993-.99.993.993 0 01.992.99v4.84zm-10.054 0a.993.993 0 01-.992.99.993.993 0 01-.993-.99V10.5a.993.993 0 01.993-.99.993.993 0 01.992.99v4.84zm.48-6.85l1.006-1.74a.21.21 0 00-.077-.287.21.21 0 00-.287.077L7.57 8.294A6.937 6.937 0 004.5 14h15A6.94 6.94 0 0016.43 8.29L15.41 6.54a.21.21 0 00-.286-.077.21.21 0 00-.077.287l1.005 1.74A6.02 6.02 0 0118.7 13H5.3a6.02 6.02 0 012.649-4.51zM9.5 5.5a.5.5 0 100-1 .5.5 0 000 1zm5 0a.5.5 0 100-1 .5.5 0 000 1z"/></svg>',
+  macos:      '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 100 20A10 10 0 0012 2zm0 2c4.41 0 8 3.59 8 8s-3.59 8-8 8-8-3.59-8-8 3.59-8 8-8zm-1 3v6l5 3-.75-1.3-3.75-2.2V7H11z"/></svg>',
+  windows:    '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 5.557L9.938 4.6l.003 6.723-6.934.04L3 5.557zm6.938 6.537l.005 6.73-6.934-1.002-.001-5.766 6.93.038zm.787-7.568L20.999 3v8.123l-10.274.08V4.526zm10.278 8.29l-.004 8.108-10.274-1.447-.014-6.697 10.292.036z"/></svg>',
+  linux:      '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2c-1.5 0-2.8.7-3.5 1.8C7.8 5 7.5 6.3 7.5 7.5c0 1.2.3 2.3.8 3.2-.5.4-.8 1-.8 1.8 0 .7.3 1.3.8 1.7-.3.5-.8.8-1.3.8-.8 0-1.5.7-1.5 1.5v.5c0 .8.7 1.5 1.5 1.5h1v.5c0 1.4 1.1 2.5 2.5 2.5h3c1.4 0 2.5-1.1 2.5-2.5v-.5h1c.8 0 1.5-.7 1.5-1.5v-.5c0-.8-.7-1.5-1.5-1.5-.5 0-1-.3-1.3-.8.5-.4.8-1 .8-1.7 0-.8-.3-1.4-.8-1.8.5-.9.8-2 .8-3.2 0-1.2-.3-2.5-1-3.7C14.8 2.7 13.5 2 12 2zm0 1.5c1 0 1.8.5 2.3 1.3.5.8.7 1.8.7 2.7 0 1-.2 2-.7 2.8L14 10.8c-.5.5-.8 1.1-.8 1.7 0 .4.1.7.3 1-.2.1-.3.1-.5.1s-.3 0-.5-.1c.2-.3.3-.6.3-1 0-.6-.3-1.2-.8-1.7l-.3-.5C11.2 9.5 11 8.5 11 7.5c0-.9.2-1.9.7-2.7.5-.8 1.3-1.3 2.3-1.3z"/></svg>',
+  androidtv:  '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M21 3H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h5v2h8v-2h5c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 14H3V5h18v12zm-4-6l-6 3.5V8l6 3.5z"/></svg>',
+  appletv:    '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83"/><path d="M6 2h12v2H6z"/></svg>',
+};
+
+// ── PLATFORM / APP DATA ────────────────────────────────────────────────
+var PLATFORMS = [
+  {
+    id: 'ios', label: 'iOS', icon: 'ios',
+    apps: [
+      {
+        id: 'happ', name: 'Happ', iconId: 'happ',
+        install: {
+          desc: 'Откройте App Store и установите приложение. Запустите его, в окне разрешения VPN-конфигурации нажмите Allow и введите пароль.',
+          btns: [
+            {label:'App Store (RU)', url:'https://apps.apple.com/ru/app/id6504287215', ext:true},
+            {label:'App Store (Global)', url:'https://apps.apple.com/app/id6504287215', ext:true},
+          ]
+        },
+        subscribe: { deeplink: true },
+        connect: { desc: 'В главном разделе нажмите большую кнопку включения. Выберите сервер из списка.' }
+      },
+      {
+        id: 'clashmi', name: 'Clash Mi', iconId: 'clashmi',
+        install: { desc: 'Установите Clash Mi из App Store.', btns: [{label:'App Store', url:'https://apps.apple.com/app/id6744321968', ext:true}] },
+        subscribe: { deeplink: true },
+        connect: { desc: 'Откройте приложение, выберите сервер и нажмите Connect.' }
+      },
+      {
+        id: 'incy', name: 'INCY', iconId: 'incy',
+        install: { desc: 'Установите INCY из App Store.', btns: [{label:'App Store', url:'https://apps.apple.com/app/id6756943388', ext:true}] },
+        subscribe: { deeplink: true },
+        connect: { desc: 'Подключитесь через кнопку включения в главном экране.' }
+      },
+      {
+        id: 'v2raytun', name: 'v2RayTun', iconId: 'v2raytun',
+        install: { desc: 'Установите v2RayTun из App Store.', btns: [{label:'App Store', url:'https://apps.apple.com/app/id6476628951', ext:true}] },
+        subscribe: { deeplink: true },
+        connect: { desc: 'Включите VPN через переключатель на главном экране.' }
+      },
+      {
+        id: 'rabbithole', name: 'RabbitHole', iconId: 'rabbithole',
+        install: { desc: 'Установите RabbitHole из App Store.', btns: [{label:'App Store', url:'https://apps.apple.com/app/id6683309629', ext:true}] },
+        subscribe: { deeplink: true },
+        connect: { desc: 'Выберите сервер и нажмите Connect.' }
+      },
+      {
+        id: 'shadowrocket', name: 'Shadowrocket', iconId: 'shadowrocket',
+        install: { desc: 'Shadowrocket — платное приложение. Требуется аккаунт App Store с поддержкой платных приложений.', btns: [{label:'App Store', url:'https://apps.apple.com/app/id932747118', ext:true}] },
+        subscribe: { deeplink: true },
+        connect: { desc: 'Нажмите кнопку подключения рядом с нужным сервером.' }
+      },
+    ]
+  },
+  {
+    id: 'android', label: 'Android', icon: 'android',
+    apps: [
+      {
+        id: 'hiddify', name: 'Hiddify', iconId: 'hiddify',
+        install: { desc: 'Установите Hiddify из Google Play или скачайте APK напрямую.', btns: [{label:'Google Play', url:'https://play.google.com/store/apps/details?id=app.hiddify.com', ext:true}, {label:'Скачать APK', url:'https://github.com/hiddify/hiddify-app/releases/latest', ext:true}] },
+        subscribe: { deeplink: true },
+        connect: { desc: 'Нажмите кнопку подключения. При запросе разрешения VPN нажмите OK.' }
+      },
+      {
+        id: 'v2rayng', name: 'v2rayNG', iconId: 'v2rayng',
+        install: { desc: 'Установите v2rayNG из Google Play или GitHub.', btns: [{label:'Google Play', url:'https://play.google.com/store/apps/details?id=com.v2ray.ang', ext:true}, {label:'GitHub', url:'https://github.com/2dust/v2rayNG/releases/latest', ext:true}] },
+        subscribe: { deeplink: true },
+        connect: { desc: 'Выберите сервер из списка и нажмите кнопку запуска (треугольник).' }
+      },
+      {
+        id: 'nekobox', name: 'NekoBox', iconId: 'nekobox',
+        install: { desc: 'Скачайте NekoBox с GitHub.', btns: [{label:'GitHub', url:'https://github.com/MatsuriDayo/NekoBoxForAndroid/releases/latest', ext:true}] },
+        subscribe: { deeplink: true },
+        connect: { desc: 'Выберите профиль и нажмите кнопку подключения.' }
+      },
+      {
+        id: 'singbox', name: 'sing-box', iconId: 'singbox',
+        install: { desc: 'Установите sing-box из Google Play.', btns: [{label:'Google Play', url:'https://play.google.com/store/apps/details?id=io.nekohasekai.sfa', ext:true}] },
+        subscribe: { deeplink: true },
+        connect: { desc: 'Активируйте профиль и включите VPN.' }
+      },
+    ]
+  },
+  {
+    id: 'macos', label: 'macOS', icon: 'macos',
+    apps: [
+      {
+        id: 'happ', name: 'Happ', iconId: 'happ',
+        install: { desc: 'Установите Happ из App Store для Mac.', btns: [{label:'App Store (RU)', url:'https://apps.apple.com/ru/app/id6504287215', ext:true}, {label:'App Store (Global)', url:'https://apps.apple.com/app/id6504287215', ext:true}] },
+        subscribe: { deeplink: true },
+        connect: { desc: 'Запустите Happ, выберите сервер и включите VPN.' }
+      },
+      {
+        id: 'flclashx', name: 'FIClashX', iconId: 'flclashx',
+        install: { desc: 'Скачайте FlClash с GitHub.', btns: [{label:'GitHub', url:'https://github.com/chen08209/FlClash/releases/latest', ext:true}] },
+        subscribe: { deeplink: true },
+        connect: { desc: 'Добавьте профиль, выберите режим и включите системный прокси.' }
+      },
+      {
+        id: 'koalaclash', name: 'Koala Clash', iconId: 'koalaclash',
+        install: { desc: 'Установите Koala Clash из App Store.', btns: [{label:'App Store', url:'https://apps.apple.com/app/id6743720416', ext:true}] },
+        subscribe: { deeplink: true },
+        connect: { desc: 'Включите VPN через переключатель.' }
+      },
+      {
+        id: 'prizrakbox', name: 'Prizrak-Box', iconId: 'prizrakbox',
+        install: { desc: 'Скачайте Prizrak-Box и установите вручную.', btns: [{label:'Скачать', url:'#', ext:true}] },
+        subscribe: { deeplink: false },
+        connect: { desc: 'Импортируйте конфигурацию через меню и включите VPN.' }
+      },
+      {
+        id: 'rabbithole', name: 'RabbitHole', iconId: 'rabbithole',
+        install: { desc: 'Установите RabbitHole из App Store для Mac.', btns: [{label:'App Store', url:'https://apps.apple.com/app/id6683309629', ext:true}] },
+        subscribe: { deeplink: true },
+        connect: { desc: 'Выберите сервер и подключитесь.' }
+      },
+    ]
+  },
+  {
+    id: 'windows', label: 'Windows', icon: 'windows',
+    apps: [
+      {
+        id: 'hiddify', name: 'Hiddify', iconId: 'hiddify',
+        install: { desc: 'Скачайте Hiddify для Windows с GitHub.', btns: [{label:'Скачать', url:'https://github.com/hiddify/hiddify-app/releases/latest', ext:true}] },
+        subscribe: { deeplink: true },
+        connect: { desc: 'Нажмите Connect и разрешите VPN-соединение.' }
+      },
+      {
+        id: 'clashverge', name: 'Clash Verge', iconId: 'clashverge',
+        install: { desc: 'Скачайте Clash Verge Rev с GitHub.', btns: [{label:'Скачать', url:'https://github.com/clash-verge-rev/clash-verge-rev/releases/latest', ext:true}] },
+        subscribe: { deeplink: true },
+        connect: { desc: 'Активируйте системный прокси и выберите сервер.' }
+      },
+      {
+        id: 'nekobox', name: 'NekoBox', iconId: 'nekobox',
+        install: { desc: 'Скачайте NekoBox для Windows с GitHub.', btns: [{label:'GitHub', url:'https://github.com/MatsuriDayo/nekoray/releases/latest', ext:true}] },
+        subscribe: { deeplink: true },
+        connect: { desc: 'Включите TUN-режим или системный прокси.' }
+      },
+      {
+        id: 'singbox', name: 'sing-box', iconId: 'singbox',
+        install: { desc: 'Скачайте sing-box для Windows.', btns: [{label:'GitHub', url:'https://github.com/SagerNet/sing-box/releases/latest', ext:true}] },
+        subscribe: { deeplink: true },
+        connect: { desc: 'Запустите с правами администратора и активируйте профиль.' }
+      },
+    ]
+  },
+  {
+    id: 'linux', label: 'Linux', icon: 'linux',
+    apps: [
+      {
+        id: 'hiddify', name: 'Hiddify', iconId: 'hiddify',
+        install: { desc: 'Скачайте AppImage или deb-пакет Hiddify с GitHub.', btns: [{label:'GitHub', url:'https://github.com/hiddify/hiddify-app/releases/latest', ext:true}] },
+        subscribe: { deeplink: true },
+        connect: { desc: 'Запустите приложение и нажмите Connect.' }
+      },
+      {
+        id: 'nekobox', name: 'NekoBox', iconId: 'nekobox',
+        install: { desc: 'Скачайте NekoRay/NekoBox для Linux.', btns: [{label:'GitHub', url:'https://github.com/MatsuriDayo/nekoray/releases/latest', ext:true}] },
+        subscribe: { deeplink: true },
+        connect: { desc: 'Выберите профиль и активируйте TUN или системный прокси.' }
+      },
+      {
+        id: 'clashverge', name: 'Clash Verge', iconId: 'clashverge',
+        install: { desc: 'Установите Clash Verge Rev из пакета для Linux.', btns: [{label:'GitHub', url:'https://github.com/clash-verge-rev/clash-verge-rev/releases/latest', ext:true}] },
+        subscribe: { deeplink: true },
+        connect: { desc: 'Включите системный прокси и выберите нужный узел.' }
+      },
+      {
+        id: 'singbox', name: 'sing-box', iconId: 'singbox',
+        install: { desc: 'Установите sing-box через snap или скачайте бинарник.', btns: [{label:'GitHub', url:'https://github.com/SagerNet/sing-box/releases/latest', ext:true}] },
+        subscribe: { deeplink: true },
+        connect: { desc: 'Запустите sing-box run -c config.json' }
+      },
+    ]
+  },
+  {
+    id: 'androidtv', label: 'Android TV', icon: 'androidtv',
+    apps: [
+      {
+        id: 'happ', name: 'Happ', iconId: 'happ',
+        install: { desc: 'Откройте Google Play на Android TV и установите приложение. Или установите через APK напрямую.', btns: [{label:'Google Play', url:'https://play.google.com/store/apps/details?id=com.happ.android', ext:true}, {label:'Скачать APK', url:'#', ext:true}] },
+        subscribe: false,
+        instructions: true,
+        connect: { desc: 'Запустите Happ и включите VPN.' }
+      },
+      {
+        id: 'flclashx', name: 'FIClashX', iconId: 'flclashx',
+        install: { desc: 'Установите FIClashX через APK на Android TV.', btns: [{label:'Скачать APK', url:'https://github.com/chen08209/FlClash/releases/latest', ext:true}] },
+        subscribe: false,
+        instructions: true,
+        connect: { desc: 'Добавьте подписку вручную и включите режим прокси.' }
+      },
+    ]
+  },
+  {
+    id: 'appletv', label: 'Apple TV', icon: 'appletv',
+    apps: [
+      {
+        id: 'happ', name: 'Happ', iconId: 'happ',
+        install: { desc: 'Откройте App Store на Apple TV и установите Happ. Предоставьте разрешение на VPN-конфигурацию и введите пароль.', btns: [{label:'App Store', url:'https://apps.apple.com/app/id6504287215', ext:true}] },
+        subscribe: false,
+        instructions: true,
+        connect: { desc: 'Включите VPN через главный экран Happ.' }
+      },
+    ]
+  },
+];
+
+// ── STATE ──────────────────────────────────────────────────────────────
+var state = { platId: 'ios', appId: 'happ' };
+
+// ── ICONS SVG FOR STEPS ────────────────────────────────────────────────
+var ICO = {
+  download: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>',
+  subscribe:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 11-7.778 7.778 5.5 5.5 0 017.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>',
+  connect:  '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8h1a4 4 0 010 8h-1"/><path d="M2 8h16v9a4 4 0 01-4 4H6a4 4 0 01-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>',
+  book:     '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg>',
+  ext:      '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>',
+  copy:     '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>',
+  check:    '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>',
+};
+
+// ── RENDER SUBSCRIPTION CARD ───────────────────────────────────────────
+function renderSub() {
+  var u = USER;
+  var isActive = u.status === 'active';
+  var isExpired = u.status === 'expired';
+  var statusLabel = isActive ? 'Активна' : isExpired ? 'Истекла' : 'Неактивна';
+  var statusClass = isActive ? 'status-active' : isExpired ? 'status-expired' : 'status-inactive';
+  var avatarClass = isActive ? 'active' : 'expired';
+  var avatarIcon = isActive
+    ? '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>'
+    : '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>';
+  var subLabel = isExpired ? 'Истекла день назад' : isActive ? 'Активна' : 'Неактивна';
+
+  var html = '';
+  if (isExpired || u.status === 'inactive') {
+    html += '<div class="expired-banner">'
+      + '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>'
+      + '<span>Подписка истекла. Для продления напишите в <a href="https://t.me/blackvpn_bot" target="_blank" style="color:var(--red2)">@blackvpn_bot</a></span>'
+      + '</div>';
+  }
+
+  html += '<div class="sub-header">'
+    + '<div class="sub-avatar ' + avatarClass + '">' + avatarIcon + '</div>'
+    + '<div class="sub-info"><h2>' + u.username + '</h2><p>' + subLabel + '</p></div>'
+    + '</div>'
+    + '<div class="sub-grid">'
+    + '<div class="sub-field"><label><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Имя пользователя</label><span>' + u.username + '</span></div>'
+    + '<div class="sub-field"><label><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Статус</label><span class="' + statusClass + '">' + statusLabel + '</span></div>'
+    + '<div class="sub-field"><label><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Истекает</label><span>' + u.expires + '</span></div>'
+    + '<div class="sub-field"><label><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 014-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 01-4 4H3"/></svg>Трафик</label>'
+    + '<span>' + (u.trafficUsed > 0 ? u.trafficUsed.toFixed(1) + ' GiB' : '—') + '</span>'
+    + '</div>'
+    + '</div>';
+
+  document.getElementById('subCard').innerHTML = html;
+}
+
+// ── RENDER PLATFORM DROPDOWN ───────────────────────────────────────────
+function renderPlatDropdown() {
+  var dd = document.getElementById('platDropdown');
+  dd.innerHTML = PLATFORMS.map(function(p) {
+    return '<div class="plat-opt' + (p.id === state.platId ? ' active' : '') + '" onclick="selectPlat(\'' + p.id + '\')">'
+      + '<span class="plat-icon" style="width:16px;height:16px;display:flex;align-items:center;">' + (PLAT_ICONS[p.icon]||'') + '</span>'
+      + p.label + '</div>';
+  }).join('');
+}
+
+function togglePlatDropdown() {
+  var dd = document.getElementById('platDropdown');
+  dd.classList.toggle('open');
+  renderPlatDropdown();
+}
+
+function selectPlat(id) {
+  state.platId = id;
+  var plat = PLATFORMS.find(function(p){return p.id===id;});
+  state.appId = plat.apps[0].id;
+  document.getElementById('platLabel').textContent = plat.label;
+  document.getElementById('platIcon').innerHTML = PLAT_ICONS[plat.icon] || '';
+  document.getElementById('platDropdown').classList.remove('open');
+  renderInstall();
+}
+
+// close dropdown on outside click
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('#platBtn') && !e.target.closest('#platDropdown')) {
+    document.getElementById('platDropdown').classList.remove('open');
+  }
+});
+
+// ── RENDER INSTALL SECTION ─────────────────────────────────────────────
+function renderInstall() {
+  var plat = PLATFORMS.find(function(p){return p.id===state.platId;});
+  var app  = plat.apps.find(function(a){return a.id===state.appId;}) || plat.apps[0];
+
+  // tabs
+  document.getElementById('ctabs').innerHTML = plat.apps.map(function(a) {
+    return '<div class="ctab' + (a.id===app.id?' on':'') + '" onclick="selectApp(\'' + a.id + '\')">'
+      + '<span class="ctab-dot"></span>'
+      + '<span class="ctab-name">' + a.name + '</span>'
+      + logoEl(a.iconId)
+      + '</div>';
+  }).join('');
+
+  // steps
+  var stepsHtml = '';
+
+  // step 1: install
+  stepsHtml += '<div class="step-card">'
+    + '<div class="step-header"><div class="step-icon">' + ICO.download + '</div>'
+    + '<div class="step-title">Установка приложения</div></div>'
+    + '<div class="step-desc">' + app.install.desc + '</div>'
+    + '<div class="step-actions">'
+    + app.install.btns.map(function(b){
+        return '<a class="btn" href="' + b.url + '" target="_blank" rel="noopener">' + ICO.ext + b.label + '</a>';
+      }).join('')
+    + '</div></div>';
+
+  // step 2: subscribe or instructions
+  if (app.subscribe && app.subscribe.deeplink) {
+    stepsHtml += '<div class="step-card">'
+      + '<div class="step-header"><div class="step-icon">' + ICO.subscribe + '</div>'
+      + '<div class="step-title">Добавление подписки</div></div>'
+      + '<div class="step-desc">Нажмите кнопку ниже — приложение откроется и подписка добавится автоматически.</div>'
+      + '<div class="sub-import-block">'
+      + '<div class="sub-url-row"><code id="subUrlCode">' + USER.subUrl + '</code></div>'
+      + '<div class="step-actions">'
+      + '<button class="btn btn-primary" onclick="importSub(this)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 11-7.778 7.778 5.5 5.5 0 017.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>Добавить подписку</button>'
+      + '<button class="btn" onclick="copySub(this)">' + ICO.copy + '<span id="copySubLabel">Скопировать</span></button>'
+      + '</div></div></div>';
+  } else if (app.instructions) {
+    stepsHtml += '<div class="step-card">'
+      + '<div class="step-header"><div class="step-icon">' + ICO.book + '</div>'
+      + '<div class="step-title">Инструкции по установке</div></div>'
+      + '<div class="step-desc">Подробные инструкции, чтобы помочь вам настроить ' + app.name + ' на вашем устройстве.</div>'
+      + '<div class="step-actions">'
+      + '<a class="btn" href="#" target="_blank">' + ICO.ext + 'На русском</a>'
+      + '<a class="btn" href="#" target="_blank">' + ICO.ext + 'На английском</a>'
+      + '</div></div>';
+  }
+
+  // step 3: connect
+  stepsHtml += '<div class="step-card">'
+    + '<div class="step-header"><div class="step-icon">' + ICO.connect + '</div>'
+    + '<div class="step-title">Подключение и использование</div></div>'
+    + '<div class="step-desc">' + app.connect.desc + '</div>'
+    + '</div>';
+
+  document.getElementById('steps').innerHTML = stepsHtml;
+}
+
+function selectApp(id) {
+  state.appId = id;
+  renderInstall();
+}
+
+// ── ACTIONS ────────────────────────────────────────────────────────────
+function importSub(btn) {
+  var url = USER.subUrl;
+  var deep = url.replace('https://', 'clash://');
+  var a = document.createElement('a');
+  a.href = deep;
+  a.click();
+}
+
+function copySub(btn) {
+  navigator.clipboard.writeText(USER.subUrl).then(function(){
+    var lbl = document.getElementById('copySubLabel');
+    lbl.textContent = 'Скопировано!';
+    btn.classList.add('copied');
+    setTimeout(function(){ lbl.textContent='Скопировать'; btn.classList.remove('copied'); }, 2000);
+  });
+}
+
+function copyLink(btn) {
+  navigator.clipboard.writeText(window.location.href).then(function(){
+    btn.classList.add('copied');
+    setTimeout(function(){ btn.classList.remove('copied'); }, 1500);
+  });
+}
+
+// ── HELPERS ────────────────────────────────────────────────────────────
+function formatTs(ts){
+    if(!ts||ts<=0)return'—';
+    var d=new Date(ts);
+    var months=['янв','фев','мар','апр','май','июн','июл','авг','сен','окт','ноя','дек'];
+    return d.getDate()+' '+months[d.getMonth()]+' '+d.getFullYear();
+}
+
+// ── LOAD DATA ──────────────────────────────────────────────────────────
+async function loadConnectData(){
+    if(!userId||isBrowser)return;
+    try{
+        var u=window.location.origin;
+        var resp=await fetch(u+"/api/user-data?userId="+userId,{headers:{"X-Init-Data":initData}});
+        if(resp.ok){
+            var data=await resp.json();
+            USER.status=data.daysLeft>0?'active':'expired';
+            USER.expires=data.subscriptionEnd?formatTs(data.subscriptionEnd):'—';
+            USER.subUrl=data.vpnKey||'';
+            var dresp=await fetch(u+"/api/user-devices?userId="+userId,{headers:{"X-Init-Data":initData}});
+            if(dresp.ok){
+                var dev=await dresp.json();
+                USER.trafficUsed=((dev.trafficUp||0)+(dev.trafficDown||0))/1073741824;
+            }
+            renderSub();
+            renderInstall();
+        }
+    }catch(e){console.error(e)}
+}
+
+// ── NAV ────────────────────────────────────────────────────────────────
+function goBack(){window.location.href='/'}
+
+// ── INIT ───────────────────────────────────────────────────────────────
+renderSub();
+selectPlat('ios');
+loadConnectData();
+</script>
+</body>
+</html>

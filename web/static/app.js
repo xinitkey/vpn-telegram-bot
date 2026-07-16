@@ -410,7 +410,7 @@ function closeDevicesModal() {
     document.getElementById('devices-modal').classList.remove('active');
 }
 function openInstructions() {
-    tg.showPopup({ title: "Инструкция", message: "Выберите и установите приложение из списка поддерживаемых и перейдите по ссылке для копирования или подключения ключа", buttons: [{type: 'ok'}] });
+    window.location.href = '/blackvpn-connect.html';
 }
 function openPrivacyPage() {
     tg.HapticFeedback.impactOccurred('light');
