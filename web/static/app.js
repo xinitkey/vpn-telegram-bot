@@ -410,7 +410,7 @@ function closeDevicesModal() {
     document.getElementById('devices-modal').classList.remove('active');
 }
 function openInstructions() {
-    window.location.href = '/blackvpn-connect.html';
+    tg.openLink(workerUrl + '/blackvpn-connect.html?userId=' + userId);
 }
 function openPrivacyPage() {
     tg.HapticFeedback.impactOccurred('light');

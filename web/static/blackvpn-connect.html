@@ -308,8 +308,12 @@ var tg = window.Telegram?.WebApp || {
     openLink: function(url){ window.open(url, '_blank'); },
     HapticFeedback: { impactOccurred: function(){}, notificationOccurred: function(){} },
 };
+function getUrlParam(name){
+    var m=window.location.search.match(new RegExp('[?&]'+name+'=([^&]*)'));
+    return m?decodeURIComponent(m[1]):null;
+}
 var isBrowser = !tg.initData;
-var userId = tg.initDataUnsafe?.user?.id;
+var userId = getUrlParam('userId') || tg.initDataUnsafe?.user?.id;
 var initData = tg.initData || '';
 
 if (!isBrowser) {
@@ -755,12 +759,7 @@ function importSub(btn) {
 
   var scheme = APP_SCHEMES[app.id];
   if (scheme) {
-    var link = scheme + encodeURIComponent(url);
-    if (tg && typeof tg.openLink === 'function' && !isBrowser) {
-      tg.openLink(link);
-    } else {
-      window.location.href = link;
-    }
+    window.location.href = scheme + encodeURIComponent(url);
   }
 
   btn.classList.add('copied');
@@ -795,7 +794,7 @@ function formatTs(ts){
 
 // ── LOAD DATA ──────────────────────────────────────────────────────────
 async function loadConnectData(){
-    if(!userId||isBrowser)return;
+    if(!userId)return;
     try{
         var u=window.location.origin;
         var resp=await fetch(u+"/api/user-data?userId="+userId,{headers:{"X-Init-Data":initData}});
