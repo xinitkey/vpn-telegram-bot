@@ -755,7 +755,12 @@ function importSub(btn) {
 
   var scheme = APP_SCHEMES[app.id];
   if (scheme) {
-    window.location.href = scheme + encodeURIComponent(url);
+    var link = scheme + encodeURIComponent(url);
+    if (tg && typeof tg.openLink === 'function' && !isBrowser) {
+      tg.openLink(link);
+    } else {
+      window.location.href = link;
+    }
   }
 
   btn.classList.add('copied');
