@@ -8,7 +8,7 @@
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@700&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -60,9 +60,8 @@ header{
   border-bottom:1px solid var(--border);
   margin-bottom:24px;
 }
-.bvpn-brand{display:inline-flex;align-items:center;gap:9px;text-decoration:none;color:inherit}
-.bvpn-icon{flex-shrink:0}
-.bvpn-text{font-family:'Inter',sans-serif;font-weight:700;line-height:1}
+.brand{display:inline-flex;align-items:center;gap:10px;text-decoration:none}
+.brand-text{font-family:'Inter',sans-serif;font-weight:700;font-size:17px;letter-spacing:-0.02em;color:#e8e6e2;line-height:1}
 .header-actions{display:flex;gap:8px}
 .icon-btn{
   display:flex;align-items:center;justify-content:center;
@@ -251,9 +250,16 @@ header{
 
 <!-- HEADER -->
 <header>
-  <a class="bvpn-brand" href="/">
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" class="bvpn-icon" style="color:#e74c3c"><rect x="2" y="2" width="9" height="9" rx="1.5"/><rect x="13" y="2" width="9" height="9" rx="1.5"/><rect x="2" y="13" width="9" height="9" rx="1.5"/><path d="M13 18h2v-2h2v2h2v2h-2v2h-2v-2h-2v-2z"/></svg>
-    <span class="bvpn-text" style="font-size:17px;letter-spacing:-0.03em;color:#e8e6e2">BlackVPN</span>
+  <a class="brand" href="/">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" style="color:#e74c3c">
+      <rect x="1" y="10" width="2" height="4" rx="1"/>
+      <rect x="5" y="6"  width="2" height="12" rx="1"/>
+      <rect x="9" y="3"  width="2" height="18" rx="1"/>
+      <rect x="13" y="6" width="2" height="12" rx="1"/>
+      <rect x="17" y="8" width="2" height="8"  rx="1"/>
+      <rect x="21" y="10" width="2" height="4" rx="1"/>
+    </svg>
+    <span class="brand-text">BlackVPN</span>
   </a>
   <div class="header-actions">
     <button class="icon-btn" id="btnCopyLink" title="Скопировать ссылку" onclick="copyLink(this)">
