@@ -308,12 +308,8 @@ var tg = window.Telegram?.WebApp || {
     openLink: function(url){ window.open(url, '_blank'); },
     HapticFeedback: { impactOccurred: function(){}, notificationOccurred: function(){} },
 };
-function getUrlParam(name){
-    var m=window.location.search.match(new RegExp('[?&]'+name+'=([^&]*)'));
-    return m?decodeURIComponent(m[1]):null;
-}
 var isBrowser = !tg.initData;
-var userId = getUrlParam('userId') || tg.initDataUnsafe?.user?.id;
+var userId = tg.initDataUnsafe?.user?.id;
 var initData = tg.initData || '';
 
 if (!isBrowser) {
@@ -751,16 +747,7 @@ var APP_SCHEMES = {
 
 // ── ACTIONS ────────────────────────────────────────────────────────────
 function importSub(btn) {
-  var plat = PLATFORMS.find(function(p){return p.id===state.platId;});
-  var app  = plat.apps.find(function(a){return a.id===state.appId;}) || plat.apps[0];
-  var url  = USER.subUrl;
-
-  navigator.clipboard.writeText(url);
-
-  var scheme = APP_SCHEMES[app.id];
-  if (scheme) {
-    window.location.href = scheme + encodeURIComponent(url);
-  }
+  navigator.clipboard.writeText(USER.subUrl);
 
   btn.classList.add('copied');
   var lbl = document.getElementById('copySubLabel');
@@ -794,7 +781,7 @@ function formatTs(ts){
 
 // ── LOAD DATA ──────────────────────────────────────────────────────────
 async function loadConnectData(){
-    if(!userId)return;
+    if(!userId||isBrowser)return;
     try{
         var u=window.location.origin;
         var resp=await fetch(u+"/api/user-data?userId="+userId,{headers:{"X-Init-Data":initData}});
