@@ -88,7 +88,13 @@ async function loadUserData() {
             document.getElementById('days-count').innerHTML = globalUserData.remainingStr || globalUserData.daysLeft + " <span>дней</span>";
             document.getElementById('home-username').textContent = (userRaw?.username ? "@" + userRaw.username : globalUserData.username) || "—";
             document.getElementById('home-expiry').textContent = formatTs(globalUserData.subscriptionEnd);
-            document.getElementById('home-traffic').textContent = formatTraffic(globalUserData.trafficUsed || 0);
+            fetch(workerUrl + "/api/user-devices?userId=" + userId, { headers: { "X-Init-Data": initData } })
+                .then(function(r){ return r.json(); })
+                .then(function(d){
+                    var total = (d.trafficUp || 0) + (d.trafficDown || 0);
+                    document.getElementById('home-traffic').textContent = formatTraffic(total);
+                })
+                .catch(function(){});
             var sb = document.getElementById('statusBadge');
             if (globalUserData.daysLeft > 30) { sb.textContent = '\u25CF Активна'; sb.className = 'badge b-active'; }
             else if (globalUserData.daysLeft > 0) { sb.textContent = '\u25CF Скоро истекает'; sb.className = 'badge b-expiring'; }
