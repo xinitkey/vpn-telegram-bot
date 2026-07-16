@@ -728,13 +728,35 @@ function selectApp(id) {
   renderInstall();
 }
 
+// ── APP DEEPLINK SCHEMES ──────────────────────────────────────────────
+var APP_SCHEMES = {
+  shadowrocket: 'shadowrocket://add?url=',
+  clashmi:      'clash://install-config?url=',
+  flclashx:     'clash://install-config?url=',
+  koalaclash:   'clash://install-config?url=',
+  clashverge:   'clash://install-config?url=',
+  singbox:      'sing-box://import-remote-profile?url=',
+};
+
 // ── ACTIONS ────────────────────────────────────────────────────────────
 function importSub(btn) {
-  var url = USER.subUrl;
-  var deep = url.replace('https://', 'clash://');
-  var a = document.createElement('a');
-  a.href = deep;
-  a.click();
+  var plat = PLATFORMS.find(function(p){return p.id===state.platId;});
+  var app  = plat.apps.find(function(a){return a.id===state.appId;}) || plat.apps[0];
+  var url  = USER.subUrl;
+
+  navigator.clipboard.writeText(url);
+
+  var scheme = APP_SCHEMES[app.id];
+  if (scheme) {
+    window.location.href = scheme + encodeURIComponent(url);
+  } else {
+    window.location.href = url;
+  }
+
+  btn.classList.add('copied');
+  var lbl = document.getElementById('copySubLabel');
+  lbl.textContent = 'Скопировано!';
+  setTimeout(function(){ btn.classList.remove('copied'); lbl.textContent='Скопировать'; }, 2000);
 }
 
 function copySub(btn) {
