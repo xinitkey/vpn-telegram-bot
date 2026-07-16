@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>BlackVPN — Подключение</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23e74c3c'><rect x='2' y='2' width='9' height='9' rx='1.5'/><rect x='13' y='2' width='9' height='9' rx='1.5'/><rect x='2' y='13' width='9' height='9' rx='1.5'/><path d='M13 18h2v-2h2v2h2v2h-2v2h-2v-2h-2v-2z'/></svg>">
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -59,8 +60,9 @@ header{
   border-bottom:1px solid var(--border);
   margin-bottom:24px;
 }
-.brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:17px;letter-spacing:-.02em}
-.brand svg{color:var(--red2)}
+.bvpn-brand{display:inline-flex;align-items:center;gap:9px;text-decoration:none;color:inherit}
+.bvpn-icon{flex-shrink:0}
+.bvpn-text{font-family:'Inter',sans-serif;font-weight:700;line-height:1}
 .header-actions{display:flex;gap:8px}
 .icon-btn{
   display:flex;align-items:center;justify-content:center;
@@ -249,12 +251,10 @@ header{
 
 <!-- HEADER -->
 <header>
-  <div class="brand">
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
-      <path d="M3 3h7v7H3zm11 0h7v7h-7zM3 14h7v7H3zm11 3h2v-2h2v2h2v2h-2v2h-2v-2h-2v-2z"/>
-    </svg>
-    BlackVPN
-  </div>
+  <a class="bvpn-brand" href="/">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" class="bvpn-icon" style="color:#e74c3c"><rect x="2" y="2" width="9" height="9" rx="1.5"/><rect x="13" y="2" width="9" height="9" rx="1.5"/><rect x="2" y="13" width="9" height="9" rx="1.5"/><path d="M13 18h2v-2h2v2h2v2h-2v2h-2v-2h-2v-2z"/></svg>
+    <span class="bvpn-text" style="font-size:17px;letter-spacing:-0.03em;color:#e8e6e2">BlackVPN</span>
+  </a>
   <div class="header-actions">
     <button class="icon-btn" id="btnCopyLink" title="Скопировать ссылку" onclick="copyLink(this)">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
