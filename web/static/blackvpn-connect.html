@@ -748,9 +748,9 @@ function importSub(btn) {
 
   var scheme = APP_SCHEMES[app.id];
   if (scheme) {
-    window.location.href = scheme + encodeURIComponent(url);
-  } else {
-    window.location.href = url;
+    var a = document.createElement('a');
+    a.href = scheme + encodeURIComponent(url);
+    a.click();
   }
 
   btn.classList.add('copied');
