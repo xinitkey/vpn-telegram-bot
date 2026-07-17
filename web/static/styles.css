@@ -59,6 +59,7 @@ body {
     flex: 1; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1);
     color: #fff; padding: 14px; border-radius: 16px; font-weight: 600;
     font-size: 14px; text-align: center; cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
 }
 .btn-primary-action {
     width: 100%; background: #ef4444; border: none; color: white; padding: 14px;
