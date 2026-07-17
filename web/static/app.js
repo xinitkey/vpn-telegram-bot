@@ -246,9 +246,9 @@ function buyDaysModal() {
     tg.showPopup({
         title: "Продление подписки",
         message: "Списать с баланса средства для продления подписки на 1 день (" + globalUserData.dailyPrice + "₽)?",
-        buttons: [{ type: 'ok', id: 'buy_sub', text: 'Купить 1 день' }, { type: 'cancel', text: 'Отмена' }]
+        buttons: [{ type: 'ok', id: 'buy_sub', text: 'Купить 1 день' }, { type: 'default', id: 'tariffs', text: 'Тарифы' }, { type: 'cancel', text: 'Отмена' }]
     }, async (buttonId) => {
-        if (buttonId === 'buy_sub') {
+                if (buttonId === 'buy_sub') {
             if (globalUserData.balance < globalUserData.dailyPrice) {
                 tg.showAlert("Недостаточно средств. Пополните ваш баланс.");
                 return;
@@ -272,6 +272,8 @@ function buyDaysModal() {
             } catch {
                 tg.showAlert("Сбой сети.");
             }
+        } else if (buttonId === 'tariffs') {
+            openTariffsModal();
         }
     });
 }
