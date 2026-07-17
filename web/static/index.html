@@ -19,7 +19,10 @@
     <div class="header">
         <div class="logo"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" style="color:#e74c3c"><rect x="1" y="10" width="2" height="4" rx="1"/><rect x="5" y="6" width="2" height="12" rx="1"/><rect x="9" y="3" width="2" height="18" rx="1"/><rect x="13" y="6" width="2" height="12" rx="1"/><rect x="17" y="8" width="2" height="8" rx="1"/><rect x="21" y="10" width="2" height="4" rx="1"/></svg> Black<span>VPN</span></div>
         <div class="balance-card">
-            <div class="balance-amount" id="balance-display">0 ₽</div>
+            <div style="display:flex;align-items:baseline;gap:4px;justify-content:flex-end">
+                <span class="balance-amount" id="balance-display">0</span>
+                <span class="balance-lbl">₽</span>
+            </div>
             <button class="btn-pay" onclick="openTopUpModal()">Пополнить</button>
         </div>
     </div>

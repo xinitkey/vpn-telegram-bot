@@ -83,7 +83,7 @@ async function loadUserData() {
             } else {
                 document.getElementById('banned-overlay').classList.remove('active');
             }
-            document.getElementById('balance-display').innerText = globalUserData.balance + " ₽";
+            document.getElementById('balance-display').textContent = globalUserData.balance;
             document.getElementById('profile-balance').innerText = globalUserData.balance + " ₽";
             document.getElementById('days-count').textContent = globalUserData.daysLeft;
             document.getElementById('home-username').textContent = (userRaw?.username ? "@" + userRaw.username : globalUserData.username) || "—";
