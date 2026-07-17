@@ -89,7 +89,7 @@ body {
 .info-circle {
     display: inline-flex; align-items: center; justify-content: center;
     width: 18px; height: 18px; border-radius: 50%;
-    border: 1.5px solid #ef4444; color: #ef4444;
+    border: 1.5px solid #666; color: #666;
     font-size: 12px; font-weight: 700; cursor: pointer;
     margin-left: 4px; line-height: 1;
     vertical-align: middle; transition: background 0.2s;
