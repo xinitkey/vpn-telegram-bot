@@ -779,7 +779,7 @@ async function loadConnectData(){
         var resp=await fetch(u+"/api/user-data?userId="+userId,{headers:{"X-Init-Data":initData}});
         if(resp.ok){
             var data=await resp.json();
-            USER.status=data.daysLeft>0?'active':'expired';
+            USER.status=data.daysLeft>0||data.subscriptionEnd>Date.now()?'active':'expired';
             USER.expires=data.subscriptionEnd?formatTs(data.subscriptionEnd):'—';
             USER.subUrl=data.vpnKey||'';
             var dresp=await fetch(u+"/api/user-devices?userId="+userId,{headers:{"X-Init-Data":initData}});

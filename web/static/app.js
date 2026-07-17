@@ -96,9 +96,12 @@ async function loadUserData() {
                 })
                 .catch(function(){});
             var sb = document.getElementById('statusBadge');
+            var now = Date.now();
             if (globalUserData.daysLeft > 30) { sb.textContent = '\u25CF Активна'; sb.className = 'badge b-active'; }
-            else if (globalUserData.daysLeft > 0 && globalUserData.daysLeft <= 7) { sb.textContent = '\u25CF Скоро истекает'; sb.className = 'badge b-expiring'; }
-            else if (globalUserData.daysLeft <= 0 && globalUserData.subscriptionEnd && globalUserData.subscriptionEnd > 0) { sb.textContent = '\u25CF Истекла'; sb.className = 'badge b-inactive'; }
+            else if (globalUserData.daysLeft > 7) { sb.textContent = '\u25CF Активна'; sb.className = 'badge b-active'; }
+            else if (globalUserData.daysLeft > 0) { sb.textContent = '\u25CF Скоро истекает'; sb.className = 'badge b-expiring'; }
+            else if (globalUserData.subscriptionEnd && globalUserData.subscriptionEnd > now) { sb.textContent = '\u25CF Скоро истекает'; sb.className = 'badge b-expiring'; }
+            else if (globalUserData.subscriptionEnd && globalUserData.subscriptionEnd > 0) { sb.textContent = '\u25CF Истекла'; sb.className = 'badge b-inactive'; }
             else { sb.textContent = '\u25CF Нет подписки'; sb.className = 'badge b-inactive'; }
             const keyRow = document.getElementById('profile-key-row');
             const keyValue = document.getElementById('profile-key-value');
