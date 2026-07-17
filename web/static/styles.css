@@ -103,7 +103,7 @@ body {
 }
 .nav-item { display: flex; flex-direction: column; align-items: center; color: #6b7280; font-size: 11px; cursor: pointer; }
 .nav-item.active { color: #ef4444; }
-.nav-icon { font-size: 20px; margin-bottom: 4px; }
+.nav-icon { font-size: 20px; margin-bottom: 4px; display:flex; align-items:center; justify-content:center; }
 
 .profile-card { display: none; }
 .info-card { display: none; }
