@@ -27,10 +27,15 @@
         <div id="tab-home-content">
             <div class="main-card">
                 <div class="tariff-info">
-                    <div class="days-left" id="days-count">0 <span>дней</span></div>
+                    <div>
+                        <div style="display:flex;align-items:baseline;gap:4px">
+                            <span class="days" id="days-count">0</span>
+                            <span class="days-lbl">дн.</span>
+                        </div>
+                        <div class="price-text" id="price-daily-text">от 5₽ / день</div>
+                    </div>
                     <button class="btn-pay" onclick="openTariffsModal()">Тарифы</button>
                 </div>
-                <div class="price-text" id="price-daily-text">от 5₽ / день</div>
                 <div class="info-grid">
                     <div class="info-cell">
                         <div class="info-lbl">

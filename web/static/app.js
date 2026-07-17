@@ -85,7 +85,7 @@ async function loadUserData() {
             }
             document.getElementById('balance-display').innerText = globalUserData.balance + " ₽";
             document.getElementById('profile-balance').innerText = globalUserData.balance + " ₽";
-            document.getElementById('days-count').innerHTML = globalUserData.remainingStr || globalUserData.daysLeft + " <span>дней</span>";
+            document.getElementById('days-count').textContent = globalUserData.daysLeft;
             document.getElementById('home-username').textContent = (userRaw?.username ? "@" + userRaw.username : globalUserData.username) || "—";
             document.getElementById('home-expiry').textContent = formatTs(globalUserData.subscriptionEnd);
             fetch(workerUrl + "/api/user-devices?userId=" + userId, { headers: { "X-Init-Data": initData } })

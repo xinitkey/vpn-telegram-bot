@@ -42,10 +42,10 @@ body {
     background: rgba(15, 15, 15, 0.85); backdrop-filter: blur(10px);
     border-radius: 24px; padding: 24px; border: 1px solid rgba(255, 255, 255, 0.05); margin-bottom: 15px;
 }
-.tariff-info { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-.days-left { font-size: 32px; font-weight: 800; }
-.days-left span { font-size: 18px; font-weight: 500; color: #9ca3af; }
-.price-text { color: #ef4444; font-size: 14px; margin-bottom: 16px; font-weight: 500; }
+.tariff-info { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px; }
+.days { font-size: 52px; font-weight: 900; letter-spacing: -2px; line-height: 1; }
+.days-lbl { font-size: 18px; font-weight: 700; color: #888; margin-left: 4px; }
+.price-text { color: #e03535; font-size: 13px; font-weight: 600; margin-top: 4px; }
 .info-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
 .info-cell{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:10px 12px}
 .info-lbl{font-size:11px;color:#888;font-weight:500;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;display:flex;align-items:center;gap:5px}
