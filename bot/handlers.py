@@ -58,7 +58,7 @@ def _platform_keyboard(selected: str = None):
     for key, label in PLATFORM_BUTTONS:
         text = f"✅ {label}" if selected == key else label
         buttons.append([InlineKeyboardButton(text=text, callback_data=f"platform_{key}")])
-    buttons.append([InlineKeyboardButton(text="🚀 Открыть BlackVPN App", web_app=WebAppInfo(url=f"{settings.BASE_URL}/"))])
+    buttons.append([InlineKeyboardButton(text="🚀 Подключить", web_app=WebAppInfo(url=f"{settings.BASE_URL}/"))])
     return InlineKeyboardMarkup(inline_keyboard=buttons)
 
 
@@ -68,8 +68,7 @@ async def send_key_with_platforms(bot, chat_id: int, key: str, remaining_str: st
         f"<b>Ваш ключ:</b>\n"
         f"{key}\n\n"
         f"<b>Осталось:</b> {remaining_str}\n\n"
-        f"<b>Инструкция:</b> Выберите и установите приложение из списка "
-        f"поддерживаемых и перейдите по ссылке для копирования или подключения ключа\n\n"
+        f"Для подключения нажмите кнопку «Подключить» ниже\n\n"
         f"<b>Выберите платформу:</b>"
     )
     await bot.send_message(
