@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 def _connect_keyboard():
     return InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="🚀 Подключить", web_app=WebAppInfo(url=f"{settings.BASE_URL}/"))]
+        [InlineKeyboardButton(text="Подключить", web_app=WebAppInfo(url=f"{settings.BASE_URL}/blackvpn-connect.html"))]
     ])
 
 
