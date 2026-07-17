@@ -421,6 +421,12 @@ var PLATFORMS = [
         connect: { desc: 'В главном разделе нажмите большую кнопку включения. Выберите сервер из списка.' }
       },
       {
+        id: 'incy', name: 'INCY', iconId: 'incy',
+        install: { desc: 'Установите INCY из Google Play.', btns: [{label:'Google Play', url:'https://play.google.com/store/apps/details?id=com.incy.app', ext:true}] },
+        subscribe: { deeplink: true },
+        connect: { desc: 'Подключитесь через кнопку включения в главном экране.' }
+      },
+      {
         id: 'hiddify', name: 'Hiddify', iconId: 'hiddify',
         install: { desc: 'Установите Hiddify из Google Play или скачайте APK напрямую.', btns: [{label:'Google Play', url:'https://play.google.com/store/apps/details?id=app.hiddify.com', ext:true}, {label:'Скачать APK', url:'https://github.com/hiddify/hiddify-app/releases/latest', ext:true}] },
         subscribe: { deeplink: true },
