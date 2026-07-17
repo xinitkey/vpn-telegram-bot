@@ -84,8 +84,24 @@ async function loadUserData() {
                 document.getElementById('banned-overlay').classList.remove('active');
             }
             document.getElementById('balance-display').textContent = globalUserData.balance;
+            var now = Date.now();
+            var remaining = globalUserData.subscriptionEnd - now;
+            var daysEl = document.getElementById('days-count');
+            var lblEl = document.querySelector('.days-lbl');
+            if (remaining <= 0) {
+                daysEl.textContent = '0';
+                lblEl.textContent = 'дн.';
+            } else if (remaining >= 86400000) {
+                daysEl.textContent = Math.floor(remaining / 86400000);
+                lblEl.textContent = 'дн.';
+            } else if (remaining >= 3600000) {
+                daysEl.textContent = Math.floor(remaining / 3600000);
+                lblEl.textContent = 'ч';
+            } else {
+                daysEl.textContent = Math.floor(remaining / 60000);
+                lblEl.textContent = 'мин';
+            }
             document.getElementById('profile-balance').innerText = globalUserData.balance + " ₽";
-            document.getElementById('days-count').textContent = globalUserData.daysLeft;
             document.getElementById('home-username').textContent = (userRaw?.username ? "@" + userRaw.username : globalUserData.username) || "—";
             document.getElementById('home-expiry').textContent = formatTs(globalUserData.subscriptionEnd);
             fetch(workerUrl + "/api/user-devices?userId=" + userId, { headers: { "X-Init-Data": initData } })
@@ -96,7 +112,6 @@ async function loadUserData() {
                 })
                 .catch(function(){});
             var sb = document.getElementById('statusBadge');
-            var now = Date.now();
             if (globalUserData.daysLeft > 30) { sb.textContent = '\u25CF Активна'; sb.className = 'badge b-active'; }
             else if (globalUserData.daysLeft > 7) { sb.textContent = '\u25CF Активна'; sb.className = 'badge b-active'; }
             else if (globalUserData.daysLeft > 0) { sb.textContent = '\u25CF Скоро истекает'; sb.className = 'badge b-expiring'; }
