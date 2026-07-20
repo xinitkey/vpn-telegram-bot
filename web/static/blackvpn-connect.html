@@ -757,7 +757,7 @@ function copySub(btn) {
 }
 
 function copyLink(btn) {
-  navigator.clipboard.writeText(window.location.href).then(function(){
+  navigator.clipboard.writeText('https://rowline.me/').then(function(){
     btn.classList.add('copied');
     setTimeout(function(){ btn.classList.remove('copied'); }, 1500);
   });
