@@ -60,7 +60,7 @@ async def cmd_admin(message: Message):
         "/add <code>id сумма</code> — пополнить баланс\n"
         "/give <code>id дней</code> — выдать подписку\n"
         "/giveall <code>дни</code> — добавить дни всем\n"
-        "/giveallactive <code>дни</code> — добавить дни активным\n"
+        "/giveallactive <code>дни</code> [комментарий] — добавить дни активным\n"
         "/reset <code>id</code> — сбросить подписку\n"
         "/wipe <code>id</code> — полностью стереть пользователя\n"
         "/resettrial <code>id</code> — обнулить триал\n"
@@ -906,10 +906,15 @@ async def cmd_giveallactive(message: Message, command: CommandObject):
         await message.answer(_NOT_ADMIN_MSG)
         return
     args = command.args
-    if not args or not args.strip().isdigit():
-        await message.answer("Формат: /giveallactive <code>дни</code>", parse_mode='HTML')
+    if not args:
+        await message.answer("Формат: /giveallactive <code>дни</code> [комментарий]", parse_mode='HTML')
         return
-    days = int(args.strip())
+    parts = args.strip().split(maxsplit=1)
+    if not parts or not parts[0].isdigit():
+        await message.answer("Формат: /giveallactive <code>дни</code> [комментарий]", parse_mode='HTML')
+        return
+    days = int(parts[0])
+    comment = parts[1] if len(parts) > 1 else ''
     users = await get_active_users()
     done = 0
     for u in users:
@@ -934,14 +939,18 @@ async def cmd_giveallactive(message: Message, command: CommandObject):
                             await update_user(upd)
                 except Exception:
                     pass
+            if comment:
+                try:
+                    await message.bot.send_message(u.user_id, comment, parse_mode='HTML')
+                except Exception:
+                    pass
             done += 1
         except Exception:
             pass
-    await message.answer(
-        f"Подписка добавлена <code>{done}/{len(users)}</code> активным пользователям\n"
-        f"Каждому: +<code>{days}</code> дн.",
-        parse_mode='HTML'
-    )
+    result = f"Подписка добавлена <code>{done}/{len(users)}</code> активным пользователям\nКаждому: +<code>{days}</code> дн."
+    if comment:
+        result += f"\nКомментарий отправлен"
+    await message.answer(result, parse_mode='HTML')
 
 
 @router.message(Command("resettrial"))
