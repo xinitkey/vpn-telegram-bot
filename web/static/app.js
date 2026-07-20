@@ -50,7 +50,7 @@ let selectedAmount = 0;
 let selectedMethod = '';
 let selectedTariffDays = 0;
 let selectedTariffPrice = 0;
-let globalUserData = { balance: 0, daysLeft: 0, vpnKey: 'Не создан', dailyPrice: 5, trialUsed: false };
+let globalUserData = { balance: 0, daysLeft: 0, vpnKey: 'Не создан', dailyPrice: 6, trialUsed: false };
 let activePromoCode = '';
 let activePromoDiscount = 0;
 let activePromoTariffPrices = {};
@@ -143,14 +143,14 @@ async function loadUserData() {
             // Trial status — update 3-day tariff pricing
             const trialOpt = document.querySelector('.tariff-option[data-days="3"]');
             if (globalUserData.trialUsed) {
-                trialOpt.setAttribute('onclick', "selectTariff(3, 15)");
-                trialOpt.setAttribute('data-price', '15');
-                trialOpt.querySelector('.tariff-price').innerHTML = '15 &#x20BD;';
-                trialOpt.querySelector('.tariff-perday').innerHTML = '5 ₽/день';
+                trialOpt.setAttribute('onclick', "selectTariff(3, 18)");
+                trialOpt.setAttribute('data-price', '18');
+                trialOpt.querySelector('.tariff-price').innerHTML = '18 &#x20BD;';
+                trialOpt.querySelector('.tariff-perday').innerHTML = '6 ₽/день';
             } else {
                 trialOpt.setAttribute('onclick', "selectTariff(3, 0)");
                 trialOpt.setAttribute('data-price', '0');
-                trialOpt.querySelector('.tariff-price').innerHTML = '0 ₽';
+                trialOpt.querySelector('.tariff-price').innerHTML = '0 &#x20BD;';
                 trialOpt.querySelector('.tariff-perday').innerHTML = 'Бесплатно';
             }
         }

@@ -64,7 +64,7 @@ class Settings:
     BASE_URL: str = ''
 
     # Tariff
-    TARIFF_DAILY_PRICE: int = int(os.getenv('TARIFF_DAILY_PRICE', '5'))
+    TARIFF_DAILY_PRICE: int = int(os.getenv('TARIFF_DAILY_PRICE', '6'))
     REFERRAL_REWARD: int = int(os.getenv('REFERRAL_REWARD', '50'))
 
     def __post_init__(self):
