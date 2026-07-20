@@ -4,7 +4,7 @@ from aiogram.filters import Command, CommandObject
 from aiogram import Dispatcher
 from config import settings
 from services.db import (
-    get_user, get_all_users, get_user_count, get_active_sub_count,
+    get_user, get_all_users, get_active_users, get_user_count, get_active_sub_count,
     get_total_balance, get_payments_count, add_balance, set_subscription,
     update_vpn_info, create_user, get_recent_payments, get_all_completed_payments,
     get_user_payments, get_revenue,
@@ -60,6 +60,7 @@ async def cmd_admin(message: Message):
         "/add <code>id сумма</code> — пополнить баланс\n"
         "/give <code>id дней</code> — выдать подписку\n"
         "/giveall <code>дни</code> — добавить дни всем\n"
+        "/giveallactive <code>дни</code> — добавить дни активным\n"
         "/reset <code>id</code> — сбросить подписку\n"
         "/wipe <code>id</code> — полностью стереть пользователя\n"
         "/resettrial <code>id</code> — обнулить триал\n"
@@ -894,6 +895,50 @@ async def cmd_giveall(message: Message, command: CommandObject):
             pass
     await message.answer(
         f"Подписка добавлена <code>{done}/{len(users)}</code> пользователям\n"
+        f"Каждому: +<code>{days}</code> дн.",
+        parse_mode='HTML'
+    )
+
+
+@router.message(Command("giveallactive"))
+async def cmd_giveallactive(message: Message, command: CommandObject):
+    if not is_admin(message.from_user.id):
+        await message.answer(_NOT_ADMIN_MSG)
+        return
+    args = command.args
+    if not args or not args.strip().isdigit():
+        await message.answer("Формат: /giveallactive <code>дни</code>", parse_mode='HTML')
+        return
+    days = int(args.strip())
+    users = await get_active_users()
+    done = 0
+    for u in users:
+        try:
+            await set_subscription(u.user_id, days)
+            u = await get_user(u.user_id)
+            if settings.XUI_URL and settings.XUI_PASSWORD and (settings.XUI_INBOUND_ID is not None or settings.XUI_INBOUND_IDS):
+                email = f'user_{u.user_id}'
+                now_ms = int(time.time() * 1000)
+                total_days = max(1, (u.subscription - now_ms) // 86400000) if u.subscription and u.subscription > now_ms else days
+                try:
+                    if u.xui_email:
+                        await xui_update_expiry(u.xui_email, total_days)
+                        link = await xui_build_link_for_email(u.xui_email, u.xui_inbound_id or None)
+                        await update_vpn_info(u.user_id, link=link)
+                    else:
+                        client = await xui_add_client(email, total_days, u.xui_inbound_id or None)
+                        await update_vpn_info(u.user_id, uuid=client['uuid'], email=client['email'], link=client['link'])
+                        upd = await get_user(u.user_id)
+                        if upd:
+                            upd.xui_inbound_id = client['inbound_id']
+                            await update_user(upd)
+                except Exception:
+                    pass
+            done += 1
+        except Exception:
+            pass
+    await message.answer(
+        f"Подписка добавлена <code>{done}/{len(users)}</code> активным пользователям\n"
         f"Каждому: +<code>{days}</code> дн.",
         parse_mode='HTML'
     )

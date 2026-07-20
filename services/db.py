@@ -247,6 +247,14 @@ async def get_all_users() -> list[User]:
             rows = await cur.fetchall()
             return [_user_from_row(row) for row in rows]
 
+async def get_active_users() -> list[User]:
+    now_ms = int(time.time() * 1000)
+    async with _db_lock:
+        db = await _get_db()
+        async with db.execute('SELECT * FROM users WHERE subscription > ? ORDER BY user_id', (now_ms,)) as cur:
+            rows = await cur.fetchall()
+            return [_user_from_row(row) for row in rows]
+
 async def get_user_count() -> int:
     async with _db_lock:
         db = await _get_db()
