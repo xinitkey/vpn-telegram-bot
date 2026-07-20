@@ -308,6 +308,27 @@ async def get_client_subid(email: str, inbound_id: int | None = None) -> str | N
     return None
 
 
+async def get_client_expiry(email: str, inbound_id: int | None = None) -> int | None:
+    ids = [inbound_id] if inbound_id else settings.XUI_INBOUND_IDS
+    for iid in ids:
+        inbound = await get_inbound_info(iid)
+        clients = inbound.get("clientStats", [])
+        if not clients:
+            raw = inbound.get("settings", "")
+            if isinstance(raw, str):
+                try:
+                    raw = json.loads(raw)
+                except Exception:
+                    raw = {}
+            clients = raw.get("clients", []) if isinstance(raw, dict) else []
+        for client in clients:
+            if isinstance(client, dict) and client.get("email") == email:
+                et = client.get("expiryTime")
+                if et:
+                    return int(et)
+    return None
+
+
 async def build_link_for_email(email: str, inbound_id: int | None = None) -> str:
     sub_id = await get_client_subid(email, inbound_id)
     if not sub_id:

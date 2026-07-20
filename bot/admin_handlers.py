@@ -154,6 +154,19 @@ async def cmd_find(message: Message, command: CommandObject):
     if user is None:
         await message.answer(f"Пользователь <code>{user_id}</code> не найден.", parse_mode='HTML')
         return
+    panel_note = ""
+    if user.xui_email:
+        try:
+            from services.xui_api import get_client_expiry
+            panel_expiry = await get_client_expiry(user.xui_email)
+            if panel_expiry is not None and panel_expiry != user.subscription:
+                user.subscription = panel_expiry
+                from services.db import update_user
+                await update_user(user)
+                panel_note = f"\n⚠ Панель: {user.remaining_str} (БД скорректирована)"
+        except Exception as e:
+            logging.warning(f"Failed to fetch panel expiry for {user.xui_email}: {e}")
+            panel_note = "\n⚠ Ошибка синхронизации с панелью"
     status = "Активна" if user.is_subscription_active else "Не активна"
     ban = "Да" if user.banned else "Нет"
     await message.answer(
@@ -168,7 +181,8 @@ async def cmd_find(message: Message, command: CommandObject):
         f"Начало: {user.subscription_start_str}\n"
         f"Заканчивается: {user.subscription_end_str}\n"
         f"Ключ: <code>{user.link or 'нет'}</code>\n"
-        f"Email: <code>{user.xui_email or 'нет'}</code>",
+        f"Email: <code>{user.xui_email or 'нет'}</code>"
+        f"{panel_note}",
         parse_mode='HTML'
     )
 
