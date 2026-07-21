@@ -337,18 +337,14 @@ var ICONS = {
   incy:         'https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/0f/03/cd/0f03cd56-3128-216b-83ea-2a85aef0fd52/AppIcon-0-0-1x_U007epad-0-11-0-85-220.png/512x512bb.jpg',
   hiddify:      'https://raw.githubusercontent.com/hiddify/hiddify-app/main/assets/images/logo.svg',
   clashverge:   'https://raw.githubusercontent.com/clash-verge-rev/clash-verge-rev/main/src-tauri/icons/icon.png',
-  nekobox:      'https://raw.githubusercontent.com/MatsuriDayo/NekoBoxForAndroid/main/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png',
   v2rayng:      'https://raw.githubusercontent.com/2dust/v2rayNG/master/V2rayNG/app/src/main/res/mipmap-xhdpi/ic_launcher.png',
   flclashx:     'https://raw.githubusercontent.com/chen08209/FlClash/main/assets/images/icon.png',
-  singbox:      'https://raw.githubusercontent.com/SagerNet/sing-box/testing/docs/assets/icon.svg',
   // SVG fallbacks for Russia-only apps not in public stores
   koalaclash: null,
-  prizrakbox: null,
 };
 
 var SVG_FALLBACK = {
   koalaclash: '<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="32" cy="34" r="18"/><circle cx="14" cy="22" r="8"/><circle cx="50" cy="22" r="8"/><circle cx="26" cy="30" r="3"/><circle cx="38" cy="30" r="3"/><ellipse cx="32" cy="40" rx="5" ry="3.5"/></svg>',
-  prizrakbox:  '<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 54V28a16 16 0 0132 0v26l-8-6-8 6-8-6-8 6z"/><circle cx="25" cy="28" r="3"/><circle cx="39" cy="28" r="3"/></svg>',
 };
 
 function logoEl(id) {
@@ -438,18 +434,6 @@ var PLATFORMS = [
         subscribe: { deeplink: true },
         connect: { desc: 'Выберите сервер из списка и нажмите кнопку запуска (треугольник).' }
       },
-      {
-        id: 'nekobox', name: 'NekoBox', iconId: 'nekobox',
-        install: { desc: 'Скачайте NekoBox с GitHub.', btns: [{label:'GitHub', url:'https://github.com/MatsuriDayo/NekoBoxForAndroid/releases/latest', ext:true}] },
-        subscribe: { deeplink: true },
-        connect: { desc: 'Выберите профиль и нажмите кнопку подключения.' }
-      },
-      {
-        id: 'singbox', name: 'sing-box', iconId: 'singbox',
-        install: { desc: 'Установите sing-box из Google Play.', btns: [{label:'Google Play', url:'https://play.google.com/store/apps/details?id=io.nekohasekai.sfa', ext:true}] },
-        subscribe: { deeplink: true },
-        connect: { desc: 'Активируйте профиль и включите VPN.' }
-      },
     ]
   },
   {
@@ -474,12 +458,6 @@ var PLATFORMS = [
         connect: { desc: 'Включите VPN через переключатель.' }
       },
       {
-        id: 'prizrakbox', name: 'Prizrak-Box', iconId: 'prizrakbox',
-        install: { desc: 'Скачайте Prizrak-Box и установите вручную.', btns: [{label:'Скачать', url:'#', ext:true}] },
-        subscribe: { deeplink: false },
-        connect: { desc: 'Импортируйте конфигурацию через меню и включите VPN.' }
-      },
-      {
         id: 'rabbithole', name: 'RabbitHole', iconId: 'rabbithole',
         install: { desc: 'Установите RabbitHole из App Store для Mac.', btns: [{label:'App Store', url:'https://apps.apple.com/app/id6683309629', ext:true}] },
         subscribe: { deeplink: true },
@@ -502,18 +480,6 @@ var PLATFORMS = [
         subscribe: { deeplink: true },
         connect: { desc: 'Активируйте системный прокси и выберите сервер.' }
       },
-      {
-        id: 'nekobox', name: 'NekoBox', iconId: 'nekobox',
-        install: { desc: 'Скачайте NekoBox для Windows с GitHub.', btns: [{label:'GitHub', url:'https://github.com/MatsuriDayo/nekoray/releases/latest', ext:true}] },
-        subscribe: { deeplink: true },
-        connect: { desc: 'Включите TUN-режим или системный прокси.' }
-      },
-      {
-        id: 'singbox', name: 'sing-box', iconId: 'singbox',
-        install: { desc: 'Скачайте sing-box для Windows.', btns: [{label:'GitHub', url:'https://github.com/SagerNet/sing-box/releases/latest', ext:true}] },
-        subscribe: { deeplink: true },
-        connect: { desc: 'Запустите с правами администратора и активируйте профиль.' }
-      },
     ]
   },
   {
@@ -526,22 +492,10 @@ var PLATFORMS = [
         connect: { desc: 'Запустите приложение и нажмите Connect.' }
       },
       {
-        id: 'nekobox', name: 'NekoBox', iconId: 'nekobox',
-        install: { desc: 'Скачайте NekoRay/NekoBox для Linux.', btns: [{label:'GitHub', url:'https://github.com/MatsuriDayo/nekoray/releases/latest', ext:true}] },
-        subscribe: { deeplink: true },
-        connect: { desc: 'Выберите профиль и активируйте TUN или системный прокси.' }
-      },
-      {
         id: 'clashverge', name: 'Clash Verge', iconId: 'clashverge',
         install: { desc: 'Установите Clash Verge Rev из пакета для Linux.', btns: [{label:'GitHub', url:'https://github.com/clash-verge-rev/clash-verge-rev/releases/latest', ext:true}] },
         subscribe: { deeplink: true },
         connect: { desc: 'Включите системный прокси и выберите нужный узел.' }
-      },
-      {
-        id: 'singbox', name: 'sing-box', iconId: 'singbox',
-        install: { desc: 'Установите sing-box через snap или скачайте бинарник.', btns: [{label:'GitHub', url:'https://github.com/SagerNet/sing-box/releases/latest', ext:true}] },
-        subscribe: { deeplink: true },
-        connect: { desc: 'Запустите sing-box run -c config.json' }
       },
     ]
   },
@@ -734,7 +688,6 @@ var APP_SCHEMES = {
   flclashx:     'clash://install-config?url=',
   koalaclash:   'clash://install-config?url=',
   clashverge:   'clash://install-config?url=',
-  singbox:      'sing-box://import-remote-profile?url=',
 };
 
 // ── ACTIONS ────────────────────────────────────────────────────────────
