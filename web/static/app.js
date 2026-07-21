@@ -153,8 +153,69 @@ async function loadUserData() {
                 trialOpt.querySelector('.tariff-price').innerHTML = '0 &#x20BD;';
                 trialOpt.querySelector('.tariff-perday').innerHTML = 'Бесплатно';
             }
+            checkTrialOffer();
         }
     } catch (e) { console.error(e); }
+}
+
+function checkTrialOffer() {
+    if (globalUserData.trialUsed) return;
+    if (localStorage.getItem('trialDismissed')) return;
+    var remindAt = localStorage.getItem('trialRemindAt');
+    if (remindAt && Date.now() < parseInt(remindAt)) return;
+    document.getElementById('trial-overlay').classList.add('active');
+}
+
+function activateTrial() {
+    tg.HapticFeedback.impactOccurred('medium');
+    document.getElementById('trial-btn-activate').disabled = true;
+    document.getElementById('trial-btn-activate').textContent = 'Активация...';
+    fetch(workerUrl + '/api/buy-subscription', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, days: 3, price: 0, initData })
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(data){
+        if (data.success) {
+            tg.HapticFeedback.notificationOccurred('success');
+            document.getElementById('trial-overlay').classList.remove('active');
+            loadUserData();
+        } else {
+            tg.showAlert(data.error || 'Ошибка активации триала');
+            document.getElementById('trial-btn-activate').disabled = false;
+            document.getElementById('trial-btn-activate').textContent = 'Активировать';
+        }
+    })
+    .catch(function(){
+        tg.showAlert('Сбой сети');
+        document.getElementById('trial-btn-activate').disabled = false;
+        document.getElementById('trial-btn-activate').textContent = 'Активировать';
+    });
+}
+
+function trialRemindLater() {
+    localStorage.setItem('trialRemindAt', Date.now() + 86400000);
+    document.getElementById('trial-overlay').classList.remove('active');
+}
+
+function trialCancel() {
+    document.getElementById('trial-modal').style.display = 'none';
+    document.getElementById('trial-cancel-dialog').classList.add('active');
+}
+
+function trialCancelConfirm() {
+    if (document.getElementById('trial-dont-show').checked) {
+        localStorage.setItem('trialDismissed', '1');
+    }
+    document.getElementById('trial-overlay').classList.remove('active');
+    document.getElementById('trial-cancel-dialog').classList.remove('active');
+    document.getElementById('trial-modal').style.display = '';
+}
+
+function trialCancelBack() {
+    document.getElementById('trial-cancel-dialog').classList.remove('active');
+    document.getElementById('trial-modal').style.display = '';
 }
 
 function copyReferralLink() {
