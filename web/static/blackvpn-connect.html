@@ -497,6 +497,18 @@ var PLATFORMS = [
         subscribe: { deeplink: true },
         connect: { desc: 'Включите системный прокси и выберите нужный узел.' }
       },
+      {
+        id: 'happ', name: 'Happ', iconId: 'happ',
+        install: { desc: 'Скачайте Happ для Linux с GitHub или с официального сайта.', btns: [{label:'GitHub', url:'https://github.com/Happ-proxy/happ-desktop/releases', ext:true}, {label:'Официальный сайт', url:'https://happ.press/#downloads', ext:true}] },
+        subscribe: { deeplink: true },
+        connect: { desc: 'Запустите Happ, выберите сервер и включите VPN.' }
+      },
+      {
+        id: 'incy', name: 'INCY', iconId: 'incy',
+        install: { desc: 'Скачайте INCY для Linux с GitHub.', btns: [{label:'GitHub', url:'https://github.com/INCY-DEV/incy-platforms/releases', ext:true}] },
+        subscribe: { deeplink: true },
+        connect: { desc: 'Подключитесь через кнопку включения в главном экране.' }
+      },
     ]
   },
   {
