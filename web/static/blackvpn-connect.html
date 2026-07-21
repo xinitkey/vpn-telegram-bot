@@ -468,6 +468,18 @@ var PLATFORMS = [
     id: 'windows', label: 'Windows', icon: 'windows',
     apps: [
       {
+        id: 'happ', name: 'Happ', iconId: 'happ',
+        install: { desc: 'Скачайте Happ для Windows с GitHub или с официального сайта.', btns: [{label:'GitHub', url:'https://github.com/Happ-proxy/happ-desktop/releases', ext:true}, {label:'Официальный сайт', url:'https://happ.press/#downloads', ext:true}] },
+        subscribe: { deeplink: true },
+        connect: { desc: 'Запустите Happ, выберите сервер и включите VPN.' }
+      },
+      {
+        id: 'incy', name: 'INCY', iconId: 'incy',
+        install: { desc: 'Скачайте INCY для Windows с GitHub.', btns: [{label:'GitHub', url:'https://github.com/INCY-DEV/incy-platforms/releases', ext:true}] },
+        subscribe: { deeplink: true },
+        connect: { desc: 'Подключитесь через кнопку включения в главном экране.' }
+      },
+      {
         id: 'hiddify', name: 'Hiddify', iconId: 'hiddify',
         install: { desc: 'Скачайте Hiddify для Windows с GitHub.', btns: [{label:'Скачать', url:'https://github.com/hiddify/hiddify-app/releases/latest', ext:true}] },
         subscribe: { deeplink: true },
