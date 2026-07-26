@@ -727,7 +727,21 @@ var APP_SCHEMES = {
 
 // ── ACTIONS ────────────────────────────────────────────────────────────
 function importSub(btn) {
-  navigator.clipboard.writeText(USER.subUrl);
+  var url = USER.subUrl;
+  navigator.clipboard.writeText(url);
+
+  var scheme = APP_SCHEMES[state.appId];
+  if (scheme) {
+    var deepLink = scheme + encodeURIComponent(url);
+    var a = document.createElement('a');
+    a.href = deepLink;
+    a.target = '_blank';
+    a.rel = 'noopener';
+    a.style.display = 'none';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(function(){ document.body.removeChild(a); }, 500);
+  }
 
   btn.classList.add('copied');
   var lbl = document.getElementById('copySubLabel');
