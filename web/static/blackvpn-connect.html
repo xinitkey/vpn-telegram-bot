@@ -838,11 +838,139 @@ function makeHappDeepLink(url) {
 var CLASH_APPS = ['clashmi', 'flclashx', 'koalaclash', 'clashverge'];
 var SUB_CONVERTER_URL = window.location.origin + '/api/sub-convert/' + (userId || '');
 
+function vlessToYaml(text) {
+  var lines;
+  try { lines = atob(text).split('\n'); }
+  catch(e) { lines = text.split('\n'); }
+  var proxies = [];
+  for (var i = 0; i < lines.length; i++) {
+    var link = lines[i].trim();
+    if (!link || link.charAt(0) === '#') continue;
+    if (link.indexOf('vless://') !== 0 && link.indexOf('vmess://') !== 0 && link.indexOf('ss://') !== 0 && link.indexOf('trojan://') !== 0) continue;
+    try {
+      var u = new URL(link);
+      var name = (u.hash.slice(1) || '').slice(0, 32) || u.hostname;
+      var p = { name: decodeURIComponent(name), server: u.hostname, port: parseInt(u.port) || 443 };
+      if (link.indexOf('vless://') === 0) {
+        p.type = 'vless'; p.uuid = u.username;
+        u.searchParams.forEach(function(v, k) {
+          if (k === 'type') p.network = v;
+          else if (k === 'flow') p.flow = v;
+          else if (k === 'sni') p.sni = v;
+          else if (k === 'fp') p['client-fingerprint'] = v;
+          else if (k === 'security' && (v === 'tls' || v === 'reality')) p.tls = true;
+          else if (k === 'pbk') { p['reality-opts'] = p['reality-opts'] || {}; p['reality-opts']['public-key'] = v; }
+          else if (k === 'sid') { p['reality-opts'] = p['reality-opts'] || {}; p['reality-opts']['short-id'] = v; }
+        });
+        if (!p.network) p.network = 'tcp';
+      } else if (link.indexOf('vmess://') === 0) {
+        p.type = 'vmess';
+        var raw = link.slice(8);
+        if (raw.indexOf('#') !== -1) raw = raw.slice(0, raw.indexOf('#'));
+        try {
+          var d = JSON.parse(atob(raw));
+          p.uuid = d.id || ''; p.alterId = d.aid || 0; p.cipher = d.scy || 'auto';
+          if (d.tls) p.tls = true; p.network = d.net || 'tcp';
+          if (d.net === 'ws' && d.path) {
+            p['ws-opts'] = { path: d.path };
+            if (d.host) p['ws-opts'].headers = { Host: d.host };
+          }
+        } catch(e) { continue; }
+      } else if (link.indexOf('ss://') === 0) {
+        p.type = 'ss';
+        var raw = link.slice(5);
+        if (raw.indexOf('#') !== -1) raw = raw.slice(0, raw.indexOf('#'));
+        try {
+          var dec = atob(raw);
+          var atIdx = dec.lastIndexOf('@');
+          if (atIdx === -1) continue;
+          var pwd = dec.slice(0, atIdx).split(':');
+          p.cipher = pwd[0] || 'chacha20-ietf-poly1305'; p.password = pwd.slice(1).join(':') || '';
+          var hp = dec.slice(atIdx + 1).split(':');
+          p.server = hp[0]; p.port = parseInt(hp[1]) || 443;
+        } catch(e) { continue; }
+      } else if (link.indexOf('trojan://') === 0) {
+        p.type = 'trojan'; p.password = u.username; p.udp = true;
+        u.searchParams.forEach(function(v, k) {
+          if (k === 'sni' || k === 'peer') p.sni = v;
+          else if (k === 'allowInsecure' && (v === '1' || v === 'true')) p['skip-cert-verify'] = true;
+        });
+      }
+      if (p.type) proxies.push(p);
+    } catch(e) {}
+  }
+  if (!proxies.length) return null;
+
+  var y = 'port: 7890\nsocks-port: 7891\nallow-lan: true\nmode: Rule\nlog-level: info\n\nproxies:\n';
+  for (var i = 0; i < proxies.length; i++) {
+    var p = proxies[i];
+    y += '  - name: "' + p.name + '"\n    type: ' + p.type + '\n    server: ' + p.server + '\n    port: ' + p.port + '\n';
+    if (p.type === 'vless') {
+      y += '    uuid: ' + p.uuid + '\n';
+      if (p.flow) y += '    flow: ' + p.flow + '\n';
+      if (p.tls) y += '    tls: true\n';
+      if (p.sni) y += '    sni: ' + p.sni + '\n';
+      if (p['client-fingerprint']) y += '    client-fingerprint: ' + p['client-fingerprint'] + '\n';
+      if (p['reality-opts']) {
+        y += '    reality-opts:\n      public-key: ' + p['reality-opts']['public-key'] + '\n';
+        if (p['reality-opts']['short-id']) y += '      short-id: ' + p['reality-opts']['short-id'] + '\n';
+      }
+      y += '    network: ' + p.network + '\n';
+    } else if (p.type === 'vmess') {
+      y += '    uuid: ' + p.uuid + '\n    alterId: ' + p.alterId + '\n    cipher: ' + p.cipher + '\n';
+      if (p.tls) y += '    tls: true\n';
+      if (p.network && p.network !== 'tcp') y += '    network: ' + p.network + '\n';
+      if (p['ws-opts']) {
+        y += '    ws-opts:\n      path: "' + p['ws-opts'].path + '"\n';
+        if (p['ws-opts'].headers) y += '      headers:\n        Host: ' + p['ws-opts'].headers.Host + '\n';
+      }
+    } else if (p.type === 'ss') {
+      y += '    cipher: ' + p.cipher + '\n    password: "' + p.password + '"\n';
+    } else if (p.type === 'trojan') {
+      y += '    password: "' + p.password + '"\n    udp: true\n';
+      if (p.sni) y += '    sni: ' + p.sni + '\n';
+      if (p['skip-cert-verify']) y += '    skip-cert-verify: true\n';
+    }
+  }
+  var names = proxies.map(function(p){ return '"' + p.name + '"'; });
+  y += 'proxy-groups:\n  - name: Proxy\n    type: select\n    proxies:\n      - Auto\n      - DIRECT\n';
+  for (var i = 0; i < names.length; i++) y += '      - ' + names[i] + '\n';
+  y += '  - name: Auto\n    type: url-test\n    url: http://www.gstatic.com/generate_204\n    interval: 300\n    proxies:\n';
+  for (var i = 0; i < names.length; i++) y += '      - ' + names[i] + '\n';
+  y += '  - name: DIRECT\n    type: select\n    proxies:\n      - DIRECT\n\nrules:\n  - MATCH,Proxy\n';
+
+  return y;
+}
+
 // ── ACTIONS ────────────────────────────────────────────────────────────
 async function importSub(btn) {
   var url = USER.subUrl;
+  var deepLink = null;
+
   if (CLASH_APPS.indexOf(state.appId) !== -1) {
-    url = SUB_CONVERTER_URL;
+    var yaml = null;
+    try {
+      var resp = await fetch(url);
+      yaml = vlessToYaml(await resp.text());
+    } catch(e) {}
+    if (!yaml) {
+      try {
+        var resp = await fetch(SUB_CONVERTER_URL);
+        if (resp.ok) yaml = await resp.text();
+      } catch(e) {}
+    }
+    if (yaml && yaml.length > 50) {
+      var b64 = btoa(unescape(encodeURIComponent(yaml)));
+      url = 'data:text/yaml;charset=utf-8;base64,' + b64;
+      var blob = new Blob([yaml], {type: 'text/yaml'});
+      var a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'blackvpn.yaml';
+      a.style.display = 'none';
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(function(){ URL.revokeObjectURL(a.href); document.body.removeChild(a); }, 500);
+    }
   }
   navigator.clipboard.writeText(url);
 
