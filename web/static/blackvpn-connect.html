@@ -949,19 +949,27 @@ async function importSub(btn) {
 
   if (CLASH_APPS.indexOf(state.appId) !== -1) {
     var yaml = null;
-    try {
-      var resp = await fetch(url);
-      yaml = vlessToYaml(await resp.text());
-    } catch(e) {}
-    if (!yaml) {
+    if (USER.subContent) {
+      yaml = vlessToYaml(USER.subContent);
+    }
+    if (!(yaml && yaml.length > 100)) {
       try {
         var resp = await fetch(SUB_CONVERTER_URL);
         if (resp.ok) yaml = await resp.text();
       } catch(e) {}
     }
     if (yaml && yaml.length > 50) {
-      var b64 = btoa(unescape(encodeURIComponent(yaml)));
-      url = 'data:text/yaml;charset=utf-8;base64,' + b64;
+      try {
+        var resp = await fetch(window.location.origin + '/api/sub-store', {method: 'POST', body: yaml});
+        if (resp.ok) {
+          var data = await resp.json();
+          if (data.token) url = window.location.origin + '/api/sub-store/' + data.token;
+        }
+      } catch(e) {}
+      if (url.indexOf('/api/sub-store/') === -1) {
+        var b64 = btoa(unescape(encodeURIComponent(yaml)));
+        url = 'data:text/yaml;charset=utf-8;base64,' + b64;
+      }
       var blob = new Blob([yaml], {type: 'text/yaml'});
       var a = document.createElement('a');
       a.href = URL.createObjectURL(blob);
@@ -1067,6 +1075,7 @@ async function loadConnectData(){
             USER.status=data.daysLeft>0||data.subscriptionEnd>Date.now()?'active':'expired';
             USER.expires=data.subscriptionEnd?formatTs(data.subscriptionEnd):'—';
             USER.subUrl=data.vpnKey||'';
+            USER.subContent=data.subContent||'';
             var dresp=await fetch(u+"/api/user-devices?userId="+userId,{headers:{"X-Init-Data":initData}});
             if(dresp.ok){
                 var dev=await dresp.json();

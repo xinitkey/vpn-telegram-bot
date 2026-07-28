@@ -1,5 +1,6 @@
 import os
-from aiohttp import web, ClientSession
+import secrets
+from aiohttp import web, ClientSession, ClientTimeout
 import json
 import logging
 import time
@@ -30,6 +31,7 @@ log = logging.getLogger(__name__)
 RATE_LIMIT = 60
 RATE_WINDOW = 60
 _rate_store = defaultdict(list)
+_sub_cache: dict[str, str] = {}
 
 
 def _rate_middleware():
@@ -99,6 +101,15 @@ def setup_routes(app: web.Application, bot: Bot, dp: Dispatcher):
             )
         from services.db import get_referral_stats
         ref_stats = await get_referral_stats(user_id) if user else {'referrals': 0, 'earned': 0}
+        sub_content = ''
+        if user and user.link:
+            try:
+                async with ClientSession() as sess:
+                    async with sess.get(user.link, timeout=ClientTimeout(total=10)) as r:
+                        if r.status == 200:
+                            sub_content = await r.text()
+            except Exception as e:
+                log.warning("Failed to fetch sub content for user %s: %s", user_id, e)
         return web.json_response({
             'balance': user.balance,
             'daysLeft': user.days_left,
@@ -106,6 +117,7 @@ def setup_routes(app: web.Application, bot: Bot, dp: Dispatcher):
             'subscriptionEnd': user.subscription or 0,
             'subscriptionStart': user.subscription_start or 0,
             'vpnKey': user.link or 'Не создан',
+            'subContent': sub_content,
             'dailyPrice': settings.TARIFF_DAILY_PRICE,
             'banned': user.banned,
             'referralUrl': user.referral_url if user else '',
@@ -361,6 +373,24 @@ def setup_routes(app: web.Application, bot: Bot, dp: Dispatcher):
 
     app.router.add_get('/api/sub-convert', api_sub_convert)
     app.router.add_get('/api/sub-convert/{user_id:[0-9]+}', api_sub_convert)
+
+    async def api_sub_store_get(request):
+        token = request.match_info.get('token', '')
+        yaml = _sub_cache.get(token)
+        if yaml is None:
+            return web.Response(text='Not found', status=404)
+        return web.Response(text=yaml, content_type='text/plain; charset=utf-8')
+
+    async def api_sub_store_post(request):
+        yaml = await request.text()
+        if not yaml or len(yaml) < 10:
+            return web.json_response({'error': 'Invalid YAML'}, status=400)
+        token = secrets.token_hex(8)
+        _sub_cache[token] = yaml
+        return web.json_response({'token': token})
+
+    app.router.add_get('/api/sub-store/{token}', api_sub_store_get)
+    app.router.add_post('/api/sub-store', api_sub_store_post)
 
     async def api_sub_test(request):
         test_yaml = '''\
