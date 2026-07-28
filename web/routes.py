@@ -338,19 +338,57 @@ def setup_routes(app: web.Application, bot: Bot, dp: Dispatcher):
             try:
                 user_id = int(request.query.get('userId', 0))
             except ValueError:
-                return web.json_response({'error': 'Invalid userId'}, status=400)
-            if user_id == 0:
-                return web.json_response({'error': 'Missing auth'}, status=401)
+                pass
+        if not user_id:
+            try:
+                user_id = int(request.match_info.get('user_id', 0))
+            except (ValueError, TypeError):
+                user_id = 0
+        if not user_id:
+            return web.json_response({'error': 'Missing auth'}, status=401)
         user = await get_user(user_id)
         if not user or not user.link:
             return web.json_response({'error': 'No subscription'}, status=404)
-        async with ClientSession() as session:
-            yaml = await sub_convert(session, user.link)
+        try:
+            async with ClientSession() as session:
+                yaml = await sub_convert(session, user.link)
+        except Exception as e:
+            log.error("Sub convert error for user %s: %s", user_id, e)
+            return web.json_response({'error': 'Conversion failed'}, status=500)
         if not yaml:
             return web.Response(text='No nodes found', status=404)
         return web.Response(text=yaml, content_type='text/plain; charset=utf-8')
 
     app.router.add_get('/api/sub-convert', api_sub_convert)
+    app.router.add_get('/api/sub-convert/{user_id:[0-9]+}', api_sub_convert)
+
+    async def api_sub_test(request):
+        test_yaml = '''\
+port: 7890
+mode: Rule
+proxies:
+  - name: Test
+    type: ss
+    server: 127.0.0.1
+    port: 8080
+    cipher: chacha20-ietf-poly1305
+    password: test
+proxy-groups:
+  - name: Proxy
+    type: select
+    proxies:
+      - Test
+      - DIRECT
+  - name: DIRECT
+    type: select
+    proxies:
+      - DIRECT
+rules:
+  - MATCH,Proxy
+'''
+        return web.Response(text=test_yaml, content_type='text/plain; charset=utf-8')
+
+    app.router.add_get('/api/sub-test', api_sub_test)
 
     async def platega_webhook(request):
         # Rate-limit webhook (10 requests/minute/IP)
