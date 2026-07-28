@@ -1,5 +1,5 @@
 import os
-from aiohttp import web
+from aiohttp import web, ClientSession
 import json
 import logging
 import time
@@ -22,6 +22,7 @@ from services.xui_api import (
 )
 from services.payment import generate_payment_id
 from services.auth import verify_telegram_init_data
+from services.sub_convert import convert as sub_convert
 from config import settings
 
 log = logging.getLogger(__name__)
@@ -330,6 +331,26 @@ def setup_routes(app: web.Application, bot: Bot, dp: Dispatcher):
     app.router.add_post('/api/apply-promo', api_apply_promo)
     app.router.add_post('/api/buy-subscription', api_buy_subscription)
     app.router.add_post('/api/create-payment', api_create_payment)
+
+    async def api_sub_convert(request):
+        user_id = _get_user_id_from_request(request)
+        if user_id is None:
+            try:
+                user_id = int(request.query.get('userId', 0))
+            except ValueError:
+                return web.json_response({'error': 'Invalid userId'}, status=400)
+            if user_id == 0:
+                return web.json_response({'error': 'Missing auth'}, status=401)
+        user = await get_user(user_id)
+        if not user or not user.link:
+            return web.json_response({'error': 'No subscription'}, status=404)
+        async with ClientSession() as session:
+            yaml = await sub_convert(session, user.link)
+        if not yaml:
+            return web.Response(text='No nodes found', status=404)
+        return web.Response(text=yaml, content_type='text/plain; charset=utf-8')
+
+    app.router.add_get('/api/sub-convert', api_sub_convert)
 
     async def platega_webhook(request):
         # Rate-limit webhook (10 requests/minute/IP)
