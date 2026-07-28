@@ -732,6 +732,9 @@ var APP_SCHEMES = {
   flclashx:     'clash://install-config?url=',
   koalaclash:   'clash://install-config?url=',
   clashverge:   'clash://install-config?url=',
+  hiddify:      'hiddify://import/',
+  v2rayng:      'v2rayng://install-sub?url=',
+  incy:         'incy://import/',
 };
 
 // ── ACTIONS ────────────────────────────────────────────────────────────
@@ -744,7 +747,12 @@ function importSub(btn) {
 
   var scheme = APP_SCHEMES[state.appId];
   if (scheme) {
-    var deepLink = scheme + encodeURIComponent(url);
+    var deepLink;
+    if (scheme.indexOf('?url=') !== -1) {
+      deepLink = scheme + encodeURIComponent(url);
+    } else {
+      deepLink = scheme + url;
+    }
     var appOpened = false;
     var onVisibility = function(){
       if (document.hidden || document.webkitHidden) {
