@@ -450,6 +450,12 @@ var PLATFORMS = [
         connect: { desc: 'Запустите Happ, выберите сервер и включите VPN.' }
       },
       {
+        id: 'incy', name: 'INCY', iconId: 'incy',
+        install: { desc: 'Установите INCY из App Store для Mac.', btns: [{label:'App Store', url:'https://apps.apple.com/app/id6756943388', ext:true}] },
+        subscribe: { deeplink: true },
+        connect: { desc: 'Подключитесь через кнопку включения в главном экране.' }
+      },
+      {
         id: 'flclashx', name: 'FIClashX', iconId: 'flclashx',
         install: { desc: 'Скачайте FlClash с GitHub.', btns: [{label:'GitHub', url:'https://github.com/chen08209/FlClash/releases/latest', ext:true}] },
         subscribe: { deeplink: true },
