@@ -834,9 +834,16 @@ function makeHappDeepLink(url) {
   return null;
 }
 
+// ── SUBSCRIPTION CONVERTER (base64 → Clash YAML) ─────────────────
+var CLASH_APPS = ['clashmi', 'flclashx', 'koalaclash', 'clashverge'];
+var SUB_CONVERTER = 'https://sub.xeton.dev/sub?target=clash&emoji=true&list=false&udp=true&url=';
+
 // ── ACTIONS ────────────────────────────────────────────────────────────
 async function importSub(btn) {
   var url = USER.subUrl;
+  if (CLASH_APPS.indexOf(state.appId) !== -1) {
+    url = SUB_CONVERTER + encodeURIComponent(url);
+  }
   navigator.clipboard.writeText(url);
 
   var notFound = document.getElementById('app-not-found');
