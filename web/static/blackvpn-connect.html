@@ -220,6 +220,7 @@ header{
 .sub-import-block p{font-size:13px;color:var(--muted);margin-bottom:10px}
 .app-not-found{display:none;margin-top:10px;padding:10px 12px;background:rgba(241,196,15,.1);border:1px solid rgba(241,196,15,.25);border-radius:8px;font-size:13px;color:#f1c40f;text-align:center}
 .app-not-found a{color:#f1c40f;font-weight:700;text-decoration:underline}
+.app-not-found-hint{font-size:11px;opacity:.7;margin-top:4px}
 .app-not-found.show{display:block}
 .sub-url-row{
   display:flex;align-items:center;gap:6px;
@@ -692,7 +693,10 @@ function renderInstall() {
       + '<button class="btn btn-primary" onclick="importSub(this)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 11-7.778 7.778 5.5 5.5 0 017.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>Добавить подписку</button>'
       + '<button class="btn" onclick="copySub(this)">' + ICO.copy + '<span id="copySubLabel">Скопировать</span></button>'
       + '</div>'
-      + '<div class="app-not-found" id="app-not-found">Приложение не найдено. <a href="" id="app-install-link" target="_blank" rel="noopener">Установить</a></div>'
+      + '<div class="app-not-found" id="app-not-found">'
+      + '<div>Не удалось открыть приложение. <a href="" id="app-install-link" target="_blank" rel="noopener">Скачать</a></div>'
+      + '<div class="app-not-found-hint">URL скопирован — импортируйте его вручную в меню приложения</div>'
+      + '</div>'
       + '</div></div>';
   } else if (app.instructions) {
     stepsHtml += '<div class="step-card">'
