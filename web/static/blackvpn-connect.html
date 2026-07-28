@@ -798,7 +798,7 @@ var APP_SCHEMES = {
   happ:         makeHappDeepLink,
   shadowrocket: 'shadowrocket://add?url=',
   clashmi:      'clash://install-config?url=',
-  flclashx:     'flclash://install-config?url=',
+  flclashx:     'clash://install-config?url=',
   koalaclash:   'clash://install-config?url=',
   clashverge:   'clash://install-config?url=',
   hiddify:      'hiddify://import/',
@@ -889,7 +889,14 @@ async function importSub(btn) {
     }
   }, 1500);
 
-  window.location.href = deepLink;
+  var a = document.createElement('a');
+  a.href = deepLink;
+  a.target = '_blank';
+  a.rel = 'noopener';
+  a.style.display = 'none';
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(function(){ document.body.removeChild(a); }, 500);
 
   btn.classList.add('copied');
   var lbl = document.getElementById('copySubLabel');
