@@ -744,48 +744,51 @@ function importSub(btn) {
   var notFound = document.getElementById('app-not-found');
   notFound.classList.remove('show');
 
+  var deepLink = null;
   var scheme = APP_SCHEMES[state.appId];
   if (scheme) {
-    var deepLink;
     if (scheme.indexOf('?url=') !== -1) {
       deepLink = scheme + encodeURIComponent(url);
     } else {
       deepLink = scheme + url;
     }
-    var appOpened = false;
-    var onVisibility = function(){
-      if (document.hidden || document.webkitHidden) {
-        appOpened = true;
-        document.removeEventListener('visibilitychange', onVisibility);
-        document.removeEventListener('webkitvisibilitychange', onVisibility);
-      }
-    };
-    document.addEventListener('visibilitychange', onVisibility);
-    document.addEventListener('webkitvisibilitychange', onVisibility);
+  } else {
+    deepLink = url;
+  }
 
-    var plat = PLATFORMS.find(function(p){return p.id===state.platId;});
-    var app = plat.apps.find(function(a){return a.id===state.appId;}) || plat.apps[0];
-    var installUrl = app.install.btns && app.install.btns.length > 0 ? app.install.btns[0].url : '';
-
-    setTimeout(function(){
+  var appOpened = false;
+  var onVisibility = function(){
+    if (document.hidden || document.webkitHidden) {
+      appOpened = true;
       document.removeEventListener('visibilitychange', onVisibility);
       document.removeEventListener('webkitvisibilitychange', onVisibility);
-      if (!appOpened) {
-        var link = document.getElementById('app-install-link');
-        link.href = installUrl;
-        notFound.classList.add('show');
-      }
-    }, 1500);
+    }
+  };
+  document.addEventListener('visibilitychange', onVisibility);
+  document.addEventListener('webkitvisibilitychange', onVisibility);
 
-    var a = document.createElement('a');
-    a.href = deepLink;
-    a.target = '_blank';
-    a.rel = 'noopener';
-    a.style.display = 'none';
-    document.body.appendChild(a);
-    a.click();
-    setTimeout(function(){ document.body.removeChild(a); }, 500);
-  }
+  var plat = PLATFORMS.find(function(p){return p.id===state.platId;});
+  var app = plat.apps.find(function(a){return a.id===state.appId;}) || plat.apps[0];
+  var installUrl = app.install.btns && app.install.btns.length > 0 ? app.install.btns[0].url : '';
+
+  setTimeout(function(){
+    document.removeEventListener('visibilitychange', onVisibility);
+    document.removeEventListener('webkitvisibilitychange', onVisibility);
+    if (!appOpened) {
+      var link = document.getElementById('app-install-link');
+      link.href = installUrl;
+      notFound.classList.add('show');
+    }
+  }, 1500);
+
+  var a = document.createElement('a');
+  a.href = deepLink;
+  a.target = '_blank';
+  a.rel = 'noopener';
+  a.style.display = 'none';
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(function(){ document.body.removeChild(a); }, 500);
 
   btn.classList.add('copied');
   var lbl = document.getElementById('copySubLabel');
