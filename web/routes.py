@@ -9,7 +9,7 @@ import hashlib
 from collections import defaultdict
 from aiogram import Bot, Dispatcher
 from services.db import (
-    get_user, create_user, update_user, add_balance,
+    get_user, get_user_by_xui_uuid, create_user, update_user, add_balance,
     create_payment, get_payment, update_payment_status,
     get_promocode, increment_promocode_uses, validate_promocode,
     discounted_price, record_promocode_use, user_used_promocode,
@@ -121,7 +121,7 @@ def setup_routes(app: web.Application, bot: Bot, dp: Dispatcher):
             'remainingStr': user.remaining_str,
             'subscriptionEnd': user.subscription or 0,
             'subscriptionStart': user.subscription_start or 0,
-            'vpnKey': f"{_origin(request)}/black_vpn/{user_id}" if user and user.link else 'Не создан',
+            'vpnKey': f"{_origin(request)}/black_vpn/{user.xui_uuid}" if user and user.xui_uuid else 'Не создан',
             'subContent': sub_content,
             'dailyPrice': settings.TARIFF_DAILY_PRICE,
             'banned': user.banned,
@@ -398,15 +398,10 @@ def setup_routes(app: web.Application, bot: Bot, dp: Dispatcher):
     app.router.add_post('/api/sub-store', api_sub_store_post)
 
     async def api_sub_proxy(request):
-        user_id = _get_user_id_from_request(request)
-        if user_id is None:
-            try:
-                user_id = int(request.match_info.get('user_id', 0))
-            except (ValueError, TypeError):
-                user_id = 0
-        if not user_id:
-            return web.json_response({'error': 'Missing auth'}, status=401)
-        user = await get_user(user_id)
+        uuid = request.match_info.get('uuid', '')
+        if not uuid:
+            return web.json_response({'error': 'Missing uuid'}, status=400)
+        user = await get_user_by_xui_uuid(uuid)
         if not user or not user.link:
             return web.json_response({'error': 'No subscription'}, status=404)
         try:
@@ -416,10 +411,10 @@ def setup_routes(app: web.Application, bot: Bot, dp: Dispatcher):
                     ct = r.headers.get('Content-Type', 'text/plain; charset=utf-8')
                     return web.Response(body=body, content_type=ct)
         except Exception as e:
-            log.error("Sub proxy error for user %s: %s", user_id, e)
+            log.error("Sub proxy error for uuid %s (user %s): %s", uuid, user.user_id, e)
             return web.json_response({'error': 'Proxy failed'}, status=502)
 
-    app.router.add_get('/black_vpn/{user_id:[0-9]+}', api_sub_proxy)
+    app.router.add_get('/black_vpn/{uuid:[a-fA-F0-9-]+}', api_sub_proxy)
 
     async def api_sub_test(request):
         test_yaml = '''\
