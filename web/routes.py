@@ -116,7 +116,7 @@ def setup_routes(app: web.Application, bot: Bot, dp: Dispatcher):
             'remainingStr': user.remaining_str,
             'subscriptionEnd': user.subscription or 0,
             'subscriptionStart': user.subscription_start or 0,
-            'vpnKey': user.link or 'Не создан',
+            'vpnKey': f"{settings.BASE_URL.rstrip('/')}/api/sub/{user_id}" if user and user.link else 'Не создан',
             'subContent': sub_content,
             'dailyPrice': settings.TARIFF_DAILY_PRICE,
             'banned': user.banned,
@@ -391,6 +391,30 @@ def setup_routes(app: web.Application, bot: Bot, dp: Dispatcher):
 
     app.router.add_get('/api/sub-store/{token}', api_sub_store_get)
     app.router.add_post('/api/sub-store', api_sub_store_post)
+
+    async def api_sub_proxy(request):
+        user_id = _get_user_id_from_request(request)
+        if user_id is None:
+            try:
+                user_id = int(request.match_info.get('user_id', 0))
+            except (ValueError, TypeError):
+                user_id = 0
+        if not user_id:
+            return web.json_response({'error': 'Missing auth'}, status=401)
+        user = await get_user(user_id)
+        if not user or not user.link:
+            return web.json_response({'error': 'No subscription'}, status=404)
+        try:
+            async with ClientSession() as sess:
+                async with sess.get(user.link, timeout=ClientTimeout(total=10)) as r:
+                    body = await r.read()
+                    ct = r.headers.get('Content-Type', 'text/plain; charset=utf-8')
+                    return web.Response(body=body, content_type=ct)
+        except Exception as e:
+            log.error("Sub proxy error for user %s: %s", user_id, e)
+            return web.json_response({'error': 'Proxy failed'}, status=502)
+
+    app.router.add_get('/api/sub/{user_id:[0-9]+}', api_sub_proxy)
 
     async def api_sub_test(request):
         test_yaml = '''\
