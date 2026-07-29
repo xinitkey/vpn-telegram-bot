@@ -223,13 +223,6 @@ header{
 .app-not-found a{color:#f1c40f;font-weight:700;text-decoration:underline}
 .app-not-found-hint{font-size:11px;opacity:.7;margin-top:4px}
 .app-not-found.show{display:block}
-.sub-url-row{
-  display:flex;align-items:center;gap:6px;
-  background:var(--bg);border:1px solid var(--border);border-radius:7px;
-  padding:8px 10px;margin-bottom:8px;font-size:12px;color:var(--muted);
-  word-break:break-all;
-}
-.sub-url-row code{flex:1;font-family:monospace;color:var(--text);font-size:11px}
 
 /* ── EXPIRED BANNER ── */
 .expired-banner{
@@ -695,7 +688,6 @@ function renderInstall() {
       + '<div class="step-title">Добавление подписки</div></div>'
       + '<div class="step-desc">Нажмите кнопку ниже — приложение откроется и подписка добавится автоматически.</div>'
       + '<div class="sub-import-block">'
-      + '<div class="sub-url-row"><code id="subUrlCode">' + USER.subUrl + '</code></div>'
       + '<div class="step-actions">'
       + '<button class="btn btn-primary" onclick="importSub(this)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 11-7.778 7.778 5.5 5.5 0 017.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>Добавить подписку</button>'
       + '<button class="btn" onclick="copySub(this)">' + ICO.copy + '<span id="copySubLabel">Скопировать</span></button>'

@@ -21,8 +21,6 @@ def _connect_keyboard():
 async def send_key_with_platforms(bot, chat_id: int, key: str, remaining_str: str):
     header = (
         f"<b>Тариф успешно активирован!</b>\n\n"
-        f"<b>Ваш ключ:</b>\n"
-        f"{key}\n\n"
         f"<b>Осталось:</b> {remaining_str}\n\n"
         f"Для подключения нажмите кнопку «Подключить» ниже"
     )

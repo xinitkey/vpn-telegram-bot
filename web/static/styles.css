@@ -117,16 +117,6 @@ body {
 .profile-info-block span a { color: #3b82f6; text-decoration: underline; }
 .profile-key-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
 .profile-key-header .di-label { font-size: 12px; color: #9ca3af; }
-.key-toggle-btn { cursor: pointer; font-size: 12px; color: #9ca3af; user-select: none; transition: color 0.2s; }
-.key-toggle-btn:hover { color: #e5e7eb; }
-.profile-key-value { overflow: hidden; white-space: nowrap;
-    background: rgba(0,0,0,0.3); border-radius: 10px; padding: 10px 12px;
-    font-family: monospace; font-size: 13px; color: #ef4444; word-break: break-all;
-    cursor: pointer; transition: background 0.2s; line-height: 1.5;
-}
-.profile-key-value:hover { background: rgba(0,0,0,0.5); }
-.profile-key-value:active { background: rgba(220, 38, 38, 0.2); }
-.profile-key-value.key-hidden { text-align: center; letter-spacing: 2px; }
 
 .info-section {
     background: rgba(15, 15, 15, 0.85); backdrop-filter: blur(10px);

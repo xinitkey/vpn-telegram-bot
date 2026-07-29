@@ -54,7 +54,6 @@ let globalUserData = { balance: 0, daysLeft: 0, vpnKey: 'Не создан', dai
 let activePromoCode = '';
 let activePromoDiscount = 0;
 let activePromoTariffPrices = {};
-let hideKey = true;
 
 if (userRaw) {
     document.getElementById('user-id').innerText = userRaw.id || "Не определен";
@@ -118,19 +117,6 @@ async function loadUserData() {
             else if (globalUserData.subscriptionEnd && globalUserData.subscriptionEnd > now) { sb.textContent = '\u25CF Скоро истекает'; sb.className = 'badge b-expiring'; }
             else if (globalUserData.subscriptionEnd && globalUserData.subscriptionEnd > 0) { sb.textContent = '\u25CF Истекла'; sb.className = 'badge b-inactive'; }
             else { sb.textContent = '\u25CF Нет подписки'; sb.className = 'badge b-inactive'; }
-            const keyRow = document.getElementById('profile-key-row');
-            const keyValue = document.getElementById('profile-key-value');
-            if (globalUserData.vpnKey && globalUserData.vpnKey !== 'Не создан') {
-                keyRow.style.display = '';
-                keyValue.dataset.key = globalUserData.vpnKey;
-                keyValue.innerText = hideKey ? '•'.repeat(20) : globalUserData.vpnKey;
-                keyValue.classList.toggle('key-hidden', hideKey);
-                
-                keyValue.classList.toggle('key-hidden', hideKey);
-                document.getElementById('key-toggle-btn').innerText = hideKey ? 'показать' : 'скрыть';
-            } else {
-                keyRow.style.display = 'none';
-            }
             document.getElementById('profile-sub-start').innerText = formatTs(globalUserData.subscriptionStart);
             document.getElementById('profile-sub-end').innerText = formatTs(globalUserData.subscriptionEnd);
             document.getElementById('price-daily-text').innerText = globalUserData.dailyPrice + "₽ / день";
@@ -242,32 +228,6 @@ function showReferralInfo(event) {
 
 loadUserData();
 setInterval(loadUserData, 10000);
-
-function toggleKeyVisibility() {
-    hideKey = !hideKey;
-    const el = document.getElementById('profile-key-value');
-    const btn = document.getElementById('key-toggle-btn');
-    if (hideKey) {
-        el.innerText = '•'.repeat(20);
-        el.classList.add('key-hidden');
-        btn.innerText = 'показать';
-    } else {
-        el.innerText = el.dataset.key || globalUserData.vpnKey;
-        el.classList.remove('key-hidden');
-        btn.innerText = 'скрыть';
-    }
-}
-
-function copyKey() {
-    const key = globalUserData.vpnKey;
-    if (!key || key === 'Не создан') return;
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(key).then(() => {
-            tg.HapticFeedback.notificationOccurred('success');
-            tg.showAlert('Ключ скопирован');
-        });
-    }
-}
 
 function switchTab(tab) {
     const homeContent = document.getElementById('tab-home-content');
