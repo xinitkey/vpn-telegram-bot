@@ -110,15 +110,6 @@ async def get_user(user_id: int) -> Optional[User]:
                 return None
             return _user_from_row(row)
 
-async def get_user_by_xui_uuid(uuid: str) -> Optional[User]:
-    async with _db_lock:
-        db = await _get_db()
-        async with db.execute('SELECT * FROM users WHERE xui_uuid = ?', (uuid,)) as cur:
-            row = await cur.fetchone()
-            if row is None:
-                return None
-            return _user_from_row(row)
-
 async def create_user(user_id: int, referred_by: int = None):
     async with _db_lock:
         db = await _get_db()

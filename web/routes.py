@@ -9,7 +9,7 @@ import hashlib
 from collections import defaultdict
 from aiogram import Bot, Dispatcher
 from services.db import (
-    get_user, get_user_by_xui_uuid, create_user, update_user, add_balance,
+    get_user, create_user, update_user, add_balance,
     create_payment, get_payment, update_payment_status,
     get_promocode, increment_promocode_uses, validate_promocode,
     discounted_price, record_promocode_use, user_used_promocode,
@@ -27,11 +27,6 @@ from services.sub_convert import convert as sub_convert
 from config import settings
 
 log = logging.getLogger(__name__)
-
-def _origin(request: web.Request) -> str:
-    scheme = request.headers.get('X-Forwarded-Proto', request.scheme)
-    host = request.headers.get('X-Forwarded-Host', request.host)
-    return f"{scheme}://{host}"
 
 RATE_LIMIT = 60
 RATE_WINDOW = 60
@@ -121,7 +116,7 @@ def setup_routes(app: web.Application, bot: Bot, dp: Dispatcher):
             'remainingStr': user.remaining_str,
             'subscriptionEnd': user.subscription or 0,
             'subscriptionStart': user.subscription_start or 0,
-            'vpnKey': f"{_origin(request)}/black_vpn/{user.xui_uuid}" if user and user.xui_uuid else 'Не создан',
+            'vpnKey': user.link or 'Не создан',
             'subContent': sub_content,
             'dailyPrice': settings.TARIFF_DAILY_PRICE,
             'banned': user.banned,
@@ -396,25 +391,6 @@ def setup_routes(app: web.Application, bot: Bot, dp: Dispatcher):
 
     app.router.add_get('/api/sub-store/{token}', api_sub_store_get)
     app.router.add_post('/api/sub-store', api_sub_store_post)
-
-    async def api_sub_proxy(request):
-        uuid = request.match_info.get('uuid', '')
-        if not uuid:
-            return web.json_response({'error': 'Missing uuid'}, status=400)
-        user = await get_user_by_xui_uuid(uuid)
-        if not user or not user.link:
-            return web.json_response({'error': 'No subscription'}, status=404)
-        try:
-            async with ClientSession() as sess:
-                async with sess.get(user.link, timeout=ClientTimeout(total=10)) as r:
-                    body = await r.read()
-                    ct = r.headers.get('Content-Type', 'text/plain; charset=utf-8')
-                    return web.Response(body=body, content_type=ct)
-        except Exception as e:
-            log.error("Sub proxy error for uuid %s (user %s): %s", uuid, user.user_id, e)
-            return web.json_response({'error': 'Proxy failed'}, status=502)
-
-    app.router.add_get('/black_vpn/{uuid:[a-fA-F0-9-]+}', api_sub_proxy)
 
     async def api_sub_test(request):
         test_yaml = '''\
