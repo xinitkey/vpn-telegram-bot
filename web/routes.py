@@ -28,6 +28,11 @@ from config import settings
 
 log = logging.getLogger(__name__)
 
+def _origin(request: web.Request) -> str:
+    scheme = request.headers.get('X-Forwarded-Proto', request.scheme)
+    host = request.headers.get('X-Forwarded-Host', request.host)
+    return f"{scheme}://{host}"
+
 RATE_LIMIT = 60
 RATE_WINDOW = 60
 _rate_store = defaultdict(list)
@@ -116,7 +121,7 @@ def setup_routes(app: web.Application, bot: Bot, dp: Dispatcher):
             'remainingStr': user.remaining_str,
             'subscriptionEnd': user.subscription or 0,
             'subscriptionStart': user.subscription_start or 0,
-            'vpnKey': f"{settings.BASE_URL.rstrip('/')}/api/sub/{user_id}" if user and user.link else 'Не создан',
+            'vpnKey': f"{_origin(request)}/api/sub/{user_id}" if user and user.link else 'Не создан',
             'subContent': sub_content,
             'dailyPrice': settings.TARIFF_DAILY_PRICE,
             'banned': user.banned,
