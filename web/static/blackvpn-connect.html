@@ -980,12 +980,7 @@ async function importSub(btn) {
       setTimeout(function(){ URL.revokeObjectURL(a.href); document.body.removeChild(a); }, 500);
     }
   }
-  navigator.clipboard.writeText(url);
 
-  var notFound = document.getElementById('app-not-found');
-  notFound.classList.remove('show');
-
-  var deepLink = null;
   var scheme = APP_SCHEMES[state.appId];
   if (typeof scheme === 'function') {
     deepLink = await scheme(url);
@@ -999,6 +994,11 @@ async function importSub(btn) {
   } else {
     deepLink = url;
   }
+
+  navigator.clipboard.writeText(deepLink);
+
+  var notFound = document.getElementById('app-not-found');
+  notFound.classList.remove('show');
 
   var appOpened = false;
   var onVisibility = function(){
@@ -1040,8 +1040,21 @@ async function importSub(btn) {
   setTimeout(function(){ btn.classList.remove('copied'); lbl.textContent='Скопировать'; }, 2000);
 }
 
-function copySub(btn) {
-  navigator.clipboard.writeText(USER.subUrl).then(function(){
+async function copySub(btn) {
+  var url = USER.subUrl;
+  var scheme = APP_SCHEMES[state.appId];
+  var copyUrl = url;
+  if (typeof scheme === 'function') {
+    var dl = await scheme(url);
+    if (dl) copyUrl = dl;
+  } else if (scheme) {
+    if (scheme.indexOf('?url=') !== -1) {
+      copyUrl = scheme + encodeURIComponent(url);
+    } else {
+      copyUrl = scheme + url;
+    }
+  }
+  navigator.clipboard.writeText(copyUrl).then(function(){
     var lbl = document.getElementById('copySubLabel');
     lbl.textContent = 'Скопировано!';
     btn.classList.add('copied');
