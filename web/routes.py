@@ -61,32 +61,41 @@ def _get_user_id_from_request(request, data: dict | None = None) -> int | None:
     return None
 
 
+def _require_user_id(request, data: dict | None = None) -> int | None:
+    """Authenticated user id: verified Telegram initData, or plain userId in DEV_MODE only."""
+    user_id = _get_user_id_from_request(request, data)
+    if user_id is not None:
+        return user_id
+    if settings.DEV_MODE:
+        try:
+            raw = (data or {}).get('userId') or request.query.get('userId', 0)
+            return int(raw) or None
+        except (ValueError, TypeError):
+            return None
+    return None
+
+
 def setup_routes(app: web.Application, bot: Bot, dp: Dispatcher):
     app.middlewares.append(_rate_middleware())
 
     async def index(request):
         try:
             with open('web/static/index.html', 'rb') as f:
-                return web.Response(body=f.read(), content_type='text/html')
+                return web.Response(
+                    body=f.read(), content_type='text/html',
+                    headers={'Cache-Control': 'no-cache'},
+                )
         except FileNotFoundError:
             return web.Response(text="BlackVPN API Operational", content_type='text/plain')
     app.router.add_get('/', index)
 
     async def api_user_data(request):
-        user_id = _get_user_id_from_request(request)
-        telegram_user = None
+        user_id = _require_user_id(request)
         if user_id is None:
-            try:
-                user_id = int(request.query.get('userId', 0))
-            except ValueError:
-                return web.json_response({'error': 'Invalid user_id'}, status=400)
-            if user_id == 0:
-                return web.json_response({'error': 'Missing authentication'}, status=401)
-        else:
-            init_data = request.headers.get('X-Init-Data') or ''
-            verified = verify_telegram_init_data(init_data, settings.TELEGRAM_BOT_TOKEN)
-            if verified and isinstance(verified.get('user'), dict):
-                telegram_user = verified['user']
+            return web.json_response({'error': 'Missing authentication'}, status=401)
+        init_data = request.headers.get('X-Init-Data') or ''
+        verified = verify_telegram_init_data(init_data, settings.TELEGRAM_BOT_TOKEN)
+        telegram_user = verified['user'] if verified and isinstance(verified.get('user'), dict) else None
 
         user = await get_user(user_id)
         if user is None:
@@ -101,8 +110,9 @@ def setup_routes(app: web.Application, bot: Bot, dp: Dispatcher):
             )
         from services.db import get_referral_stats
         ref_stats = await get_referral_stats(user_id) if user else {'referrals': 0, 'earned': 0}
+        # Subscription content is heavy (external fetch) — only on explicit request
         sub_content = ''
-        if user and user.link:
+        if user and user.link and request.query.get('withSub') == '1':
             try:
                 async with ClientSession() as sess:
                     async with sess.get(user.link, timeout=ClientTimeout(total=10)) as r:
@@ -120,21 +130,41 @@ def setup_routes(app: web.Application, bot: Bot, dp: Dispatcher):
             'subContent': sub_content,
             'dailyPrice': settings.TARIFF_DAILY_PRICE,
             'banned': user.banned,
+            'username': user.telegram_username if user else '',
+            'firstName': user.first_name if user else '',
             'referralUrl': user.referral_url if user else '',
             'referralCount': ref_stats['referrals'],
             'referralEarnings': user.referral_earnings if user else 0,
             'trialUsed': user.trial_used if user else False,
         })
 
+    async def api_config(request):
+        """Public frontend config: single source of truth for tariffs/limits."""
+        tariffs = [
+            {
+                'days': days,
+                'price': TARIFF_PRICE_MAP[days],
+                'perDay': round(TARIFF_PRICE_MAP[days] / days, 1),
+            }
+            for days in sorted(TARIFF_PRICE_MAP)
+        ]
+        return web.json_response({
+            'tariffs': tariffs,
+            'dailyPrice': settings.TARIFF_DAILY_PRICE,
+            'minTopUp': 50,
+            'topUpPresets': [50, 100, 200, 500, 1000, 2000],
+            'paymentMethods': [
+                {'id': 'platega_sbp', 'label': 'СБП', 'code': 2},
+                {'id': 'platega_crypto', 'label': 'Криптовалюта', 'code': 13},
+            ],
+            'referralReward': settings.REFERRAL_REWARD,
+            'trialDays': 3,
+        })
+
     async def api_user_devices(request):
-        user_id = _get_user_id_from_request(request)
+        user_id = _require_user_id(request)
         if user_id is None:
-            try:
-                user_id = int(request.query.get('userId', 0))
-            except ValueError:
-                return web.json_response({'error': 'Invalid user_id'}, status=400)
-            if user_id == 0:
-                return web.json_response({'error': 'Missing authentication'}, status=401)
+            return web.json_response({'error': 'Missing authentication'}, status=401)
         user = await get_user(user_id)
         if user is None or not user.xui_email or not user.is_subscription_active:
             return web.json_response({
@@ -154,8 +184,7 @@ def setup_routes(app: web.Application, bot: Bot, dp: Dispatcher):
             raw = await request.json()
         except Exception:
             return web.json_response({'error': 'Invalid JSON'}, status=400)
-        verified_id = _get_user_id_from_request(request, raw)
-        user_id = verified_id or int(raw.get('userId', 0))
+        user_id = _require_user_id(request, raw)
         if user_id:
             user = await get_user(user_id)
             if user and user.banned:
@@ -200,12 +229,16 @@ def setup_routes(app: web.Application, bot: Bot, dp: Dispatcher):
         except Exception:
             return web.json_response({'error': 'Invalid JSON'}, status=400)
 
-        verified_id = _get_user_id_from_request(request, raw)
-        user_id = verified_id or int(raw.get('userId', 0))
-        days = int(raw.get('days', 0))
+        user_id = _require_user_id(request, raw)
+        if user_id is None:
+            return web.json_response({'error': 'Missing authentication'}, status=401)
+        try:
+            days = int(raw.get('days', 0))
+        except (ValueError, TypeError):
+            days = 0
         price = raw.get('price')
         promo_code = raw.get('promoCode', '').strip()
-        if not user_id or days <= 0:
+        if days <= 0:
             return web.json_response({'error': 'Invalid data'}, status=400)
         user = await get_user(user_id)
         if user is None:
@@ -216,7 +249,8 @@ def setup_routes(app: web.Application, bot: Bot, dp: Dispatcher):
         if is_trial:
             total_price = 0
         else:
-            total_price = price if price is not None else days * settings.TARIFF_DAILY_PRICE
+            # Price is ALWAYS computed server-side; client-provided price is ignored
+            total_price = TARIFF_PRICE_MAP.get(days) or days * settings.TARIFF_DAILY_PRICE
             # Apply promo code discount
             if promo_code:
                 promo = await get_promocode(promo_code)
@@ -298,12 +332,19 @@ def setup_routes(app: web.Application, bot: Bot, dp: Dispatcher):
         except Exception:
             return web.json_response({'error': 'Invalid JSON'}, status=400)
 
-        verified_id = _get_user_id_from_request(request, raw)
-        user_id = verified_id or int(raw.get('userId', 0))
-        amount = float(raw.get('amount', 0))
+        user_id = _require_user_id(request, raw)
+        if user_id is None:
+            return web.json_response({'error': 'Missing authentication'}, status=401)
+        try:
+            amount = float(raw.get('amount', 0))
+        except (ValueError, TypeError):
+            amount = 0
         method = raw.get('method', '')
-        pay_method = int(raw.get('paymentMethod', 0))
-        if not user_id or amount < 50:
+        try:
+            pay_method = int(raw.get('paymentMethod', 0))
+        except (ValueError, TypeError):
+            pay_method = 0
+        if amount < 50 or amount > 1000000:
             return web.json_response({'error': 'Invalid data. Minimum 50₽'}, status=400)
 
         user = await get_user(user_id)
@@ -339,6 +380,7 @@ def setup_routes(app: web.Application, bot: Bot, dp: Dispatcher):
         })
 
     app.router.add_get('/api/user-data', api_user_data)
+    app.router.add_get('/api/config', api_config)
     app.router.add_get('/api/user-devices', api_user_devices)
     app.router.add_post('/api/apply-promo', api_apply_promo)
     app.router.add_post('/api/buy-subscription', api_buy_subscription)
@@ -542,15 +584,19 @@ rules:
     app.router.add_get('/privacy', serve_privacy)
     app.router.add_get('/terms', serve_terms)
 
+    static_root = os.path.abspath('web/static')
+
     async def serve_static(request):
-        filename = os.path.basename(request.match_info.get('filename', 'index.html') or 'index.html')
-        if not filename:
+        rel = request.match_info.get('filename', 'index.html') or 'index.html'
+        path = os.path.abspath(os.path.join(static_root, rel))
+        if not path.startswith(static_root + os.sep):
             raise web.HTTPNotFound()
         try:
-            with open(f'web/static/{filename}', 'rb') as f:
+            with open(path, 'rb') as f:
                 data = f.read()
-        except FileNotFoundError:
+        except (FileNotFoundError, IsADirectoryError):
             raise web.HTTPNotFound()
+        filename = os.path.basename(path)
         ct = 'application/octet-stream'
         if filename.endswith('.css'):
             ct = 'text/css'
@@ -558,7 +604,9 @@ rules:
             ct = 'application/javascript'
         elif filename.endswith('.html'):
             ct = 'text/html'
-        return web.Response(body=data, content_type=ct)
+        # HTML revalidates every load; css/js are cacheable (bump query ?v= on deploy)
+        cache = 'no-cache' if ct == 'text/html' else 'public, max-age=3600'
+        return web.Response(body=data, content_type=ct, headers={'Cache-Control': cache})
 
     app.router.add_get('/{filename:.*}', serve_static)
 

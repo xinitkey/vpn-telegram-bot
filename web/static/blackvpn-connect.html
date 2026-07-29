@@ -27,7 +27,20 @@
   --yellow:#e67e22;
   --radius:12px;
   --font:'Inter',sans-serif;
+  color-scheme:dark;
 }
+body.theme-light{
+  --bg:#f3f2f0;
+  --surface:#ffffff;
+  --surface2:#f4f3f1;
+  --border:rgba(25,20,15,.09);
+  --text:#1b1815;
+  --muted:#6e6a64;
+  --faint:#dcd8d3;
+  --red-glow:rgba(192,57,43,.08);
+  color-scheme:light;
+}
+body{transition:background-color .25s ease,color .25s ease}
 html{-webkit-font-smoothing:antialiased;scroll-behavior:smooth}
 body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100dvh;font-size:15px;line-height:1.5}
 
@@ -50,6 +63,8 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
     90deg,transparent,transparent 40px,rgba(255,255,255,.012) 40px,rgba(255,255,255,.012) 41px
   );
 }
+body.theme-light .bg-mesh::before{opacity:.45}
+body.theme-light .bg-mesh::after{display:none}
 
 /* ── LAYOUT ── */
 .wrap{position:relative;z-index:1;max-width:680px;margin:0 auto;padding:0 16px 64px}
@@ -298,6 +313,10 @@ header{
 var tg = window.Telegram?.WebApp || {
     expand: function(){},
     setHeaderColor: function(){},
+    setBackgroundColor: function(){},
+    onEvent: function(){},
+    colorScheme: 'dark',
+    themeParams: {},
     initDataUnsafe: { user: { id: 1, first_name: 'Dev', username: 'dev' } },
     initData: '',
     BackButton: { show: function(){}, hide: function(){}, onClick: function(){} },
@@ -308,9 +327,23 @@ var isBrowser = !tg.initData;
 var userId = tg.initDataUnsafe?.user?.id;
 var initData = tg.initData || '';
 
+// ── THEME (Telegram themeParams + light/dark) ──────────────────────────
+function applyConnectTheme(){
+    var scheme = tg.colorScheme === 'light' ? 'light' : 'dark';
+    document.body.classList.toggle('theme-light', scheme === 'light');
+    var p = tg.themeParams || {};
+    var root = document.documentElement;
+    var map = { bg_color: '--bg', secondary_bg_color: '--surface', text_color: '--text', hint_color: '--muted' };
+    for (var k in map) root.style.removeProperty(map[k]);
+    for (var k in map) { if (p[k]) root.style.setProperty(map[k], p[k]); }
+    var bg = p.bg_color || (scheme === 'light' ? '#f3f2f0' : '#0e0d0c');
+    try { tg.setHeaderColor(bg); tg.setBackgroundColor(bg); } catch(e){}
+}
+applyConnectTheme();
+try { tg.onEvent('themeChanged', applyConnectTheme); } catch(e){}
+
 if (!isBrowser) {
     tg.expand();
-    tg.setHeaderColor('#0e0d0c');
     tg.BackButton.show();
     tg.BackButton.onClick(function(){ window.location.href = '/'; });
 }
@@ -1054,11 +1087,13 @@ async function copySub(btn) {
   });
 }
 
-function copyLink(btn) {
-  navigator.clipboard.writeText('sosal?').then(function(){
+async function copyLink(btn) {
+  if (!USER.subUrl) return;
+  try {
+    await navigator.clipboard.writeText(USER.subUrl);
     btn.classList.add('copied');
     setTimeout(function(){ btn.classList.remove('copied'); }, 1500);
-  });
+  } catch(e) {}
 }
 
 // ── HELPERS ────────────────────────────────────────────────────────────
@@ -1074,7 +1109,7 @@ async function loadConnectData(){
     if(!userId||isBrowser)return;
     try{
         var u=window.location.origin;
-        var resp=await fetch(u+"/api/user-data?userId="+userId,{headers:{"X-Init-Data":initData}});
+        var resp=await fetch(u+"/api/user-data?userId="+userId+"&withSub=1",{headers:{"X-Init-Data":initData}});
         if(resp.ok){
             var data=await resp.json();
             USER.status=data.daysLeft>0||data.subscriptionEnd>Date.now()?'active':'expired';
@@ -1095,9 +1130,18 @@ async function loadConnectData(){
 // ── NAV ────────────────────────────────────────────────────────────────
 function goBack(){window.location.href='/'}
 
+// ── PLATFORM AUTODETECT ────────────────────────────────────────────────
+function detectPlatform(){
+    var p=(tg.platform||'').toLowerCase();
+    if(p==='ios')return'ios';
+    if(p.indexOf('android')===0)return'android';
+    if(p==='macos')return'macos';
+    return'ios';
+}
+
 // ── INIT ───────────────────────────────────────────────────────────────
 renderSub();
-selectPlat('ios');
+selectPlat(detectPlatform());
 loadConnectData();
 </script>
 </body>

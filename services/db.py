@@ -538,7 +538,7 @@ async def record_promocode_use(code: str, user_id: int):
 
 
 TARIFF_INDEX_MAP = {1: 3, 2: 30, 3: 90, 4: 180, 5: 365}
-TARIFF_PRICE_MAP = {3: 15, 30: 119, 90: 299, 180: 549, 365: 999}
+TARIFF_PRICE_MAP = {3: 18, 30: 129, 90: 329, 180: 599, 365: 1149}
 _DAYS_TO_INDEX = {v: k for k, v in TARIFF_INDEX_MAP.items()}
 
 

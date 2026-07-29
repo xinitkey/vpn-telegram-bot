@@ -62,6 +62,8 @@ class Settings:
     PORT: int = int(os.getenv('PORT', '8000'))
     USE_HTTPS: bool = field(default_factory=lambda: _get_bool('USE_HTTPS'))
     BASE_URL: str = ''
+    # Allows plain ?userId= auth for local frontend development (NEVER enable in prod)
+    DEV_MODE: bool = field(default_factory=lambda: _get_bool('DEV_MODE'))
 
     # Tariff
     TARIFF_DAILY_PRICE: int = 6
