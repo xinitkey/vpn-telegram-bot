@@ -321,40 +321,108 @@ function showSubscriptionInfo() {
     });
 }
 
-function buyDaysModal() {
-    tg.showPopup({
-        title: "Продление подписки",
-        message: "Списать с баланса средства для продления подписки на 1 день (" + globalUserData.dailyPrice + "₽)?",
-        buttons: [{ type: 'ok', id: 'buy_sub', text: 'Купить 1 день' }, { type: 'default', id: 'tariffs', text: 'Тарифы' }, { type: 'cancel', text: 'Отмена' }]
-    }, async (buttonId) => {
-                if (buttonId === 'buy_sub') {
-            if (globalUserData.balance < globalUserData.dailyPrice) {
-                tg.showAlert("Недостаточно средств. Пополните ваш баланс.");
-                return;
-            }
-            try {
-                const res = await fetch(workerUrl + "/api/buy-subscription", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ userId, days: 1, price: globalUserData.dailyPrice, initData })
-                });
-                if (res.ok) {
-                    tg.HapticFeedback.notificationOccurred('success');
-                    tg.showAlert("Подписка успешно продлена на 1 день!");
-                    loadUserData();
-                } else {
-            const text = await res.text();
-                    let errData;
-                    try { errData = JSON.parse(text); } catch { errData = { error: text }; }
-                    tg.showAlert(errData.error || "Ошибка проведения платежа");
-                }
-            } catch {
-                tg.showAlert("Сбой сети.");
-            }
-        } else if (buttonId === 'tariffs') {
-            openTariffsModal();
-        }
+// ── CUSTOM MODALS ──────────────────────────────────────────────────────
+function showConfirmModal(title, message, buttons) {
+    document.getElementById('confirm-title').textContent = title;
+    document.getElementById('confirm-message').textContent = message;
+    var container = document.getElementById('confirm-buttons');
+    container.innerHTML = '';
+    buttons.forEach(function(b) {
+        var btn = document.createElement('button');
+        btn.textContent = b.text;
+        var cls = 'custom-modal-btn';
+        if (b.primary) cls += ' custom-modal-btn-primary';
+        else if (b.cancel) cls += ' custom-modal-btn-cancel';
+        else cls += ' custom-modal-btn-secondary';
+        btn.className = cls;
+        btn.onclick = function() {
+            closeConfirmModal();
+            if (b.onClick) b.onClick();
+        };
+        container.appendChild(btn);
     });
+    document.getElementById('confirm-modal').classList.add('active');
+}
+function closeConfirmModal() {
+    document.getElementById('confirm-modal').classList.remove('active');
+}
+
+function showAlertModal(title, message, buttons, isError) {
+    document.getElementById('alert-title').textContent = title;
+    document.getElementById('alert-message').textContent = message;
+    var icon = document.getElementById('alert-icon');
+    if (isError) {
+        icon.innerHTML = '<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#e74c3c" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>';
+    } else {
+        icon.innerHTML = '<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#27ae60" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>';
+    }
+    var container = document.getElementById('alert-buttons');
+    container.innerHTML = '';
+    buttons.forEach(function(b) {
+        var btn = document.createElement('button');
+        btn.textContent = b.text;
+        var cls = 'custom-modal-btn';
+        if (b.primary) cls += ' custom-modal-btn-primary';
+        else cls += ' custom-modal-btn-secondary';
+        btn.className = cls;
+        btn.onclick = function() {
+            closeAlertModal();
+            if (b.onClick) b.onClick();
+        };
+        container.appendChild(btn);
+    });
+    document.getElementById('alert-modal').classList.add('active');
+}
+function closeAlertModal() {
+    document.getElementById('alert-modal').classList.remove('active');
+}
+
+function buyDaysModal() {
+    showConfirmModal(
+        "Продление подписки",
+        "Списать с баланса " + globalUserData.dailyPrice + "₽ для продления на 1 день?",
+        [
+            { text: "Купить 1 день", primary: true, onClick: async function() {
+                if (globalUserData.balance < globalUserData.dailyPrice) {
+                    showAlertModal(
+                        "Недостаточно средств",
+                        "На балансе " + globalUserData.balance + " ₽.\nПополните и повторите попытку.",
+                        [{ text: "Пополнить", primary: true, onClick: function() { openTopUpModal(); } }],
+                        true
+                    );
+                    return;
+                }
+                try {
+                    const res = await fetch(workerUrl + "/api/buy-subscription", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ userId, days: 1, price: globalUserData.dailyPrice, initData })
+                    });
+                    if (res.ok) {
+                        tg.HapticFeedback.notificationOccurred('success');
+                        loadUserData();
+                        showAlertModal(
+                            "Подписка продлена",
+                            "Подписка успешно продлена на 1 день!",
+                            [
+                                { text: "Перейти к подключению", primary: true, onClick: function() { window.location.href = '/blackvpn-connect.html'; } },
+                                { text: "Закрыть" }
+                            ]
+                        );
+                    } else {
+                        const text = await res.text();
+                        let errData;
+                        try { errData = JSON.parse(text); } catch { errData = { error: text }; }
+                        showAlertModal("Ошибка", errData.error || "Ошибка проведения платежа", [{ text: "Закрыть" }], true);
+                    }
+                } catch {
+                    showAlertModal("Ошибка", "Сбой сети.", [{ text: "Закрыть" }], true);
+                }
+            }},
+            { text: "Тарифы", onClick: function() { openTariffsModal(); } },
+            { text: "Отмена", cancel: true }
+        ]
+    );
 }
 
 function openTopUpModal() {
@@ -675,13 +743,12 @@ async function confirmTariffPurchase() {
     tg.HapticFeedback.impactOccurred('medium');
 
     if (selectedTariffPrice > 0 && globalUserData.balance < selectedTariffPrice) {
-        tg.showPopup({
-            title: "Недостаточно средств",
-            message: "На балансе " + globalUserData.balance + " ₽. Нужно " + selectedTariffPrice + " ₽.\nПополните баланс и повторите попытку.",
-            buttons: [{ type: 'ok', text: "Пополнить" }]
-        });
-        closeTariffsModal();
-        openTopUpModal();
+        showAlertModal(
+            "Недостаточно средств",
+            "На балансе " + globalUserData.balance + " ₽. Нужно " + selectedTariffPrice + " ₽.\nПополните баланс и повторите попытку.",
+            [{ text: "Пополнить", primary: true, onClick: function() { closeTariffsModal(); openTopUpModal(); } }],
+            true
+        );
         return;
     }
 
@@ -702,18 +769,25 @@ async function confirmTariffPurchase() {
 
         if (res.ok) {
             tg.HapticFeedback.notificationOccurred('success');
-            tg.showAlert("Тариф успешно активирован на " + selectedTariffDays + " дней!");
             clearPromoCode();
             closeTariffsModal();
             loadUserData();
+            showAlertModal(
+                "Тариф активирован",
+                "Тариф успешно активирован на " + selectedTariffDays + " дней!",
+                [
+                    { text: "Перейти к подключению", primary: true, onClick: function() { window.location.href = '/blackvpn-connect.html'; } },
+                    { text: "Закрыть" }
+                ]
+            );
         } else {
             const text = await res.text();
             let errData;
             try { errData = JSON.parse(text); } catch { errData = { error: text }; }
-            tg.showAlert(errData.error || "Ошибка при покупке тарифа");
+            showAlertModal("Ошибка", errData.error || "Ошибка при покупке тарифа", [{ text: "Закрыть" }], true);
         }
     } catch {
-        tg.showAlert("Сбой сети.");
+        showAlertModal("Ошибка", "Сбой сети.", [{ text: "Закрыть" }], true);
     } finally {
         btn.disabled = false;
         btn.innerText = originalText;

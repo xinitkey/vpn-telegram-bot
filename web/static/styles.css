@@ -378,3 +378,16 @@ body {
     color: #9ca3af; padding: 14px; border-radius: 14px; font-size: 16px; font-weight: 600;
     cursor: pointer;
 }
+
+/* ── CUSTOM MODALS ── */
+.custom-modal-icon { text-align: center; margin-bottom: 12px; }
+.custom-modal-msg { text-align: center; color: #d1d5db; font-size: 15px; line-height: 1.6; margin-bottom: 24px; padding: 0 4px; }
+.custom-modal-buttons { display: flex; flex-direction: column; gap: 10px; }
+.custom-modal-btn {
+    width: 100%; padding: 14px; border-radius: 14px; font-size: 16px; font-weight: 700;
+    border: none; cursor: pointer; text-align: center; transition: transform 0.15s;
+}
+.custom-modal-btn:active { transform: scale(0.97); }
+.custom-modal-btn-primary { background: #dc2626; color: #fff; box-shadow: 0 4px 20px rgba(220, 38, 38, 0.4); }
+.custom-modal-btn-secondary { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08); color: #9ca3af; }
+.custom-modal-btn-cancel { background: transparent; color: #6b7280; }
