@@ -121,7 +121,7 @@ def setup_routes(app: web.Application, bot: Bot, dp: Dispatcher):
             'remainingStr': user.remaining_str,
             'subscriptionEnd': user.subscription or 0,
             'subscriptionStart': user.subscription_start or 0,
-            'vpnKey': f"{_origin(request)}/api/sub/{user_id}" if user and user.link else 'Не создан',
+            'vpnKey': f"{_origin(request)}/black_vpn/{user_id}" if user and user.link else 'Не создан',
             'subContent': sub_content,
             'dailyPrice': settings.TARIFF_DAILY_PRICE,
             'banned': user.banned,
@@ -419,7 +419,7 @@ def setup_routes(app: web.Application, bot: Bot, dp: Dispatcher):
             log.error("Sub proxy error for user %s: %s", user_id, e)
             return web.json_response({'error': 'Proxy failed'}, status=502)
 
-    app.router.add_get('/api/sub/{user_id:[0-9]+}', api_sub_proxy)
+    app.router.add_get('/black_vpn/{user_id:[0-9]+}', api_sub_proxy)
 
     async def api_sub_test(request):
         test_yaml = '''\
