@@ -662,7 +662,7 @@
   if (!c) return;
   var frag = document.createDocumentFragment();
   function rand(a,b){return a+Math.random()*(b-a)}
-  for(var i=0;i<8;i++){
+  for(var i=0;i<4;i++){
     var left=rand(2,98),w=rand(3,9),h=w*rand(1.5,2.2),dur=rand(5,11),delay=rand(0,16),isRed=Math.random()<0.15;
     var d=document.createElement('i');
     d.className=isRed?'droplet droplet-red':'droplet';

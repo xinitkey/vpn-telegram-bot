@@ -1,4 +1,4 @@
-const COUNT = 8;
+const COUNT = 4;
 const RED_RATIO = 0.15;
 
 function rand(min, max) { return min + Math.random() * (max - min); }
