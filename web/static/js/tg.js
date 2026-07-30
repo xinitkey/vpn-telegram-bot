@@ -35,10 +35,11 @@ export function initTelegram() {
 
 const PARAM_MAP = {
     bg_color: '--bg',
-    secondary_bg_color: '--card',
     text_color: '--text-1',
     hint_color: '--text-2',
     link_color: '--link',
+    // secondary_bg_color intentionally NOT mapped: --card is translucent
+    // (liquid glass) — a solid Telegram color would kill the effect.
 };
 
 const FALLBACK_BG = { light: '#f3f2f0', dark: '#0e0d0c' };
