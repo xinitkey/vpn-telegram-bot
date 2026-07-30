@@ -108,8 +108,8 @@ button { font-family: inherit; color: inherit; }
 .particle {
     position: absolute;
     border-radius: 50%;
-    background: rgba(255, 255, 255, 0.4);
-    box-shadow: 0 0 80px 30px rgba(255, 255, 255, 0.15);
+    background: rgba(255, 255, 255, 0.15);
+    box-shadow: 0 0 80px 30px rgba(255, 255, 255, 0.06);
     filter: blur(18px);
     opacity: 0;
     animation: particle-float var(--p-time) linear infinite;
@@ -117,8 +117,8 @@ button { font-family: inherit; color: inherit; }
     will-change: transform, opacity;
 }
 .particle-red {
-    background: rgba(242, 85, 90, 0.6);
-    box-shadow: 0 0 80px 30px rgba(229, 72, 77, 0.25);
+    background: rgba(242, 85, 90, 0.3);
+    box-shadow: 0 0 80px 30px rgba(229, 72, 77, 0.12);
 }
 body.theme-light .particle { background: rgba(25, 20, 15, 0.25); box-shadow: 0 0 60px 20px rgba(25, 20, 15, 0.08); }
 body.theme-light .particle-red { background: rgba(229, 72, 77, 0.4); box-shadow: 0 0 60px 20px rgba(229, 72, 77, 0.18); }

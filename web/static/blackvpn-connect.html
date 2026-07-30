@@ -50,8 +50,8 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 }
 .particle{
   position:absolute;border-radius:50%;
-  background:rgba(255,255,255,.4);
-  box-shadow:0 0 80px 30px rgba(255,255,255,.15);
+  background:rgba(255,255,255,.15);
+  box-shadow:0 0 80px 30px rgba(255,255,255,.06);
   filter:blur(18px);
   opacity:0;
   animation:particle-float var(--p-time,24s) linear infinite;
@@ -59,11 +59,11 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
   will-change:transform,opacity;
 }
 .particle-red{
-  background:rgba(242,85,90,.6);
-  box-shadow:0 0 80px 30px rgba(229,72,77,.25);
+  background:rgba(242,85,90,.3);
+  box-shadow:0 0 80px 30px rgba(229,72,77,.12);
 }
-body.theme-light .particle{background:rgba(25,20,15,.25);box-shadow:0 0 60px 20px rgba(25,20,15,.08)}
-body.theme-light .particle-red{background:rgba(229,72,77,.4);box-shadow:0 0 60px 20px rgba(229,72,77,.18)}
+body.theme-light .particle{background:rgba(25,20,15,.1);box-shadow:0 0 60px 20px rgba(25,20,15,.03)}
+body.theme-light .particle-red{background:rgba(229,72,77,.2);box-shadow:0 0 60px 20px rgba(229,72,77,.08)}
 @keyframes particle-float{
   0%{transform:translate3d(0,0,0);opacity:0}
   10%{opacity:1}
