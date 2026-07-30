@@ -374,13 +374,9 @@ var ICONS = {
   clashverge:   'https://raw.githubusercontent.com/clash-verge-rev/clash-verge-rev/main/src-tauri/icons/icon.png',
   v2rayng:      'https://raw.githubusercontent.com/2dust/v2rayNG/master/V2rayNG/app/src/main/res/mipmap-xhdpi/ic_launcher.png',
   flclashx:     'https://raw.githubusercontent.com/chen08209/FlClash/main/assets/images/icon.png',
-  // SVG fallbacks for Russia-only apps not in public stores
-  koalaclash: null,
 };
 
 var SVG_FALLBACK = {
-  koalaclash: '<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="32" cy="34" r="18"/><circle cx="14" cy="22" r="8"/><circle cx="50" cy="22" r="8"/><circle cx="26" cy="30" r="3"/><circle cx="38" cy="30" r="3"/><ellipse cx="32" cy="40" rx="5" ry="3.5"/></svg>',
-};
 
 function logoEl(id) {
   if (ICONS[id]) {
@@ -492,12 +488,6 @@ var PLATFORMS = [
         connect: { desc: 'Добавьте профиль, выберите режим и включите системный прокси.' }
       },
       {
-        id: 'koalaclash', name: 'Koala Clash', iconId: 'koalaclash',
-        install: { desc: 'Скачайте Koala Clash с GitHub.', btns: [{label:'GitHub', url:'https://github.com/coolcoala/koala-clash/releases', ext:true}] },
-        subscribe: { deeplink: true },
-        connect: { desc: 'Включите VPN через переключатель.' }
-      },
-      {
         id: 'rabbithole', name: 'RabbitHole', iconId: 'rabbithole',
         install: { desc: 'Установите RabbitHole из App Store для Mac.', btns: [{label:'App Store', url:'https://apps.apple.com/app/id6683309629', ext:true}] },
         subscribe: { deeplink: true },
@@ -532,12 +522,6 @@ var PLATFORMS = [
         subscribe: { deeplink: true },
         connect: { desc: 'Активируйте системный прокси и выберите сервер.' }
       },
-      {
-        id: 'koalaclash', name: 'Koala Clash', iconId: 'koalaclash',
-        install: { desc: 'Скачайте Koala Clash с GitHub.', btns: [{label:'GitHub', url:'https://github.com/coolcoala/koala-clash/releases', ext:true}] },
-        subscribe: { deeplink: true },
-        connect: { desc: 'Включите VPN через переключатель.' }
-      },
     ]
   },
   {
@@ -566,12 +550,6 @@ var PLATFORMS = [
         install: { desc: 'Установите Clash Verge Rev из пакета для Linux.', btns: [{label:'GitHub', url:'https://github.com/clash-verge-rev/clash-verge-rev/releases/latest', ext:true}] },
         subscribe: { deeplink: true },
         connect: { desc: 'Включите системный прокси и выберите нужный узел.' }
-      },
-      {
-        id: 'koalaclash', name: 'Koala Clash', iconId: 'koalaclash',
-        install: { desc: 'Скачайте Koala Clash с GitHub.', btns: [{label:'GitHub', url:'https://github.com/coolcoala/koala-clash/releases', ext:true}] },
-        subscribe: { deeplink: true },
-        connect: { desc: 'Включите VPN через переключатель.' }
       },
     ]
   },
@@ -828,7 +806,6 @@ var APP_SCHEMES = {
   shadowrocket: 'shadowrocket://add?url=',
   clashmi:      'clash://install-config?url=',
   flclashx:     'clash://install-config?url=',
-  koalaclash:   'clash://install-config?url=',
   clashverge:   'clash://install-config?url=',
   hiddify:      'hiddify://import/',
   v2rayng:      'v2rayng://install-sub?url=',
@@ -864,7 +841,7 @@ function makeHappDeepLink(url) {
 }
 
 // ── SUBSCRIPTION CONVERTER (base64 → Clash YAML) ─────────────────
-var CLASH_APPS = ['clashmi', 'flclashx', 'koalaclash', 'clashverge'];
+var CLASH_APPS = ['clashmi', 'flclashx', 'clashverge'];
 var SUB_CONVERTER_URL = window.location.origin + '/api/sub-convert/' + (userId || '');
 
 function vlessToYaml(text) {
