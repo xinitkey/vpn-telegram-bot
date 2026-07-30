@@ -767,26 +767,11 @@ async function makeIncyDeepLink(url) {
 }
 
 // ── APP DEEPLINK SCHEMES ──────────────────────────────────────────────
-function makeSubStoreDeepLink(prefix) {
-  return async function(url) {
-    var content = USER.subContent;
-    if (!content) return null;
-    try {
-      var resp = await fetch(window.location.origin + '/api/sub-store', {method: 'POST', body: content});
-      if (resp.ok) {
-        var data = await resp.json();
-        if (data.token) return prefix + window.location.origin + '/api/sub-store/' + data.token;
-      }
-    } catch(e) {}
-    return null;
-  };
-}
-
 var APP_SCHEMES = {
   happ:         makeHappDeepLink,
   clashmi:      'clash://install-config?url=',
-  rabbithole:   makeSubStoreDeepLink('rabbithole://add/'),
-  v2raytun:     makeSubStoreDeepLink('v2raytun://import/'),
+  rabbithole:   'rabbithole://add/',
+  v2raytun:     'v2raytun://import/',
   hiddify:      'hiddify://import/',
   v2rayng:      'v2rayng://install-sub?url=',
   incy:         makeIncyDeepLink,
@@ -818,6 +803,20 @@ function makeHappDeepLink(url) {
     if (encrypted) return 'happ://crypt4/' + encrypted;
   } catch(e) {}
   return null;
+}
+
+// ── CLIPBOARD MASKING ──────────────────────────────────────────────
+async function protectUrl() {
+  var content = USER.subContent;
+  if (!content) return '';
+  try {
+    var resp = await fetch(window.location.origin + '/api/sub-store', {method: 'POST', body: content});
+    if (resp.ok) {
+      var data = await resp.json();
+      if (data.token) return window.location.origin + '/api/sub-store/' + data.token;
+    }
+  } catch(e) {}
+  return '';
 }
 
 // ── SUBSCRIPTION CONVERTER (base64 → Clash YAML) ─────────────────
@@ -981,7 +980,8 @@ async function importSub(btn) {
     deepLink = url;
   }
 
-  navigator.clipboard.writeText(deepLink);
+  var clipUrl = await protectUrl();
+  navigator.clipboard.writeText(clipUrl || deepLink);
 
   var notFound = document.getElementById('app-not-found');
   notFound.classList.remove('show');
@@ -1040,7 +1040,8 @@ async function copySub(btn) {
       copyUrl = scheme + url;
     }
   }
-  navigator.clipboard.writeText(copyUrl).then(function(){
+  var clipUrl = await protectUrl();
+  navigator.clipboard.writeText(clipUrl || copyUrl).then(function(){
     var lbl = document.getElementById('copySubLabel');
     lbl.textContent = 'Скопировано!';
     btn.classList.add('copied');
