@@ -28,7 +28,6 @@
   --card: rgba(255, 255, 255, 0.05);
   --card-2: rgba(255, 255, 255, 0.035);
   --sheet: rgba(30, 26, 24, 0.78);
-  --glass: rgba(20, 18, 16, 0.62);
   --overlay: rgba(0, 0, 0, 0.55);
   --overlay-strong: rgba(8, 7, 6, 0.94);
 
@@ -61,7 +60,6 @@ body.theme-light {
   --card: rgba(255, 255, 255, 0.55);
   --card-2: rgba(255, 255, 255, 0.42);
   --sheet: rgba(255, 255, 255, 0.8);
-  --glass: rgba(255, 255, 255, 0.68);
   --overlay: rgba(40, 32, 28, 0.32);
   --overlay-strong: rgba(250, 249, 248, 0.96);
 
@@ -135,11 +133,10 @@ body.theme-light .particle-red { background: rgba(229, 72, 77, 0.55); box-shadow
 .logo { font-size: 22px; font-weight: 800; font-style: italic; letter-spacing: -0.02em; display: flex; align-items: center; gap: 7px; }
 .logo span { color: var(--accent-2); }
 .balance-card {
-    background: var(--glass);
-    backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur);
+    background: var(--card);
     border-radius: 999px; padding: 7px 8px 7px 14px; display: flex; align-items: center; gap: 10px;
     border: 1px solid var(--border);
-    box-shadow: inset 0 1px 0 var(--glass-hi), var(--glass-shadow);
+    box-shadow: inset 0 1px 0 var(--glass-hi);
 }
 .balance-row { display: flex; align-items: baseline; gap: 3px; }
 .balance-amount { font-size: 16px; font-weight: 800; }
@@ -249,10 +246,9 @@ body.theme-light .particle-red { background: rgba(229, 72, 77, 0.55); box-shadow
 /* ── Bottom nav ── */
 .bottom-nav {
     position: fixed; bottom: calc(12px + var(--safe-bottom)); left: 15px; right: 15px;
-    background: var(--glass);
-    backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur);
+    background: var(--card);
     border-radius: 22px; display: flex; padding: 6px; border: 1px solid var(--border);
-    z-index: 100; box-shadow: inset 0 1px 0 var(--glass-hi), 0 12px 32px rgba(0, 0, 0, 0.22);
+    z-index: 100; box-shadow: inset 0 1px 0 var(--glass-hi);
 }
 .nav-item {
     flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px;
