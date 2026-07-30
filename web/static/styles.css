@@ -26,8 +26,8 @@
 
   /* surfaces (dark default) — liquid glass */
   --bg: #0e0d0c;
-  --card: rgba(255, 255, 255, 0.12);
-  --card-2: rgba(255, 255, 255, 0.07);
+  --card: rgba(255, 255, 255, 0.05);
+  --card-2: rgba(255, 255, 255, 0.035);
   --sheet: rgba(30, 26, 24, 0.78);
   --overlay: rgba(0, 0, 0, 0.55);
   --overlay-strong: rgba(8, 7, 6, 0.94);
@@ -58,8 +58,8 @@
 }
 
 body.theme-light {
-  --card: rgba(255, 255, 255, 0.78);
-  --card-2: rgba(255, 255, 255, 0.68);
+  --card: rgba(255, 255, 255, 0.55);
+  --card-2: rgba(255, 255, 255, 0.42);
   --sheet: rgba(255, 255, 255, 0.8);
   --overlay: rgba(40, 32, 28, 0.32);
   --overlay-strong: rgba(250, 249, 248, 0.96);
