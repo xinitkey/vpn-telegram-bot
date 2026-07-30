@@ -966,11 +966,6 @@ async function importSub(btn) {
     }
   }
 
-  if (USER.subContent && url === USER.subUrl && typeof APP_SCHEMES[state.appId] !== 'function') {
-    var pUrl = await protectUrl();
-    if (pUrl) url = pUrl;
-  }
-
   var scheme = APP_SCHEMES[state.appId];
   if (typeof scheme === 'function') {
     deepLink = await scheme(url);
@@ -1034,18 +1029,14 @@ async function copySub(btn) {
   var url = USER.subUrl;
   var scheme = APP_SCHEMES[state.appId];
   var copyUrl = url;
-  if (typeof scheme !== 'function' && USER.subContent) {
-    var pUrl = await protectUrl();
-    if (pUrl) copyUrl = pUrl;
-  }
   if (typeof scheme === 'function') {
-    var dl = await scheme(copyUrl);
+    var dl = await scheme(url);
     if (dl) copyUrl = dl;
   } else if (scheme) {
     if (scheme.indexOf('?url=') !== -1) {
-      copyUrl = scheme + encodeURIComponent(copyUrl);
+      copyUrl = scheme + encodeURIComponent(url);
     } else {
-      copyUrl = scheme + copyUrl;
+      copyUrl = scheme + url;
     }
   }
   navigator.clipboard.writeText(copyUrl).then(function(){
