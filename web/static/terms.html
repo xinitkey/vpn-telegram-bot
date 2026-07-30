@@ -54,25 +54,25 @@
     .bg-mesh { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
     .particle {
       position: absolute; bottom: -10px; border-radius: 50%;
-      background: rgba(255,255,255,.45);
-      box-shadow: 0 0 8px rgba(255,255,255,.3);
+      background: rgba(255,255,255,.15);
+      box-shadow: 0 0 6px rgba(255,255,255,.12);
       opacity: 0;
       animation: particle-rise var(--p-time,24s) linear infinite;
       animation-delay: var(--p-delay,0s);
       will-change: transform, opacity;
     }
     .particle-red {
-      background: rgba(242,85,90,.75);
-      box-shadow: 0 0 10px rgba(229,72,77,.55);
+      background: rgba(242,85,90,.35);
+      box-shadow: 0 0 8px rgba(229,72,77,.25);
     }
     @media (prefers-color-scheme: light) {
-      .particle { background: rgba(25,20,15,.3); box-shadow: 0 0 6px rgba(25,20,15,.18); }
-      .particle-red { background: rgba(229,72,77,.55); box-shadow: 0 0 8px rgba(229,72,77,.35); }
+      .particle { background: rgba(25,20,15,.12); box-shadow: 0 0 4px rgba(25,20,15,.08); }
+      .particle-red { background: rgba(229,72,77,.25); box-shadow: 0 0 6px rgba(229,72,77,.15); }
     }
     @keyframes particle-rise {
       0% { transform: translate3d(0,0,0); opacity: 0; }
-      10% { opacity: 1; }
-      85% { opacity: 1; }
+      10% { opacity: .35; }
+      85% { opacity: .35; }
       100% { transform: translate3d(var(--p-drift,4vw),-105vh,0); opacity: 0; }
     }
 
@@ -617,7 +617,8 @@
     var p = document.createElement('i');
     p.className = Math.random() < 0.28 ? 'particle particle-red' : 'particle';
     var size = 2 + Math.random() * 3;
-    var time = 16 + Math.random() * 20;
+    var time = 40 + Math.random() * 40;
+
     p.style.cssText = 'left:' + (Math.random() * 100).toFixed(1) + '%;'
       + 'width:' + size.toFixed(1) + 'px;height:' + size.toFixed(1) + 'px;'
       + '--p-time:' + time.toFixed(1) + 's;'
