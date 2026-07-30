@@ -308,6 +308,9 @@ function finalPrice(days) {
 function renderTariffs() {
     if (!els.tariffList) return;
     const selected = state.selection.tariffDays;
+    const baseTariff = cfg().tariffs.find((x) => x.days === 30);
+    const baseRate = baseTariff ? (baseTariff.price / 30) : null;
+
     els.tariffList.innerHTML = cfg().tariffs.map((t) => {
         const meta = TARIFF_META[t.days] || { icon: '⭐', label: '', labelCls: '', featured: '' };
         const free = isFreeTrial(t.days);
@@ -319,12 +322,25 @@ function renderTariffs() {
                 ? `<span class="old-price">${fp.original} ₽</span> <span class="discount-price">${fp.price} ₽</span>`
                 : `${fmt.formatMoney(fp.price)} ₽`;
         const perDay = free ? 'Бесплатно' : `${String(t.perDay).replace('.', ',')} ₽/день`;
+
+        let savingsHtml = '';
+        if (baseRate && t.days > 30) {
+            const currentRate = t.price / t.days;
+            const savingsPercent = Math.round((1 - currentRate / baseRate) * 100);
+            if (savingsPercent > 0) {
+                savingsHtml = `<span class="tariff-savings">-${savingsPercent}%</span>`;
+            }
+        }
+
         return `
         <div class="tariff-option ${meta.featured || ''}${selected === t.days ? ' active' : ''}" data-action="select-tariff" data-days="${t.days}" role="button" tabindex="0">
             <div class="tariff-badge">${meta.icon}</div>
             <div class="tariff-info-block">
                 <div class="tariff-days">${t.days} ${fmt.plural(t.days, ['день', 'дня', 'дней'])}</div>
-                <div class="tariff-perday">${perDay}</div>
+                <div class="tariff-perday-row">
+                    <span class="tariff-perday">${perDay}</span>
+                    ${savingsHtml}
+                </div>
             </div>
             <div class="tariff-price">${priceHtml}</div>
             ${meta.label ? `<div class="${meta.labelCls}">${meta.label}</div>` : ''}
