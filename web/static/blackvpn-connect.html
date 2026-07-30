@@ -50,20 +50,20 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 }
 .particle{
   position:absolute;bottom:-10px;border-radius:50%;
-  background:rgba(255,255,255,.45);
-  box-shadow:0 0 8px rgba(255,255,255,.3);
-  filter:blur(5px);
+  background:rgba(255,255,255,.4);
+  box-shadow:0 0 80px 30px rgba(255,255,255,.15);
+  filter:blur(18px);
   opacity:0;
   animation:particle-rise var(--p-time,24s) linear infinite;
   animation-delay:var(--p-delay,0s);
   will-change:transform,opacity;
 }
 .particle-red{
-  background:rgba(242,85,90,.75);
-  box-shadow:0 0 10px rgba(229,72,77,.55);
+  background:rgba(242,85,90,.6);
+  box-shadow:0 0 80px 30px rgba(229,72,77,.25);
 }
-body.theme-light .particle{background:rgba(25,20,15,.3);box-shadow:0 0 6px rgba(25,20,15,.18)}
-body.theme-light .particle-red{background:rgba(229,72,77,.55);box-shadow:0 0 8px rgba(229,72,77,.35)}
+body.theme-light .particle{background:rgba(25,20,15,.25);box-shadow:0 0 60px 20px rgba(25,20,15,.08)}
+body.theme-light .particle-red{background:rgba(229,72,77,.4);box-shadow:0 0 60px 20px rgba(229,72,77,.18)}
 @keyframes particle-rise{
   0%{transform:translate3d(0,0,0);opacity:0}
   10%{opacity:1}
@@ -1000,13 +1000,13 @@ loadConnectData();
   var c = document.querySelector('.bg-mesh');
   if (!c) return;
   var frag = document.createDocumentFragment();
-  for (var i = 0; i < 6; i++) {
+  for (var i = 0; i < 3; i++) {
     var p = document.createElement('i');
     p.className = Math.random() < 0.28 ? 'particle particle-red' : 'particle';
-    var size = 14 + Math.random() * 21;
-    var time = 40 + Math.random() * 40;
+    var size = 20 + Math.random() * 30;
+    var time = 50 + Math.random() * 40;
     p.style.cssText = 'left:' + (Math.random() * 100).toFixed(1) + '%;'
-      + 'width:' + size.toFixed(1) + 'px;height:' + size.toFixed(1) + 'px;'
+      + 'width:' + size.toFixed(1) + 'vw;height:' + size.toFixed(1) + 'vw;'
       + '--p-time:' + time.toFixed(1) + 's;'
       + '--p-delay:' + (-Math.random() * time).toFixed(1) + 's;'
       + '--p-drift:' + (Math.random() * 12 - 6).toFixed(1) + 'vw;';
