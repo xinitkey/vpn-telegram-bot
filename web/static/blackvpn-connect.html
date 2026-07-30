@@ -359,6 +359,8 @@ var USER = {
     expires: '—',
     trafficUsed: 0,
     subUrl: '',
+    subContent: '',
+    subStoreBase: '',
 };
 
 // ── REAL APP ICONS ─────────────────────────────────────────────────────
@@ -805,22 +807,55 @@ function makeHappDeepLink(url) {
   return null;
 }
 
-// ── CLIPBOARD MASKING ──────────────────────────────────────────────
-async function protectUrl() {
-  var content = USER.subContent;
+// ── SUB-STORE: upload content, return token URL ───────────────────
+async function protectUrl(content) {
   if (!content) return '';
   try {
-    var resp = await fetch(window.location.origin + '/api/sub-store', {method: 'POST', body: content});
+    var base = USER.subStoreBase || window.location.origin;
+    var resp = await fetch(base + '/api/sub-store', {method: 'POST', body: content});
     if (resp.ok) {
       var data = await resp.json();
-      if (data.token) return window.location.origin + '/api/sub-store/' + data.token;
+      if (data.token) return base + '/api/sub-store/' + data.token;
     }
   } catch(e) {}
   return '';
 }
 
+// ── SANITIZE SUBSCRIPTION (strip fragments & non-essential params) ─
+function sanitizeSub(text) {
+  var lines;
+  try { lines = atob(text).split('\n'); }
+  catch(e) { lines = text.split('\n'); }
+  var clean = [];
+  for (var i = 0; i < lines.length; i++) {
+    var link = lines[i].trim();
+    if (!link) continue;
+    var hashIdx = link.indexOf('#');
+    if (hashIdx !== -1) link = link.slice(0, hashIdx);
+    try {
+      if (link.indexOf('vless://') === 0) {
+        var u = new URL(link);
+        var keep = ['type','flow','sni','fp','security','pbk','sid','encryption'];
+        for (var k of Array.from(u.searchParams.keys()))
+          if (keep.indexOf(k) === -1) u.searchParams.delete(k);
+        clean.push(u.toString());
+      } else if (link.indexOf('trojan://') === 0) {
+        var u = new URL(link);
+        var keep = ['sni','peer','allowInsecure','security'];
+        for (var k of Array.from(u.searchParams.keys()))
+          if (keep.indexOf(k) === -1) u.searchParams.delete(k);
+        clean.push(u.toString());
+      } else {
+        clean.push(link);
+      }
+    } catch(e) { clean.push(link); }
+  }
+  return btoa(clean.join('\n'));
+}
+
 // ── SUBSCRIPTION CONVERTER (base64 → Clash YAML) ─────────────────
 var CLASH_APPS = ['clashmi'];
+var SANITIZE_APPS = ['rabbithole', 'v2raytun'];
 var SUB_CONVERTER_URL = window.location.origin + '/api/sub-convert/' + (userId || '');
 
 function vlessToYaml(text) {
@@ -944,14 +979,10 @@ async function importSub(btn) {
       } catch(e) {}
     }
     if (yaml && yaml.length > 50) {
-      try {
-        var resp = await fetch(window.location.origin + '/api/sub-store', {method: 'POST', body: yaml});
-        if (resp.ok) {
-          var data = await resp.json();
-          if (data.token) url = window.location.origin + '/api/sub-store/' + data.token;
-        }
-      } catch(e) {}
-      if (url.indexOf('/api/sub-store/') === -1) {
+      var storeUrl = await protectUrl(yaml);
+      if (storeUrl) {
+        url = storeUrl;
+      } else {
         var b64 = btoa(unescape(encodeURIComponent(yaml)));
         url = 'data:text/yaml;charset=utf-8;base64,' + b64;
       }
@@ -963,6 +994,19 @@ async function importSub(btn) {
       document.body.appendChild(a);
       a.click();
       setTimeout(function(){ URL.revokeObjectURL(a.href); document.body.removeChild(a); }, 500);
+    }
+  }
+
+  if (SANITIZE_APPS.indexOf(state.appId) !== -1) {
+    var cleanContent;
+    if (state.appId === 'rabbithole') {
+      cleanContent = vlessToYaml(USER.subContent);
+    } else {
+      cleanContent = sanitizeSub(USER.subContent);
+    }
+    if (cleanContent && cleanContent.length > 50) {
+      var storeUrl = await protectUrl(cleanContent);
+      if (storeUrl) url = storeUrl;
     }
   }
 
@@ -1027,6 +1071,18 @@ async function importSub(btn) {
 
 async function copySub(btn) {
   var url = USER.subUrl;
+  if (SANITIZE_APPS.indexOf(state.appId) !== -1) {
+    var cleanContent;
+    if (state.appId === 'rabbithole') {
+      cleanContent = vlessToYaml(USER.subContent);
+    } else {
+      cleanContent = sanitizeSub(USER.subContent);
+    }
+    if (cleanContent && cleanContent.length > 50) {
+      var storeUrl = await protectUrl(cleanContent);
+      if (storeUrl) url = storeUrl;
+    }
+  }
   var scheme = APP_SCHEMES[state.appId];
   var copyUrl = url;
   if (typeof scheme === 'function') {
@@ -1076,6 +1132,7 @@ async function loadConnectData(){
             USER.expires=data.subscriptionEnd?formatTs(data.subscriptionEnd):'—';
             USER.subUrl=data.vpnKey||'';
             USER.subContent=data.subContent||'';
+            USER.subStoreBase=data.subStoreBase||window.location.origin;
             var dresp=await fetch(u+"/api/user-devices?userId="+userId,{headers:{"X-Init-Data":initData}});
             if(dresp.ok){
                 var dev=await dresp.json();
