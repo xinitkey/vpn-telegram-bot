@@ -371,7 +371,6 @@ var ICONS = {
   clashmi:      'https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/26/60/7a/26607aaf-ae8e-fe67-b366-a8f47fd34e57/AppIcon-0-1x_U007emarketing-0-11-0-85-220-0.png/512x512bb.jpg',
   hiddify:      'https://raw.githubusercontent.com/hiddify/hiddify-app/main/assets/images/logo.svg',
   v2rayng:      'https://raw.githubusercontent.com/2dust/v2rayNG/master/V2rayNG/app/src/main/res/mipmap-xhdpi/ic_launcher.png',
-  flclash:     'https://raw.githubusercontent.com/chen08209/FlClash/main/assets/images/icon.png',
 };
 
 var SVG_FALLBACK = {};
@@ -474,12 +473,6 @@ var PLATFORMS = [
         connect: { desc: 'Подключитесь через кнопку включения в главном экране.' }
       },
       {
-        id: 'flclash', name: 'FlClash', iconId: 'flclash',
-        install: { desc: 'Скачайте FlClash с GitHub.', btns: [{label:'GitHub', url:'https://github.com/chen08209/FlClash/releases/latest', ext:true}] },
-        subscribe: { deeplink: true },
-        connect: { desc: 'Добавьте профиль, выберите режим и включите системный прокси.' }
-      },
-      {
         id: 'rabbithole', name: 'RabbitHole', iconId: 'rabbithole',
         install: { desc: 'Установите RabbitHole из App Store для Mac.', btns: [{label:'App Store', url:'https://apps.apple.com/app/id6683309629', ext:true}] },
         subscribe: { deeplink: true },
@@ -542,13 +535,6 @@ var PLATFORMS = [
         subscribe: false,
         instructions: true,
         connect: { desc: 'Запустите Happ и включите VPN.' }
-      },
-      {
-        id: 'flclash', name: 'FlClash', iconId: 'flclash',
-        install: { desc: 'Установите FlClash через APK на Android TV.', btns: [{label:'Скачать APK', url:'https://github.com/chen08209/FlClash/releases/latest', ext:true}] },
-        subscribe: false,
-        instructions: true,
-        connect: { desc: 'Добавьте подписку вручную и включите режим прокси.' }
       },
     ]
   },
@@ -820,7 +806,7 @@ function makeHappDeepLink(url) {
 }
 
 // ── SUBSCRIPTION CONVERTER (base64 → Clash YAML) ─────────────────
-var CLASH_APPS = ['clashmi', 'flclash'];
+var CLASH_APPS = ['clashmi'];
 var SUB_CONVERTER_URL = window.location.origin + '/api/sub-convert/' + (userId || '');
 
 function vlessToYaml(text) {
