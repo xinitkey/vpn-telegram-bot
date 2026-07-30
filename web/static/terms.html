@@ -53,12 +53,12 @@
 
     .bg-mesh { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
     .particle {
-      position: absolute; bottom: -10px; border-radius: 50%;
+      position: absolute; border-radius: 50%;
       background: rgba(255,255,255,.4);
       box-shadow: 0 0 80px 30px rgba(255,255,255,.15);
       filter: blur(18px);
       opacity: 0;
-      animation: particle-rise var(--p-time,24s) linear infinite;
+      animation: particle-float var(--p-time,24s) linear infinite;
       animation-delay: var(--p-delay,0s);
       will-change: transform, opacity;
     }
@@ -70,11 +70,11 @@
       .particle { background: rgba(25,20,15,.25); box-shadow: 0 0 60px 20px rgba(25,20,15,.08); }
       .particle-red { background: rgba(229,72,77,.4); box-shadow: 0 0 60px 20px rgba(229,72,77,.18); }
     }
-    @keyframes particle-rise {
+    @keyframes particle-float {
       0% { transform: translate3d(0,0,0); opacity: 0; }
       10% { opacity: 1; }
       85% { opacity: 1; }
-      100% { transform: translate3d(var(--p-drift,4vw),-105vh,0); opacity: 0; }
+      100% { transform: translate3d(var(--p-tx),var(--p-ty),0); opacity: 0; }
     }
 
     body {
@@ -614,16 +614,29 @@
   var c = document.querySelector('.bg-mesh');
   if (!c) return;
   var frag = document.createDocumentFragment();
-  for (var i = 0; i < 3; i++) {
-    var p = document.createElement('i');
-    p.className = Math.random() < 0.28 ? 'particle particle-red' : 'particle';
-    var size = 20 + Math.random() * 30;
-    var time = 50 + Math.random() * 40;
-    p.style.cssText = 'left:' + (Math.random() * 100).toFixed(1) + '%;'
-      + 'width:' + size.toFixed(1) + 'vw;height:' + size.toFixed(1) + 'vw;'
-      + '--p-time:' + time.toFixed(1) + 's;'
-      + '--p-delay:' + (-Math.random() * time).toFixed(1) + 's;'
-      + '--p-drift:' + (Math.random() * 12 - 6).toFixed(1) + 'vw;';
+  function rand(a,b){return a+Math.random()*(b-a)}
+  var DIRS=['up','down','left','right','diag-tr','diag-tl','diag-br','diag-bl'];
+  for(var i=0;i<3;i++){
+    var p=document.createElement('i');
+    p.className=Math.random()<0.28?'particle particle-red':'particle';
+    var size=20+Math.random()*30,time=50+Math.random()*40;
+    var dir=DIRS[Math.floor(Math.random()*DIRS.length)],drift=rand(-15,15);
+    var left,top,tx,ty;
+    switch(dir){
+      case'up':left=rand(0,100);top=rand(105,120);tx=drift+'vw';ty=-(120+rand(0,20))+'vh';break;
+      case'down':left=rand(0,100);top=rand(-20,-5);tx=drift+'vw';ty=120+rand(0,20)+'vh';break;
+      case'left':left=rand(105,120);top=rand(0,100);tx=-(120+rand(0,20))+'vw';ty=drift+'vh';break;
+      case'right':left=rand(-20,-5);top=rand(0,100);tx=120+rand(0,20)+'vw';ty=drift+'vh';break;
+      case'diag-tr':left=rand(-20,-5);top=rand(105,120);tx=120+rand(0,20)+'vw';ty=-(120+rand(0,20))+'vh';break;
+      case'diag-tl':left=rand(105,120);top=rand(105,120);tx=-(120+rand(0,20))+'vw';ty=-(120+rand(0,20))+'vh';break;
+      case'diag-br':left=rand(-20,-5);top=rand(-20,-5);tx=120+rand(0,20)+'vw';ty=120+rand(0,20)+'vh';break;
+      case'diag-bl':left=rand(105,120);top=rand(-20,-5);tx=-(120+rand(0,20))+'vw';ty=120+rand(0,20)+'vh';break;
+    }
+    p.style.cssText='left:'+left.toFixed(1)+'%;top:'+top.toFixed(1)+'%;'
+      +'width:'+size.toFixed(1)+'vw;height:'+size.toFixed(1)+'vw;'
+      +'--p-time:'+time.toFixed(1)+'s;'
+      +'--p-delay:'+(-Math.random()*time).toFixed(1)+'s;'
+      +'--p-tx:'+tx+';--p-ty:'+ty+';';
     frag.appendChild(p);
   }
   c.appendChild(frag);
