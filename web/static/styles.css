@@ -400,172 +400,54 @@ body.theme-light .particle-red { background: rgba(229, 72, 77, 0.55); box-shadow
 .btn-confirm:not(:disabled):active { transform: scale(0.98); }
 
 /* ── Tariffs ── */
-.tariff-hint { text-align: center; color: var(--text-2); font-size: 13px; margin-bottom: 16px; font-weight: 500; }
-.tariff-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+.tariff-hint { text-align: center; color: var(--text-2); font-size: 13px; margin-bottom: 14px; }
+.tariff-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 18px; }
 .tariff-option {
-    display: flex; align-items: center; gap: 14px;
-    background: var(--card); border: 1px solid var(--border);
-    border-radius: var(--r-m); padding: 14px 16px; cursor: pointer;
-    transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1); position: relative;
+    display: flex; align-items: center; gap: 12px;
+    background: var(--card-2); border: 1px solid var(--border);
+    border-radius: var(--r-m); padding: 13px 14px; cursor: pointer;
+    transition: border-color 0.15s ease, background 0.15s ease; position: relative;
 }
-.tariff-option::after {
-    content: ''; position: absolute; inset: 0; border-radius: inherit;
-    border: 1px solid transparent; pointer-events: none; transition: border-color 0.2s ease;
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
-}
-.tariff-option:hover {
-    background: var(--card-2);
-    border-color: var(--border-strong);
-    transform: translateY(-1px);
-}
-.tariff-option.active {
-    background: linear-gradient(135deg, rgba(229, 72, 77, 0.12) 0%, rgba(229, 72, 77, 0.04) 100%), var(--card);
-    border-color: var(--accent);
-    box-shadow: 0 8px 24px rgba(229, 72, 77, 0.12), inset 0 1px 0 var(--glass-hi);
-}
-.tariff-option.active::after {
-    border-color: rgba(229, 72, 77, 0.25);
-}
-.tariff-best {
-    border-color: rgba(229, 72, 77, 0.28);
-}
-.tariff-recommended {
-    border-color: rgba(77, 159, 255, 0.25);
-}
-
+.tariff-option.active { background: var(--accent-soft); border-color: var(--accent); }
+.tariff-best { border-color: var(--accent-border); }
+.tariff-recommended { border-color: rgba(77, 159, 255, 0.3); }
 .tariff-badge {
-    width: 44px; height: 44px; flex-shrink: 0;
-    border-radius: 12px;
-    display: flex; align-items: center; justify-content: center; font-size: 21px;
-    transition: all 0.22s ease;
-    background: var(--card-2);
-    border: 1px solid var(--border);
+    width: 40px; height: 40px; flex-shrink: 0;
+    background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+    display: flex; align-items: center; justify-content: center; font-size: 19px;
 }
-
-.tariff-option[data-days="3"] .tariff-badge {
-    background: linear-gradient(135deg, rgba(147, 51, 234, 0.15), rgba(147, 51, 234, 0.05));
-    border-color: rgba(147, 51, 234, 0.35);
-    box-shadow: 0 4px 12px rgba(147, 51, 234, 0.08);
-}
-.tariff-option[data-days="30"] .tariff-badge {
-    background: linear-gradient(135deg, rgba(37, 99, 235, 0.15), rgba(37, 99, 235, 0.05));
-    border-color: rgba(37, 99, 235, 0.35);
-    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.08);
-}
-.tariff-option[data-days="90"] .tariff-badge {
-    background: linear-gradient(135deg, rgba(8, 145, 178, 0.15), rgba(8, 145, 178, 0.05));
-    border-color: rgba(8, 145, 178, 0.35);
-    box-shadow: 0 4px 12px rgba(8, 145, 178, 0.08);
-}
-.tariff-option[data-days="180"] .tariff-badge {
-    background: linear-gradient(135deg, rgba(5, 150, 105, 0.15), rgba(5, 150, 105, 0.05));
-    border-color: rgba(5, 150, 105, 0.35);
-    box-shadow: 0 4px 12px rgba(5, 150, 105, 0.08);
-}
-.tariff-option[data-days="365"] .tariff-badge {
-    background: linear-gradient(135deg, rgba(229, 72, 77, 0.22), rgba(244, 63, 94, 0.08));
-    border-color: rgba(229, 72, 77, 0.45);
-    box-shadow: 0 4px 14px rgba(229, 72, 77, 0.18);
-}
-
-.tariff-info-block { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
-.tariff-days { font-size: 16px; font-weight: 800; color: var(--text-1); letter-spacing: -0.01em; }
-.tariff-perday-row { display: flex; align-items: center; flex-wrap: wrap; }
-.tariff-perday { font-size: 12.5px; color: var(--text-2); font-weight: 500; }
-
-.tariff-savings {
-    background: rgba(63, 185, 80, 0.14);
-    color: var(--green);
-    border: 1px solid rgba(63, 185, 80, 0.25);
-    font-size: 10px; font-weight: 800; padding: 2px 5px; border-radius: 6px;
-    margin-left: 6px; text-transform: uppercase; letter-spacing: 0.2px;
-    display: inline-flex; align-items: center; line-height: 1;
-}
-
-body.theme-light .tariff-savings {
-    background: rgba(63, 185, 80, 0.1);
-    border-color: rgba(63, 185, 80, 0.2);
-}
-
-.tariff-price { font-size: 19px; font-weight: 900; color: var(--text-1); text-align: right; letter-spacing: -0.02em; }
-.tariff-option.active .tariff-price { color: var(--accent-2); }
-
+.tariff-option.active .tariff-badge { background: var(--sheet); }
+.tariff-info-block { flex: 1; min-width: 0; }
+.tariff-days { font-size: 15.5px; font-weight: 700; margin-bottom: 2px; }
+.tariff-perday { font-size: 12.5px; color: var(--text-2); }
+.tariff-price { font-size: 18px; font-weight: 800; color: var(--accent-2); text-align: right; }
 .tariff-best-label, .tariff-trial-label, .tariff-rec-label,
 .tariff-standard-label, .tariff-profitable-label {
-    position: absolute; top: -8px; right: 12px;
-    color: #fff; font-size: 9px; font-weight: 900;
-    padding: 3.5px 9px; border-radius: 999px; text-transform: uppercase; letter-spacing: 0.5px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.18);
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    z-index: 2;
-    line-height: 1;
+    position: absolute; top: -7px; right: 10px;
+    background: var(--accent); color: #fff; font-size: 9.5px; font-weight: 800;
+    padding: 3px 8px; border-radius: 999px; text-transform: uppercase; letter-spacing: 0.4px;
 }
-.tariff-trial-label { background: linear-gradient(135deg, #a855f7, #7c3aed); }
-.tariff-rec-label { background: linear-gradient(135deg, #3b82f6, #1d4ed8); }
-.tariff-standard-label { background: linear-gradient(135deg, #06b6d4, #0891b2); }
-.tariff-profitable-label { background: linear-gradient(135deg, #10b981, #047857); }
-.tariff-best-label { background: linear-gradient(135deg, #f43f5e, #e11d48); }
+.tariff-trial-label { background: #9333ea; right: auto; left: 10px; }
+.tariff-rec-label { background: #2563eb; }
+.tariff-standard-label { background: #0891b2; }
+.tariff-profitable-label { background: #059669; }
 
 /* ── Promo ── */
-.promo-section {
-    display: flex;
-    background: var(--card-2);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    padding: 4px;
-    margin-bottom: 16px;
-    position: relative;
-    transition: border-color 0.15s ease, box-shadow 0.15s ease;
-}
-.promo-section:focus-within {
-    border-color: var(--accent-border);
-    box-shadow: 0 0 12px var(--accent-soft);
-}
+.promo-section { display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
 .promo-input {
-    flex: 1;
-    background: transparent;
-    border: none;
-    color: var(--text-1);
-    padding: 10px 12px;
-    font-size: 14px;
-    font-weight: 600;
-    text-transform: uppercase;
+    flex: 1; min-width: 140px; background: var(--card-2); border: 1px solid var(--border);
+    color: var(--text-1); padding: 11px 14px; border-radius: var(--r-s);
+    font-size: 14px; text-transform: uppercase; transition: border-color 0.15s ease;
 }
-.promo-input:focus {
-    outline: none;
-}
-.promo-input::placeholder {
-    text-transform: none;
-    color: var(--text-3);
-    font-weight: 400;
-}
+.promo-input:focus { outline: none; border-color: var(--accent); }
+.promo-input::placeholder { text-transform: none; color: var(--text-3); }
 .promo-btn {
-    background: var(--accent);
-    color: #fff;
-    border: none;
-    padding: 10px 16px;
-    border-radius: 10px;
-    cursor: pointer;
-    font-size: 13px;
-    font-weight: 700;
-    white-space: nowrap;
-    transition: transform 0.12s ease, filter 0.15s ease;
+    background: var(--accent-soft); border: 1px solid var(--accent-border);
+    color: var(--accent-2); padding: 10px 16px; border-radius: var(--r-s); cursor: pointer;
+    font-size: 14px; font-weight: 600; white-space: nowrap;
 }
-.promo-btn:active {
-    transform: scale(0.96);
-}
-.promo-btn:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
-.promo-status {
-    position: absolute;
-    top: 100%;
-    left: 4px;
-    font-size: 11px;
-    font-weight: 600;
-    padding: 4px 0 0;
-}
+.promo-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.promo-status { width: 100%; font-size: 12.5px; padding: 2px 0 0; }
 .promo-status:empty { display: none; }
 .promo-success { color: var(--green); }
 .promo-error { color: var(--accent-2); }
