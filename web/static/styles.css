@@ -134,7 +134,8 @@ body.theme-light .particle-red { background: rgba(229, 72, 77, 0.55); box-shadow
 /* ── Header ── */
 .header { display: flex; justify-content: space-between; align-items: center; padding: 18px 16px 14px; position: relative; z-index: 1; }
 .logo { font-size: 22px; font-weight: 800; font-style: italic; letter-spacing: -0.02em; display: flex; align-items: center; gap: 7px; }
-.logo .logo-accent { color: var(--accent-2); }
+.logo-title { color: var(--text-1); }
+.logo-title span { color: var(--accent-2); }
 .balance-card {
     background: var(--card);
     border-radius: 999px; padding: 7px 8px 7px 14px; display: flex; align-items: center; gap: 10px;
