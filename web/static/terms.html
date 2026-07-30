@@ -614,10 +614,10 @@
   var c = document.querySelector('.bg-mesh');
   if (!c) return;
   var frag = document.createDocumentFragment();
-  for (var i = 0; i < 18; i++) {
+  for (var i = 0; i < 6; i++) {
     var p = document.createElement('i');
     p.className = Math.random() < 0.28 ? 'particle particle-red' : 'particle';
-    var size = 6 + Math.random() * 10;
+    var size = 14 + Math.random() * 21;
     var time = 40 + Math.random() * 40;
     p.style.cssText = 'left:' + (Math.random() * 100).toFixed(1) + '%;'
       + 'width:' + size.toFixed(1) + 'px;height:' + size.toFixed(1) + 'px;'
