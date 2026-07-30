@@ -364,12 +364,11 @@ var USER = {
 // ── REAL APP ICONS ─────────────────────────────────────────────────────
 var ICONS = {
   happ:         'https://is1-ssl.mzstatic.com/image/thumb/Purple221/v4/53/a8/9a/53a89a23-9c9d-779f-3ba8-4c0bd6ccce9b/AppIcon-0-0-1x_U007epad-0-0-0-1-0-0-sRGB-85-220.png/512x512bb.jpg',
-  shadowrocket: 'https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/44/d3/df/44d3df14-cf72-37d1-6e61-582f7023b90e/AppIcon-0-0-1x_U007epad-0-1-0-sRGB-85-220.png/512x512bb.jpg',
   streisand:    'https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/fb/fd/e7/fbfde74a-55a9-6dc5-e0dc-38b927b0f46f/AppIcon-0-0-1x_U007epad-0-0-0-1-0-85-220.png/512x512bb.jpg',
   v2raytun:     'https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/dc/17/de/dc17de36-3c79-0d89-aca3-09e2b600ed25/AppIcon-0-0-1x_U007epad-0-1-85-220.png/512x512bb.jpg',
-  clashmi:      'https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/26/60/7a/26607aaf-ae8e-fe67-b366-a8f47fd34e57/AppIcon-0-1x_U007emarketing-0-11-0-85-220-0.png/512x512bb.jpg',
   rabbithole:   'https://is1-ssl.mzstatic.com/image/thumb/Purple221/v4/66/53/50/665350c1-f4bb-08e9-653b-d1266d7c4c41/AppIcon-0-0-1x_U007epad-0-0-0-1-0-0-85-220.png/512x512bb.jpg',
   incy:         'https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/0f/03/cd/0f03cd56-3128-216b-83ea-2a85aef0fd52/AppIcon-0-0-1x_U007epad-0-11-0-85-220.png/512x512bb.jpg',
+  clashmi:      'https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/26/60/7a/26607aaf-ae8e-fe67-b366-a8f47fd34e57/AppIcon-0-1x_U007emarketing-0-11-0-85-220-0.png/512x512bb.jpg',
   hiddify:      'https://raw.githubusercontent.com/hiddify/hiddify-app/main/assets/images/logo.svg',
   clashverge:   'https://raw.githubusercontent.com/clash-verge-rev/clash-verge-rev/main/src-tauri/icons/icon.png',
   v2rayng:      'https://raw.githubusercontent.com/2dust/v2rayNG/master/V2rayNG/app/src/main/res/mipmap-xhdpi/ic_launcher.png',
@@ -428,12 +427,6 @@ var PLATFORMS = [
         install: { desc: 'Установите RabbitHole из App Store.', btns: [{label:'App Store', url:'https://apps.apple.com/app/id6683309629', ext:true}] },
         subscribe: { deeplink: true },
         connect: { desc: 'Выберите сервер и нажмите Connect.' }
-      },
-      {
-        id: 'shadowrocket', name: 'Shadowrocket', iconId: 'shadowrocket',
-        install: { desc: 'Shadowrocket — платное приложение. Требуется аккаунт App Store с поддержкой платных приложений.', btns: [{label:'App Store', url:'https://apps.apple.com/app/id932747118', ext:true}] },
-        subscribe: { deeplink: true },
-        connect: { desc: 'Нажмите кнопку подключения рядом с нужным сервером.' }
       },
     ]
   },
@@ -803,7 +796,6 @@ async function makeIncyDeepLink(url) {
 // ── APP DEEPLINK SCHEMES ──────────────────────────────────────────────
 var APP_SCHEMES = {
   happ:         makeHappDeepLink,
-  shadowrocket: 'shadowrocket://add?url=',
   clashmi:      'clash://install-config?url=',
   flclashx:     'clash://install-config?url=',
   clashverge:   'clash://install-config?url=',
