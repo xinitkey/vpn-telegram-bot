@@ -52,29 +52,31 @@
     html { scroll-behavior: smooth; }
 
     .bg-mesh { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
-    .particle {
-      position: absolute; border-radius: 50%;
-      background: rgba(255,255,255,.15);
-      box-shadow: 0 0 80px 30px rgba(255,255,255,.06);
-      filter: blur(18px);
+    .droplet {
+      position: absolute; top: -18px;
+      border-radius: 50% 50% 50% 50% / 25% 25% 75% 75%;
+      background: linear-gradient(180deg, rgba(255,255,255,.6) 0%, rgba(180,210,255,.18) 100%);
+      box-shadow: 0 0 5px 1px rgba(255,255,255,.1);
       opacity: 0;
-      animation: particle-float var(--p-time,24s) linear infinite;
-      animation-delay: var(--p-delay,0s);
+      animation: droplet-fall var(--d-dur,7s) ease-in infinite;
+      animation-delay: var(--d-delay,0s);
       will-change: transform, opacity;
     }
-    .particle-red {
-      background: rgba(242,85,90,.3);
-      box-shadow: 0 0 80px 30px rgba(229,72,77,.12);
+    .droplet-red {
+      background: linear-gradient(180deg, rgba(242,85,90,.45) 0%, rgba(220,60,70,.12) 100%);
+      box-shadow: 0 0 5px 1px rgba(229,72,77,.12);
     }
     @media (prefers-color-scheme: light) {
-      .particle { background: rgba(25,20,15,.1); box-shadow: 0 0 60px 20px rgba(25,20,15,.03); }
-      .particle-red { background: rgba(229,72,77,.2); box-shadow: 0 0 60px 20px rgba(229,72,77,.08); }
+      .droplet { background: linear-gradient(180deg, rgba(25,20,15,.35) 0%, rgba(30,40,60,.1) 100%); box-shadow: 0 0 3px 1px rgba(25,20,15,.06); }
+      .droplet-red { background: linear-gradient(180deg, rgba(229,72,77,.3) 0%, rgba(180,40,50,.08) 100%); box-shadow: 0 0 3px 1px rgba(229,72,77,.08); }
     }
-    @keyframes particle-float {
-      0% { transform: translate3d(0,0,0); opacity: 0; }
-      10% { opacity: 1; }
-      85% { opacity: 1; }
-      100% { transform: translate3d(var(--p-tx),var(--p-ty),0); opacity: 0; }
+    @keyframes droplet-fall {
+      0% { transform: translateY(0) scale(1); opacity: 0; }
+      5% { opacity: .7; }
+      82% { transform: translateY(calc(100vh - 86px)) scale(1); opacity: .7; }
+      88% { transform: translateY(calc(100vh - 86px)) scale(1.8); opacity: .4; }
+      94% { transform: translateY(calc(100vh - 86px)) scale(3.5); opacity: .1; }
+      100% { transform: translateY(calc(100vh - 86px)) scale(5); opacity: 0; }
     }
 
     body {
@@ -581,29 +583,15 @@
   if (!c) return;
   var frag = document.createDocumentFragment();
   function rand(a,b){return a+Math.random()*(b-a)}
-  var DIRS=['up','down','left','right','diag-tr','diag-tl','diag-br','diag-bl'];
-  for(var i=0;i<3;i++){
-    var p=document.createElement('i');
-    p.className=Math.random()<0.28?'particle particle-red':'particle';
-    var size=20+Math.random()*30,time=50+Math.random()*40;
-    var dir=DIRS[Math.floor(Math.random()*DIRS.length)],drift=rand(-15,15);
-    var left,top,tx,ty;
-    switch(dir){
-      case'up':left=rand(0,100);top=rand(105,120);tx=drift+'vw';ty=-(120+rand(0,20))+'vh';break;
-      case'down':left=rand(0,100);top=rand(-20,-5);tx=drift+'vw';ty=120+rand(0,20)+'vh';break;
-      case'left':left=rand(105,120);top=rand(0,100);tx=-(120+rand(0,20))+'vw';ty=drift+'vh';break;
-      case'right':left=rand(-20,-5);top=rand(0,100);tx=120+rand(0,20)+'vw';ty=drift+'vh';break;
-      case'diag-tr':left=rand(-20,-5);top=rand(105,120);tx=120+rand(0,20)+'vw';ty=-(120+rand(0,20))+'vh';break;
-      case'diag-tl':left=rand(105,120);top=rand(105,120);tx=-(120+rand(0,20))+'vw';ty=-(120+rand(0,20))+'vh';break;
-      case'diag-br':left=rand(-20,-5);top=rand(-20,-5);tx=120+rand(0,20)+'vw';ty=120+rand(0,20)+'vh';break;
-      case'diag-bl':left=rand(105,120);top=rand(-20,-5);tx=-(120+rand(0,20))+'vw';ty=120+rand(0,20)+'vh';break;
-    }
-    p.style.cssText='left:'+left.toFixed(1)+'%;top:'+top.toFixed(1)+'%;'
-      +'width:'+size.toFixed(1)+'vw;height:'+size.toFixed(1)+'vw;'
-      +'--p-time:'+time.toFixed(1)+'s;'
-      +'--p-delay:'+(-Math.random()*time).toFixed(1)+'s;'
-      +'--p-tx:'+tx+';--p-ty:'+ty+';';
-    frag.appendChild(p);
+  for(var i=0;i<8;i++){
+    var d=document.createElement('i');
+    d.className=Math.random()<0.15?'droplet droplet-red':'droplet';
+    var left=rand(2,98),w=rand(3,9),h=w*rand(1.5,2.2),dur=rand(5,11),delay=rand(0,16);
+    d.style.cssText='left:'+left.toFixed(1)+'%;'
+      +'width:'+w.toFixed(1)+'px;height:'+h.toFixed(1)+'px;'
+      +'--d-dur:'+dur.toFixed(1)+'s;'
+      +'--d-delay:'+(-delay).toFixed(1)+'s;';
+    frag.appendChild(d);
   }
   c.appendChild(frag);
 })();

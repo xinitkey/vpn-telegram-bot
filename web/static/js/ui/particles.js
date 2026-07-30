@@ -1,6 +1,5 @@
-const COUNT = 3;
-const RED_RATIO = 0.28;
-const DIRECTIONS = ['up', 'down', 'left', 'right', 'diag-tr', 'diag-tl', 'diag-br', 'diag-bl'];
+const COUNT = 8;
+const RED_RATIO = 0.15;
 
 function rand(min, max) { return min + Math.random() * (max - min); }
 
@@ -10,58 +9,21 @@ export function initParticles(container = document.querySelector('.bg-mesh'), co
 
     const frag = document.createDocumentFragment();
     for (let i = 0; i < count; i++) {
-        const p = document.createElement('i');
-        p.className = Math.random() < RED_RATIO ? 'particle particle-red' : 'particle';
+        const d = document.createElement('i');
+        d.className = Math.random() < RED_RATIO ? 'droplet droplet-red' : 'droplet';
 
-        const size = 20 + Math.random() * 30;
-        const time = 50 + Math.random() * 40;
-        const dir = DIRECTIONS[Math.floor(Math.random() * DIRECTIONS.length)];
-        const drift = rand(-15, 15);
+        const left = rand(2, 98);
+        const w = rand(3, 9);              // width, px
+        const h = w * rand(1.5, 2.2);      // height, px
+        const dur = rand(5, 11);
+        const delay = rand(0, 16);
 
-        let left, top, tx, ty;
-
-        switch (dir) {
-            case 'up':
-                left = rand(0, 100); top = rand(105, 120);
-                tx = drift + 'vw'; ty = -(120 + rand(0, 20)) + 'vh';
-                break;
-            case 'down':
-                left = rand(0, 100); top = rand(-20, -5);
-                tx = drift + 'vw'; ty = 120 + rand(0, 20) + 'vh';
-                break;
-            case 'left':
-                left = rand(105, 120); top = rand(0, 100);
-                tx = -(120 + rand(0, 20)) + 'vw'; ty = drift + 'vh';
-                break;
-            case 'right':
-                left = rand(-20, -5); top = rand(0, 100);
-                tx = 120 + rand(0, 20) + 'vw'; ty = drift + 'vh';
-                break;
-            case 'diag-tr':
-                left = rand(-20, -5); top = rand(105, 120);
-                tx = 120 + rand(0, 20) + 'vw'; ty = -(120 + rand(0, 20)) + 'vh';
-                break;
-            case 'diag-tl':
-                left = rand(105, 120); top = rand(105, 120);
-                tx = -(120 + rand(0, 20)) + 'vw'; ty = -(120 + rand(0, 20)) + 'vh';
-                break;
-            case 'diag-br':
-                left = rand(-20, -5); top = rand(-20, -5);
-                tx = 120 + rand(0, 20) + 'vw'; ty = 120 + rand(0, 20) + 'vh';
-                break;
-            case 'diag-bl':
-                left = rand(105, 120); top = rand(-20, -5);
-                tx = -(120 + rand(0, 20)) + 'vw'; ty = 120 + rand(0, 20) + 'vh';
-                break;
-        }
-
-        p.style.cssText =
-            `left:${left.toFixed(1)}%;top:${top.toFixed(1)}%;` +
-            `width:${size.toFixed(1)}vw;height:${size.toFixed(1)}vw;` +
-            `--p-time:${time.toFixed(1)}s;` +
-            `--p-delay:${(-Math.random() * time).toFixed(1)}s;` +
-            `--p-tx:${tx};--p-ty:${ty};`;
-        frag.appendChild(p);
+        d.style.cssText =
+            `left:${left.toFixed(1)}%;` +
+            `width:${w.toFixed(1)}px;height:${h.toFixed(1)}px;` +
+            `--d-dur:${dur.toFixed(1)}s;` +
+            `--d-delay:${(-delay).toFixed(1)}s;`;
+        frag.appendChild(d);
     }
     container.appendChild(frag);
 }
