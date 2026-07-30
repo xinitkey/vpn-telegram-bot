@@ -767,11 +767,26 @@ async function makeIncyDeepLink(url) {
 }
 
 // ── APP DEEPLINK SCHEMES ──────────────────────────────────────────────
+function makeSubStoreDeepLink(prefix) {
+  return async function(url) {
+    var content = USER.subContent;
+    if (!content) return null;
+    try {
+      var resp = await fetch(window.location.origin + '/api/sub-store', {method: 'POST', body: content});
+      if (resp.ok) {
+        var data = await resp.json();
+        if (data.token) return prefix + window.location.origin + '/api/sub-store/' + data.token;
+      }
+    } catch(e) {}
+    return null;
+  };
+}
+
 var APP_SCHEMES = {
   happ:         makeHappDeepLink,
   clashmi:      'clash://install-config?url=',
-  rabbithole:   'rabbithole://add/',
-  v2raytun:     'v2raytun://import/',
+  rabbithole:   makeSubStoreDeepLink('rabbithole://add/'),
+  v2raytun:     makeSubStoreDeepLink('v2raytun://import/'),
   hiddify:      'hiddify://import/',
   v2rayng:      'v2rayng://install-sub?url=',
   incy:         makeIncyDeepLink,
