@@ -108,23 +108,23 @@ button { font-family: inherit; color: inherit; }
 .particle {
     position: absolute; bottom: -10px;
     border-radius: 50%;
-    background: rgba(255, 255, 255, 0.15);
-    box-shadow: 0 0 6px rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.45);
+    box-shadow: 0 0 8px rgba(255, 255, 255, 0.3);
     opacity: 0;
     animation: particle-rise var(--p-time, 24s) linear infinite;
     animation-delay: var(--p-delay, 0s);
     will-change: transform, opacity;
 }
 .particle-red {
-    background: rgba(242, 85, 90, 0.35);
-    box-shadow: 0 0 8px rgba(229, 72, 77, 0.25);
+    background: rgba(242, 85, 90, 0.75);
+    box-shadow: 0 0 10px rgba(229, 72, 77, 0.55);
 }
-body.theme-light .particle { background: rgba(25, 20, 15, 0.12); box-shadow: 0 0 4px rgba(25, 20, 15, 0.08); }
-body.theme-light .particle-red { background: rgba(229, 72, 77, 0.25); box-shadow: 0 0 6px rgba(229, 72, 77, 0.15); }
+body.theme-light .particle { background: rgba(25, 20, 15, 0.3); box-shadow: 0 0 6px rgba(25, 20, 15, 0.18); }
+body.theme-light .particle-red { background: rgba(229, 72, 77, 0.55); box-shadow: 0 0 8px rgba(229, 72, 77, 0.35); }
 @keyframes particle-rise {
     0% { transform: translate3d(0, 0, 0); opacity: 0; }
-    10% { opacity: 0.35; }
-    85% { opacity: 0.35; }
+    10% { opacity: 1; }
+    85% { opacity: 1; }
     100% { transform: translate3d(var(--p-drift, 4vw), -105vh, 0); opacity: 0; }
 }
 
