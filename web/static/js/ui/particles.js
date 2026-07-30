@@ -33,16 +33,25 @@ export function initParticles(container = document.querySelector('.bg-mesh'), co
             `--sr-dur:1.4s;--sr-delay:${(ringStart - 1.4).toFixed(1)}s;`;
         frag.appendChild(ring);
 
-        const sprayCount = 2 + Math.floor(Math.random() * 2);
+        const ring2 = document.createElement('i');
+        ring2.className = isRed ? 'splash-ring-2 splash-ring-red-2' : 'splash-ring-2';
+        ring2.style.cssText =
+            `left:${left.toFixed(1)}%;` +
+            `--sr2-dur:2s;--sr2-delay:${(ringStart - 2).toFixed(1)}s;`;
+        frag.appendChild(ring2);
+
+        const sprayCount = 3 + Math.floor(Math.random() * 3);
         for (let j = 0; j < sprayCount; j++) {
             const s = document.createElement('i');
             s.className = isRed ? 'spray spray-red' : 'spray';
-            const spX = rand(-22, 22);
-            const spY = rand(-18, -40);
-            const sDur = rand(0.5, 0.9);
+            const spX = rand(-35, 35);
+            const spY = rand(-15, -50);
+            const sDur = rand(0.4, 1);
+            const sSz = rand(1.5, 4);
             const sDelay = dur * 0.84 + delay;
             s.style.cssText =
-                `left:${(left + rand(-1, 1)).toFixed(1)}%;bottom:2px;` +
+                `left:${(left + rand(-1.5, 1.5)).toFixed(1)}%;bottom:2px;` +
+                `width:${sSz.toFixed(1)}px;height:${sSz.toFixed(1)}px;` +
                 `--sp-x:${spX.toFixed(1)}px;--sp-y:${spY.toFixed(1)}px;` +
                 `--sp-dur:${sDur.toFixed(2)}s;--sp-delay:${(sDelay - sDur).toFixed(2)}s;`;
             frag.appendChild(s);
