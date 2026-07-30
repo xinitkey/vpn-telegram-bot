@@ -966,6 +966,11 @@ async function importSub(btn) {
     }
   }
 
+  if (USER.subContent && url === USER.subUrl && typeof APP_SCHEMES[state.appId] !== 'function') {
+    var pUrl = await protectUrl();
+    if (pUrl) url = pUrl;
+  }
+
   var scheme = APP_SCHEMES[state.appId];
   if (typeof scheme === 'function') {
     deepLink = await scheme(url);
@@ -980,8 +985,7 @@ async function importSub(btn) {
     deepLink = url;
   }
 
-  var clipUrl = await protectUrl();
-  navigator.clipboard.writeText(clipUrl || deepLink);
+  navigator.clipboard.writeText(deepLink);
 
   var notFound = document.getElementById('app-not-found');
   notFound.classList.remove('show');
@@ -1030,18 +1034,21 @@ async function copySub(btn) {
   var url = USER.subUrl;
   var scheme = APP_SCHEMES[state.appId];
   var copyUrl = url;
+  if (typeof scheme !== 'function' && USER.subContent) {
+    var pUrl = await protectUrl();
+    if (pUrl) copyUrl = pUrl;
+  }
   if (typeof scheme === 'function') {
-    var dl = await scheme(url);
+    var dl = await scheme(copyUrl);
     if (dl) copyUrl = dl;
   } else if (scheme) {
     if (scheme.indexOf('?url=') !== -1) {
-      copyUrl = scheme + encodeURIComponent(url);
+      copyUrl = scheme + encodeURIComponent(copyUrl);
     } else {
-      copyUrl = scheme + url;
+      copyUrl = scheme + copyUrl;
     }
   }
-  var clipUrl = await protectUrl();
-  navigator.clipboard.writeText(clipUrl || copyUrl).then(function(){
+  navigator.clipboard.writeText(copyUrl).then(function(){
     var lbl = document.getElementById('copySubLabel');
     lbl.textContent = 'Скопировано!';
     btn.classList.add('copied');
