@@ -102,48 +102,30 @@ button { font-family: inherit; color: inherit; }
 .balance-amount, .days, .di-value, .tariff-price { font-variant-numeric: tabular-nums; }
 
 /* ── Background ── */
-/* ── Animated aurora background ── */
+/* ── Animated background: solid bg + rising particles ── */
 .bg-mesh { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
-.orb {
-    position: absolute; border-radius: 50%;
-    filter: blur(56px); -webkit-filter: blur(56px);
-    will-change: transform;
+.particle {
+    position: absolute; bottom: -10px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.45);
+    box-shadow: 0 0 8px rgba(255, 255, 255, 0.3);
+    opacity: 0;
+    animation: particle-rise var(--p-time, 24s) linear infinite;
+    animation-delay: var(--p-delay, 0s);
+    will-change: transform, opacity;
 }
-.orb-1 {
-    width: 60vmax; height: 60vmax; top: -25%; left: -18%;
-    background: radial-gradient(circle at 38% 38%, rgba(229, 72, 77, 0.34), rgba(229, 72, 77, 0) 64%);
-    animation: orb-drift-1 14s ease-in-out infinite alternate;
+.particle-red {
+    background: rgba(242, 85, 90, 0.75);
+    box-shadow: 0 0 10px rgba(229, 72, 77, 0.55);
 }
-.orb-2 {
-    width: 48vmax; height: 48vmax; bottom: -18%; right: -12%;
-    background: radial-gradient(circle at 42% 42%, rgba(255, 112, 82, 0.2), rgba(255, 112, 82, 0) 62%);
-    animation: orb-drift-2 18s ease-in-out infinite alternate;
+body.theme-light .particle { background: rgba(25, 20, 15, 0.3); box-shadow: 0 0 6px rgba(25, 20, 15, 0.18); }
+body.theme-light .particle-red { background: rgba(229, 72, 77, 0.55); box-shadow: 0 0 8px rgba(229, 72, 77, 0.35); }
+@keyframes particle-rise {
+    0% { transform: translate3d(0, 0, 0); opacity: 0; }
+    10% { opacity: 1; }
+    85% { opacity: 1; }
+    100% { transform: translate3d(var(--p-drift, 4vw), -105vh, 0); opacity: 0; }
 }
-.orb-3 {
-    width: 42vmax; height: 42vmax; top: 32%; left: 52%;
-    background: radial-gradient(circle at 50% 50%, rgba(122, 32, 62, 0.18), rgba(122, 32, 62, 0) 60%);
-    animation: orb-drift-3 22s ease-in-out infinite alternate;
-}
-@keyframes orb-drift-1 {
-    from { transform: translate3d(0, 0, 0) scale(1) rotate(0deg); }
-    to { transform: translate3d(16vw, 12vh, 0) scale(1.18) rotate(18deg); }
-}
-@keyframes orb-drift-2 {
-    from { transform: translate3d(0, 0, 0) scale(1) rotate(0deg); }
-    to { transform: translate3d(-14vw, -16vh, 0) scale(1.12) rotate(-15deg); }
-}
-@keyframes orb-drift-3 {
-    from { transform: translate3d(0, 0, 0) scale(1); }
-    to { transform: translate3d(-18vw, 10vh, 0) scale(0.9); }
-}
-body.theme-light .orb { opacity: 0.45; }
-
-/* film grain — hides blur banding, adds texture */
-.bg-mesh::after {
-    content: ''; position: absolute; inset: 0; opacity: 0.032;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
-}
-body.theme-light .bg-mesh::after { opacity: 0.02; }
 
 .dev-notice { display: none; background: var(--card-2); color: var(--text-3); text-align: center; padding: 6px; font-size: 12px; position: relative; z-index: 1; }
 .dev-notice a { color: var(--accent-2); text-decoration: none; font-weight: 600; }
@@ -633,5 +615,4 @@ button:focus:not(:focus-visible) { outline: none; }
 
 @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { animation: none !important; transition: none !important; }
-    .orb { animation: none !important; }
 }

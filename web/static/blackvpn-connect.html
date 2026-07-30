@@ -44,40 +44,31 @@ body{transition:background-color .25s ease,color .25s ease}
 html{-webkit-font-smoothing:antialiased;scroll-behavior:smooth}
 body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100dvh;font-size:15px;line-height:1.5}
 
-/* ── BACKGROUND (animated aurora) ── */
+/* ── BACKGROUND: solid + rising particles ── */
 .bg-mesh{
   position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;
 }
-.orb{
-  position:absolute;border-radius:50%;
-  filter:blur(56px);-webkit-filter:blur(56px);
-  will-change:transform;
+.particle{
+  position:absolute;bottom:-10px;border-radius:50%;
+  background:rgba(255,255,255,.45);
+  box-shadow:0 0 8px rgba(255,255,255,.3);
+  opacity:0;
+  animation:particle-rise var(--p-time,24s) linear infinite;
+  animation-delay:var(--p-delay,0s);
+  will-change:transform,opacity;
 }
-.orb-1{
-  width:60vmax;height:60vmax;top:-25%;left:-18%;
-  background:radial-gradient(circle at 38% 38%, rgba(229,72,77,.32), rgba(229,72,77,0) 64%);
-  animation:orb-drift-1 14s ease-in-out infinite alternate;
+.particle-red{
+  background:rgba(242,85,90,.75);
+  box-shadow:0 0 10px rgba(229,72,77,.55);
 }
-.orb-2{
-  width:48vmax;height:48vmax;bottom:-18%;right:-12%;
-  background:radial-gradient(circle at 42% 42%, rgba(255,112,82,.19), rgba(255,112,82,0) 62%);
-  animation:orb-drift-2 18s ease-in-out infinite alternate;
+body.theme-light .particle{background:rgba(25,20,15,.3);box-shadow:0 0 6px rgba(25,20,15,.18)}
+body.theme-light .particle-red{background:rgba(229,72,77,.55);box-shadow:0 0 8px rgba(229,72,77,.35)}
+@keyframes particle-rise{
+  0%{transform:translate3d(0,0,0);opacity:0}
+  10%{opacity:1}
+  85%{opacity:1}
+  100%{transform:translate3d(var(--p-drift,4vw),-105vh,0);opacity:0}
 }
-.orb-3{
-  width:42vmax;height:42vmax;top:32%;left:52%;
-  background:radial-gradient(circle at 50% 50%, rgba(122,32,62,.17), rgba(122,32,62,0) 60%);
-  animation:orb-drift-3 22s ease-in-out infinite alternate;
-}
-@keyframes orb-drift-1{from{transform:translate3d(0,0,0) scale(1) rotate(0deg)}to{transform:translate3d(16vw,12vh,0) scale(1.18) rotate(18deg)}}
-@keyframes orb-drift-2{from{transform:translate3d(0,0,0) scale(1) rotate(0deg)}to{transform:translate3d(-14vw,-16vh,0) scale(1.12) rotate(-15deg)}}
-@keyframes orb-drift-3{from{transform:translate3d(0,0,0) scale(1)}to{transform:translate3d(-18vw,10vh,0) scale(0.9)}}
-body.theme-light .orb{opacity:.45}
-.bg-mesh::after{
-  content:'';position:absolute;inset:0;opacity:.032;
-  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
-}
-body.theme-light .bg-mesh::after{opacity:.02}
-@media (prefers-reduced-motion: reduce){.orb{animation:none !important}}
 
 /* ── LAYOUT ── */
 .wrap{position:relative;z-index:1;max-width:680px;margin:0 auto;padding:0 16px 64px}
@@ -273,7 +264,7 @@ header{
 </style>
 </head>
 <body>
-<div class="bg-mesh"><i class="orb orb-1"></i><i class="orb orb-2"></i><i class="orb orb-3"></i></div>
+<div class="bg-mesh"></div>
 <div class="wrap">
 
 <!-- HEADER -->
@@ -1159,6 +1150,27 @@ function detectPlatform(){
 renderSub();
 selectPlat(detectPlatform());
 loadConnectData();
+</script>
+<script>
+(function(){
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  var c = document.querySelector('.bg-mesh');
+  if (!c) return;
+  var frag = document.createDocumentFragment();
+  for (var i = 0; i < 18; i++) {
+    var p = document.createElement('i');
+    p.className = Math.random() < 0.28 ? 'particle particle-red' : 'particle';
+    var size = 2 + Math.random() * 3;
+    var time = 16 + Math.random() * 20;
+    p.style.cssText = 'left:' + (Math.random() * 100).toFixed(1) + '%;'
+      + 'width:' + size.toFixed(1) + 'px;height:' + size.toFixed(1) + 'px;'
+      + '--p-time:' + time.toFixed(1) + 's;'
+      + '--p-delay:' + (-Math.random() * time).toFixed(1) + 's;'
+      + '--p-drift:' + (Math.random() * 12 - 6).toFixed(1) + 'vw;';
+    frag.appendChild(p);
+  }
+  c.appendChild(frag);
+})();
 </script>
 </body>
 </html>

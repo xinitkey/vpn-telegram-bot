@@ -8,6 +8,7 @@ import { state, setState, subscribe, resetPromo } from './store.js';
 import * as fmt from './format.js';
 import { initModals, openModal, closeModal, showDialog, alertDialog } from './ui/modal.js';
 import { toast } from './ui/toast.js';
+import { initParticles } from './ui/particles.js';
 
 // ── Config ──────────────────────────────────────────────────────────────
 // Fallback mirror of /api/config — lets the app work even if the endpoint
@@ -693,6 +694,7 @@ function bindEvents() {
 function init() {
     initTelegram();
     initTheme();
+    initParticles();
     if (!isTelegram) els.devNotice.style.display = 'block';
     document.body.classList.add('app-loading');
 
