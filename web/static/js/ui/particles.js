@@ -13,8 +13,8 @@ export function initParticles(container = document.querySelector('.bg-mesh'), co
     for (let i = 0; i < count; i++) {
         const p = document.createElement('i');
         p.className = Math.random() < RED_RATIO ? 'particle particle-red' : 'particle';
-        const size = 2 + Math.random() * 3;                 // 2–5px
-        const time = 16 + Math.random() * 20;               // 16–36s per rise
+        const size = 6 + Math.random() * 10;                // 6–16px
+        const time = 40 + Math.random() * 40;               // 40–80s per rise
         p.style.cssText =
             `left:${(Math.random() * 100).toFixed(1)}%;` +
             `width:${size.toFixed(1)}px;height:${size.toFixed(1)}px;` +

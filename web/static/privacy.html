@@ -56,6 +56,7 @@
       position: absolute; bottom: -10px; border-radius: 50%;
       background: rgba(255,255,255,.45);
       box-shadow: 0 0 8px rgba(255,255,255,.3);
+      filter: blur(5px);
       opacity: 0;
       animation: particle-rise var(--p-time,24s) linear infinite;
       animation-delay: var(--p-delay,0s);
@@ -582,8 +583,8 @@
   for (var i = 0; i < 18; i++) {
     var p = document.createElement('i');
     p.className = Math.random() < 0.28 ? 'particle particle-red' : 'particle';
-    var size = 2 + Math.random() * 3;
-    var time = 16 + Math.random() * 20;
+    var size = 6 + Math.random() * 10;
+    var time = 40 + Math.random() * 40;
     p.style.cssText = 'left:' + (Math.random() * 100).toFixed(1) + '%;'
       + 'width:' + size.toFixed(1) + 'px;height:' + size.toFixed(1) + 'px;'
       + '--p-time:' + time.toFixed(1) + 's;'

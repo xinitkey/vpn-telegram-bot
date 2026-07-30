@@ -110,6 +110,7 @@ button { font-family: inherit; color: inherit; }
     border-radius: 50%;
     background: rgba(255, 255, 255, 0.45);
     box-shadow: 0 0 8px rgba(255, 255, 255, 0.3);
+    filter: blur(5px);
     opacity: 0;
     animation: particle-rise var(--p-time, 24s) linear infinite;
     animation-delay: var(--p-delay, 0s);
