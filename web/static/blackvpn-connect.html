@@ -370,7 +370,6 @@ var ICONS = {
   incy:         'https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/0f/03/cd/0f03cd56-3128-216b-83ea-2a85aef0fd52/AppIcon-0-0-1x_U007epad-0-11-0-85-220.png/512x512bb.jpg',
   clashmi:      'https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/26/60/7a/26607aaf-ae8e-fe67-b366-a8f47fd34e57/AppIcon-0-1x_U007emarketing-0-11-0-85-220-0.png/512x512bb.jpg',
   hiddify:      'https://raw.githubusercontent.com/hiddify/hiddify-app/main/assets/images/logo.svg',
-  clashverge:   'https://raw.githubusercontent.com/clash-verge-rev/clash-verge-rev/main/src-tauri/icons/icon.png',
   v2rayng:      'https://raw.githubusercontent.com/2dust/v2rayNG/master/V2rayNG/app/src/main/res/mipmap-xhdpi/ic_launcher.png',
   flclashx:     'https://raw.githubusercontent.com/chen08209/FlClash/main/assets/images/icon.png',
 };
@@ -509,12 +508,6 @@ var PLATFORMS = [
         subscribe: { deeplink: true },
         connect: { desc: 'Нажмите Connect и разрешите VPN-соединение.' }
       },
-      {
-        id: 'clashverge', name: 'Clash Verge', iconId: 'clashverge',
-        install: { desc: 'Скачайте Clash Verge Rev с GitHub.', btns: [{label:'Скачать', url:'https://github.com/clash-verge-rev/clash-verge-rev/releases/latest', ext:true}] },
-        subscribe: { deeplink: true },
-        connect: { desc: 'Активируйте системный прокси и выберите сервер.' }
-      },
     ]
   },
   {
@@ -537,12 +530,6 @@ var PLATFORMS = [
         install: { desc: 'Скачайте AppImage или deb-пакет Hiddify с GitHub.', btns: [{label:'GitHub', url:'https://github.com/hiddify/hiddify-app/releases/latest', ext:true}] },
         subscribe: { deeplink: true },
         connect: { desc: 'Запустите приложение и нажмите Connect.' }
-      },
-      {
-        id: 'clashverge', name: 'Clash Verge', iconId: 'clashverge',
-        install: { desc: 'Установите Clash Verge Rev из пакета для Linux.', btns: [{label:'GitHub', url:'https://github.com/clash-verge-rev/clash-verge-rev/releases/latest', ext:true}] },
-        subscribe: { deeplink: true },
-        connect: { desc: 'Включите системный прокси и выберите нужный узел.' }
       },
     ]
   },
@@ -798,7 +785,6 @@ var APP_SCHEMES = {
   happ:         makeHappDeepLink,
   clashmi:      'clash://install-config?url=',
   flclashx:     'clash://install-config?url=',
-  clashverge:   'clash://install-config?url=',
   rabbithole:   'rabbithole://add/',
   hiddify:      'hiddify://import/',
   v2rayng:      'v2rayng://install-sub?url=',
@@ -834,7 +820,7 @@ function makeHappDeepLink(url) {
 }
 
 // ── SUBSCRIPTION CONVERTER (base64 → Clash YAML) ─────────────────
-var CLASH_APPS = ['clashmi', 'flclashx', 'clashverge'];
+var CLASH_APPS = ['clashmi', 'flclashx'];
 var SUB_CONVERTER_URL = window.location.origin + '/api/sub-convert/' + (userId || '');
 
 function vlessToYaml(text) {
