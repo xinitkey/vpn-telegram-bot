@@ -364,13 +364,7 @@ var USER = {
 // ── REAL APP ICONS ─────────────────────────────────────────────────────
 var ICONS = {
   happ:         'https://is1-ssl.mzstatic.com/image/thumb/Purple221/v4/53/a8/9a/53a89a23-9c9d-779f-3ba8-4c0bd6ccce9b/AppIcon-0-0-1x_U007epad-0-0-0-1-0-0-sRGB-85-220.png/512x512bb.jpg',
-  streisand:    'https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/fb/fd/e7/fbfde74a-55a9-6dc5-e0dc-38b927b0f46f/AppIcon-0-0-1x_U007epad-0-0-0-1-0-85-220.png/512x512bb.jpg',
-  v2raytun:     'https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/dc/17/de/dc17de36-3c79-0d89-aca3-09e2b600ed25/AppIcon-0-0-1x_U007epad-0-1-85-220.png/512x512bb.jpg',
-  rabbithole:   'https://is1-ssl.mzstatic.com/image/thumb/Purple221/v4/66/53/50/665350c1-f4bb-08e9-653b-d1266d7c4c41/AppIcon-0-0-1x_U007epad-0-0-0-1-0-0-85-220.png/512x512bb.jpg',
   incy:         'https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/0f/03/cd/0f03cd56-3128-216b-83ea-2a85aef0fd52/AppIcon-0-0-1x_U007epad-0-11-0-85-220.png/512x512bb.jpg',
-  clashmi:      'https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/26/60/7a/26607aaf-ae8e-fe67-b366-a8f47fd34e57/AppIcon-0-1x_U007emarketing-0-11-0-85-220-0.png/512x512bb.jpg',
-  hiddify:      'https://raw.githubusercontent.com/hiddify/hiddify-app/main/assets/images/logo.svg',
-  v2rayng:      'https://raw.githubusercontent.com/2dust/v2rayNG/master/V2rayNG/app/src/main/res/mipmap-xhdpi/ic_launcher.png',
 };
 
 var SVG_FALLBACK = {};
@@ -403,28 +397,10 @@ var PLATFORMS = [
         connect: { desc: 'В главном разделе нажмите большую кнопку включения. Выберите сервер из списка.' }
       },
       {
-        id: 'clashmi', name: 'Clash Mi', iconId: 'clashmi',
-        install: { desc: 'Установите Clash Mi из App Store.', btns: [{label:'App Store', url:'https://apps.apple.com/app/id6744321968', ext:true}] },
-        subscribe: { deeplink: true },
-        connect: { desc: 'Откройте приложение, выберите сервер и нажмите Connect.' }
-      },
-      {
         id: 'incy', name: 'INCY', iconId: 'incy',
         install: { desc: 'Установите INCY из App Store.', btns: [{label:'App Store', url:'https://apps.apple.com/app/id6756943388', ext:true}] },
         subscribe: { deeplink: true },
         connect: { desc: 'Подключитесь через кнопку включения в главном экране.' }
-      },
-      {
-        id: 'v2raytun', name: 'v2RayTun', iconId: 'v2raytun',
-        install: { desc: 'Установите v2RayTun из App Store.', btns: [{label:'App Store', url:'https://apps.apple.com/app/id6476628951', ext:true}] },
-        subscribe: { deeplink: true },
-        connect: { desc: 'Включите VPN через переключатель на главном экране.' }
-      },
-      {
-        id: 'rabbithole', name: 'RabbitHole', iconId: 'rabbithole',
-        install: { desc: 'Установите RabbitHole из App Store.', btns: [{label:'App Store', url:'https://apps.apple.com/app/id6683309629', ext:true}] },
-        subscribe: { deeplink: true },
-        connect: { desc: 'Выберите сервер и нажмите Connect.' }
       },
     ]
   },
@@ -443,18 +419,6 @@ var PLATFORMS = [
         subscribe: { deeplink: true },
         connect: { desc: 'Подключитесь через кнопку включения в главном экране.' }
       },
-      {
-        id: 'hiddify', name: 'Hiddify', iconId: 'hiddify',
-        install: { desc: 'Установите Hiddify из Google Play или скачайте APK напрямую.', btns: [{label:'Google Play', url:'https://play.google.com/store/apps/details?id=app.hiddify.com', ext:true}, {label:'Скачать APK', url:'https://github.com/hiddify/hiddify-app/releases/latest', ext:true}] },
-        subscribe: { deeplink: true },
-        connect: { desc: 'Нажмите кнопку подключения. При запросе разрешения VPN нажмите OK.' }
-      },
-      {
-        id: 'v2rayng', name: 'v2rayNG', iconId: 'v2rayng',
-        install: { desc: 'Установите v2rayNG c GitHub.', btns: [{label:'GitHub', url:'https://github.com/2dust/v2rayNG/releases/latest', ext:true}] },
-        subscribe: { deeplink: true },
-        connect: { desc: 'Выберите сервер из списка и нажмите кнопку запуска (треугольник).' }
-      },
     ]
   },
   {
@@ -471,12 +435,6 @@ var PLATFORMS = [
         install: { desc: 'Установите INCY из App Store для Mac.', btns: [{label:'App Store', url:'https://apps.apple.com/app/id6756943388', ext:true}] },
         subscribe: { deeplink: true },
         connect: { desc: 'Подключитесь через кнопку включения в главном экране.' }
-      },
-      {
-        id: 'rabbithole', name: 'RabbitHole', iconId: 'rabbithole',
-        install: { desc: 'Установите RabbitHole из App Store для Mac.', btns: [{label:'App Store', url:'https://apps.apple.com/app/id6683309629', ext:true}] },
-        subscribe: { deeplink: true },
-        connect: { desc: 'Выберите сервер и подключитесь.' }
       },
     ]
   },
@@ -495,12 +453,6 @@ var PLATFORMS = [
         subscribe: { deeplink: true },
         connect: { desc: 'Подключитесь через кнопку включения в главном экране.' }
       },
-      {
-        id: 'hiddify', name: 'Hiddify', iconId: 'hiddify',
-        install: { desc: 'Скачайте Hiddify для Windows с GitHub.', btns: [{label:'Скачать', url:'https://github.com/hiddify/hiddify-app/releases/latest', ext:true}] },
-        subscribe: { deeplink: true },
-        connect: { desc: 'Нажмите Connect и разрешите VPN-соединение.' }
-      },
     ]
   },
   {
@@ -517,12 +469,6 @@ var PLATFORMS = [
         install: { desc: 'Скачайте INCY для Linux с GitHub.', btns: [{label:'GitHub', url:'https://github.com/INCY-DEV/incy-platforms/releases', ext:true}] },
         subscribe: { deeplink: true },
         connect: { desc: 'Подключитесь через кнопку включения в главном экране.' }
-      },
-      {
-        id: 'hiddify', name: 'Hiddify', iconId: 'hiddify',
-        install: { desc: 'Скачайте AppImage или deb-пакет Hiddify с GitHub.', btns: [{label:'GitHub', url:'https://github.com/hiddify/hiddify-app/releases/latest', ext:true}] },
-        subscribe: { deeplink: true },
-        connect: { desc: 'Запустите приложение и нажмите Connect.' }
       },
     ]
   },
@@ -769,11 +715,6 @@ async function makeIncyDeepLink(url) {
 // ── APP DEEPLINK SCHEMES ──────────────────────────────────────────────
 var APP_SCHEMES = {
   happ:         makeHappDeepLink,
-  clashmi:      'clash://install-config?url=',
-  rabbithole:   'rabbithole://add/',
-  v2raytun:     'v2raytun://import/',
-  hiddify:      'hiddify://import/',
-  v2rayng:      'v2rayng://install-sub?url=',
   incy:         makeIncyDeepLink,
 };
 
@@ -804,24 +745,6 @@ function makeHappDeepLink(url) {
   } catch(e) {}
   return null;
 }
-
-// ── CLIPBOARD MASKING ──────────────────────────────────────────────
-async function protectUrl() {
-  var content = USER.subContent;
-  if (!content) return '';
-  try {
-    var resp = await fetch(window.location.origin + '/api/sub-store', {method: 'POST', body: content});
-    if (resp.ok) {
-      var data = await resp.json();
-      if (data.token) return window.location.origin + '/api/sub-store/' + data.token;
-    }
-  } catch(e) {}
-  return '';
-}
-
-// ── SUBSCRIPTION CONVERTER (base64 → Clash YAML) ─────────────────
-var CLASH_APPS = ['clashmi'];
-var SUB_CONVERTER_URL = window.location.origin + '/api/sub-convert/' + (userId || '');
 
 function vlessToYaml(text) {
   var lines;
@@ -931,40 +854,6 @@ function vlessToYaml(text) {
 async function importSub(btn) {
   var url = USER.subUrl;
   var deepLink = null;
-
-  if (CLASH_APPS.indexOf(state.appId) !== -1) {
-    var yaml = null;
-    if (USER.subContent) {
-      yaml = vlessToYaml(USER.subContent);
-    }
-    if (!(yaml && yaml.length > 100)) {
-      try {
-        var resp = await fetch(SUB_CONVERTER_URL);
-        if (resp.ok) yaml = await resp.text();
-      } catch(e) {}
-    }
-    if (yaml && yaml.length > 50) {
-      try {
-        var resp = await fetch(window.location.origin + '/api/sub-store', {method: 'POST', body: yaml});
-        if (resp.ok) {
-          var data = await resp.json();
-          if (data.token) url = window.location.origin + '/api/sub-store/' + data.token;
-        }
-      } catch(e) {}
-      if (url.indexOf('/api/sub-store/') === -1) {
-        var b64 = btoa(unescape(encodeURIComponent(yaml)));
-        url = 'data:text/yaml;charset=utf-8;base64,' + b64;
-      }
-      var blob = new Blob([yaml], {type: 'text/yaml'});
-      var a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = 'blackvpn.yaml';
-      a.style.display = 'none';
-      document.body.appendChild(a);
-      a.click();
-      setTimeout(function(){ URL.revokeObjectURL(a.href); document.body.removeChild(a); }, 500);
-    }
-  }
 
   var scheme = APP_SCHEMES[state.appId];
   if (typeof scheme === 'function') {
