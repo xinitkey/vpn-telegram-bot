@@ -129,7 +129,6 @@ def setup_routes(app: web.Application, bot: Bot, dp: Dispatcher):
             'vpnKey': user.link or 'Не создан',
             'subContent': sub_content,
             'dailyPrice': settings.TARIFF_DAILY_PRICE,
-            'subStoreBase': settings.SUB_STORE_BASE or '',
             'banned': user.banned,
             'username': user.telegram_username if user else '',
             'firstName': user.first_name if user else '',
