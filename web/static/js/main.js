@@ -35,12 +35,21 @@ const DEFAULT_CONFIG = {
 const cfg = () => state.config || DEFAULT_CONFIG;
 
 // Presentation-only metadata (prices come from the server)
+const _ticon = (body) => `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${body}</svg>`;
+const TARIFF_ICONS = {
+    zap: _ticon('<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>'),
+    flame: _ticon('<path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/>'),
+    star: _ticon('<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>'),
+    crown: _ticon('<path d="m2 4 3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14"/>'),
+    gem: _ticon('<path d="M6 3h12l4 6-10 13L2 9Z"/><path d="M11 3 8 9l4 13 4-13-3-6"/><path d="M2 9h20"/>'),
+    spark: _ticon('<path d="M12 3l1.9 5.8 5.8 1.9-5.8 1.9L12 18.4l-1.9-5.8L4.3 10.7l5.8-1.9L12 3z"/>'),
+};
 const TARIFF_META = {
-    3:   { icon: '💡', label: 'Триал',    labelCls: 'tariff-trial-label' },
-    30:  { icon: '🔥', label: 'Базовый',  labelCls: 'tariff-rec-label',        featured: 'tariff-recommended' },
-    90:  { icon: '🌟', label: 'Стандарт', labelCls: 'tariff-standard-label' },
-    180: { icon: '👑', label: 'Выгодный', labelCls: 'tariff-profitable-label' },
-    365: { icon: '💎', label: 'Лучший',   labelCls: 'tariff-best-label',       featured: 'tariff-best' },
+    3:   { icon: TARIFF_ICONS.zap,   badgeCls: 'tb-violet', label: 'Триал',    labelCls: 'tariff-trial-label' },
+    30:  { icon: TARIFF_ICONS.flame, badgeCls: 'tb-blue',   label: 'Базовый',  labelCls: 'tariff-rec-label',        featured: 'tariff-recommended' },
+    90:  { icon: TARIFF_ICONS.star,  badgeCls: 'tb-cyan',   label: 'Стандарт', labelCls: 'tariff-standard-label' },
+    180: { icon: TARIFF_ICONS.crown, badgeCls: 'tb-green',  label: 'Выгодный', labelCls: 'tariff-profitable-label' },
+    365: { icon: TARIFF_ICONS.gem,   badgeCls: 'tb-red',    label: 'Лучший',   labelCls: 'tariff-best-label',       featured: 'tariff-best' },
 };
 
 const METHOD_ICONS = {
@@ -331,7 +340,7 @@ function renderTariffs() {
     if (!els.tariffList) return;
     const selected = state.selection.tariffDays;
     els.tariffList.innerHTML = cfg().tariffs.map((t) => {
-        const meta = TARIFF_META[t.days] || { icon: '⭐', label: '', labelCls: '', featured: '' };
+        const meta = TARIFF_META[t.days] || { icon: TARIFF_ICONS.spark, badgeCls: '', label: '', labelCls: '', featured: '' };
         const free = isFreeTrial(t.days);
         const fp = finalPrice(t.days);
         const discounted = !free && fp.price < fp.original;
@@ -343,7 +352,7 @@ function renderTariffs() {
         const perDay = free ? 'Бесплатно' : `${String(t.perDay).replace('.', ',')} ₽/день`;
         return `
         <div class="tariff-option ${meta.featured || ''}${selected === t.days ? ' active' : ''}" data-action="select-tariff" data-days="${t.days}" role="button" tabindex="0">
-            <div class="tariff-badge">${meta.icon}</div>
+            <div class="tariff-badge ${meta.badgeCls || ''}">${meta.icon}</div>
             <div class="tariff-info-block">
                 <div class="tariff-days">${t.days} ${fmt.plural(t.days, ['день', 'дня', 'дней'])}</div>
                 <div class="tariff-perday">${perDay}</div>
