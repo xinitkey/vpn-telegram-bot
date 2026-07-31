@@ -270,6 +270,18 @@ body.theme-light .ring-track { stroke: rgba(30, 20, 15, 0.09); }
     stroke: url(#ringGradAmber);
     filter: drop-shadow(0 0 6px rgba(232, 155, 28, 0.5));
 }
+.ring-wrap.is-green .ring-prog {
+    stroke: url(#ringGradGreen);
+    filter: drop-shadow(0 0 6px rgba(53, 194, 107, 0.5));
+}
+.ring-wrap.is-blue .ring-prog {
+    stroke: url(#ringGradBlue);
+    filter: drop-shadow(0 0 6px rgba(77, 159, 255, 0.5));
+}
+.ring-wrap.is-violet .ring-prog {
+    stroke: url(#ringGradViolet);
+    filter: drop-shadow(0 0 6px rgba(139, 92, 246, 0.5));
+}
 .ring-wrap.is-empty .ring-prog { filter: none; opacity: 0.22; }
 .ring-center {
     position: absolute; inset: 0;

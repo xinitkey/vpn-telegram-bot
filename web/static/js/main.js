@@ -179,7 +179,11 @@ function renderRing(u, st) {
             : 1;
     }
     els.ringProg.style.strokeDashoffset = (RING_C * (1 - frac)).toFixed(2);
+    const daysLeft = (end - now) / 86400000;
     els.ringWrap.classList.toggle('is-expiring', st.cls === 'b-expiring');
+    els.ringWrap.classList.toggle('is-green', end > now && daysLeft > 7 && daysLeft <= 30);
+    els.ringWrap.classList.toggle('is-blue', end > now && daysLeft > 30 && daysLeft <= 90);
+    els.ringWrap.classList.toggle('is-violet', end > now && daysLeft > 180);
     els.ringWrap.classList.toggle('is-empty', end <= now);
 }
 
