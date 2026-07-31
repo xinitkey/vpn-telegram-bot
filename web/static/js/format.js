@@ -7,6 +7,15 @@ export function formatTs(ts) {
     return `${pad(d.getDate())}.${pad(d.getMonth() + 1)}.${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
+// Compact date for tight cells: "31 июл" (year appended only if not current)
+const MONTHS_SHORT = ['янв', 'фев', 'мар', 'апр', 'май', 'июн', 'июл', 'авг', 'сен', 'окт', 'ноя', 'дек'];
+export function formatDateShort(ts) {
+    if (!ts || ts <= 0) return '—';
+    const d = new Date(ts);
+    const base = `${d.getDate()} ${MONTHS_SHORT[d.getMonth()]}`;
+    return d.getFullYear() === new Date().getFullYear() ? base : `${base} ${d.getFullYear()}`;
+}
+
 export function formatTraffic(bytes) {
     if (!bytes || bytes <= 0) return '0 B';
     if (bytes < 1024) return `${bytes} B`;

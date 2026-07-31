@@ -42,7 +42,7 @@ const PARAM_MAP = {
     // (liquid glass) — a solid Telegram color would kill the effect.
 };
 
-const FALLBACK_BG = { light: '#f3f2f0', dark: '#0e0d0c' };
+const FALLBACK_BG = { light: '#f4f3f1', dark: '#070709' };
 
 export function applyTelegramTheme() {
     const scheme = tg.colorScheme === 'light' ? 'light' : 'dark';

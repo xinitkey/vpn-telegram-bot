@@ -51,6 +51,7 @@ const METHOD_ICONS = {
 const POLL_INTERVAL = 30000;
 const REFRESH_MIN_GAP = 15000;
 const CONNECT_PAGE = '/blackvpn-connect.html';
+const RING_C = 2 * Math.PI * 50; // progress ring circumference (r=50)
 
 // ── Elements ────────────────────────────────────────────────────────────
 const $ = (id) => document.getElementById(id);
@@ -59,6 +60,8 @@ const els = {
     balance: $('balance-display'),
     days: $('days-count'),
     daysLbl: $('days-lbl'),
+    ringWrap: $('ring-wrap'),
+    ringProg: $('ring-prog'),
     priceDaily: $('price-daily-text'),
     username: $('home-username'),
     statusBadge: $('statusBadge'),
@@ -146,7 +149,7 @@ function renderSubscription() {
     els.username.textContent = tgUser?.username
         ? `@${tgUser.username}`
         : (u.username ? `@${u.username}` : '—');
-    els.expiry.textContent = fmt.formatTs(u.subscriptionEnd);
+    els.expiry.textContent = fmt.formatDateShort(u.subscriptionEnd);
     els.profileSubStart.textContent = fmt.formatTs(u.subscriptionStart);
     els.profileSubEnd.textContent = fmt.formatTs(u.subscriptionEnd);
     els.priceDaily.textContent = `от ${cfg().dailyPrice}₽ / день`;
@@ -154,6 +157,25 @@ function renderSubscription() {
     const st = fmt.subscriptionStatus(u);
     els.statusBadge.textContent = st.text;
     els.statusBadge.className = `badge ${st.cls}`;
+
+    renderRing(u, st);
+}
+
+// Subscription progress ring: fraction of the paid period still ahead.
+function renderRing(u, st) {
+    if (!els.ringProg || !els.ringWrap) return;
+    const now = Date.now();
+    const start = u.subscriptionStart || 0;
+    const end = u.subscriptionEnd || 0;
+    let frac = 0;
+    if (end > now) {
+        frac = end > start
+            ? Math.min(1, Math.max(0.02, (end - now) / (end - start)))
+            : 1;
+    }
+    els.ringProg.style.strokeDashoffset = (RING_C * (1 - frac)).toFixed(2);
+    els.ringWrap.classList.toggle('is-expiring', st.cls === 'b-expiring');
+    els.ringWrap.classList.toggle('is-empty', end <= now);
 }
 
 function renderReferral() {

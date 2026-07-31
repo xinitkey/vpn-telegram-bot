@@ -8,8 +8,8 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/styles.css?v=21">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Unbounded:wght@500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/styles.css?v=22">
 </head>
 <body>
     <div class="bg-mesh"></div>
@@ -18,8 +18,12 @@
     </div>
 
     <header class="header">
-        <div class="logo"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" style="color:#e74c3c"><rect x="1" y="10" width="2" height="4" rx="1"/><rect x="5" y="6" width="2" height="12" rx="1"/><rect x="9" y="3" width="2" height="18" rx="1"/><rect x="13" y="6" width="2" height="12" rx="1"/><rect x="17" y="8" width="2" height="8" rx="1"/><rect x="21" y="10" width="2" height="4" rx="1"/></svg> <div class="logo-title">Black<span>VPN</span></div></div>
+        <div class="logo">
+            <div class="logo-mark"><svg width="15" height="15" viewBox="0 0 24 24" fill="#fff"><rect x="1" y="10" width="2.4" height="4" rx="1.2"/><rect x="5.4" y="6" width="2.4" height="12" rx="1.2"/><rect x="9.8" y="3" width="2.4" height="18" rx="1.2"/><rect x="14.2" y="6" width="2.4" height="12" rx="1.2"/><rect x="18.6" y="10" width="2.4" height="4" rx="1.2"/></svg></div>
+            <div class="logo-title">Black<span>VPN</span></div>
+        </div>
         <div class="balance-card">
+            <svg class="balance-ic" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"/></svg>
             <div class="balance-row">
                 <span class="balance-amount" id="balance-display" data-skel>0</span>
                 <span class="balance-lbl">₽</span>
@@ -31,15 +35,32 @@
     <main class="container">
         <div id="tab-home-content">
             <section class="main-card">
-                <div class="tariff-info">
-                    <div>
-                        <div class="days-row">
+                <div class="hero-top">
+                    <div class="ring-wrap" id="ring-wrap">
+                        <svg class="ring" width="118" height="118" viewBox="0 0 118 118" aria-hidden="true">
+                            <defs>
+                                <linearGradient id="ringGradRed" x1="0" y1="0" x2="1" y2="1">
+                                    <stop offset="0%" stop-color="#ff6b74"/>
+                                    <stop offset="100%" stop-color="#d91e33"/>
+                                </linearGradient>
+                                <linearGradient id="ringGradAmber" x1="0" y1="0" x2="1" y2="1">
+                                    <stop offset="0%" stop-color="#ffd08a"/>
+                                    <stop offset="100%" stop-color="#e8930c"/>
+                                </linearGradient>
+                            </defs>
+                            <circle class="ring-track" cx="59" cy="59" r="50"/>
+                            <circle class="ring-prog" id="ring-prog" cx="59" cy="59" r="50"/>
+                        </svg>
+                        <div class="ring-center">
                             <span class="days" id="days-count" data-skel>0</span>
                             <span class="days-lbl" id="days-lbl">дн.</span>
                         </div>
-                        <div class="price-text" id="price-daily-text">—</div>
                     </div>
-                    <button type="button" class="btn-soft" data-action="open-tariffs">Тарифы</button>
+                    <div class="hero-side">
+                        <span class="badge b-inactive" id="statusBadge">Загрузка...</span>
+                        <div class="price-text" id="price-daily-text">—</div>
+                        <button type="button" class="btn-soft" data-action="open-tariffs">Все тарифы</button>
+                    </div>
                 </div>
                 <div class="info-grid">
                     <div class="info-cell">
@@ -48,13 +69,6 @@
                             Пользователь
                         </div>
                         <div class="info-val info-val-truncate" id="home-username">—</div>
-                    </div>
-                    <div class="info-cell">
-                        <div class="info-lbl">
-                            <svg class="ic-green" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
-                            Статус
-                        </div>
-                        <div class="info-val"><span class="badge b-inactive" id="statusBadge">Загрузка...</span></div>
                     </div>
                     <div class="info-cell">
                         <div class="info-lbl">
@@ -79,11 +93,16 @@
             </section>
 
             <section class="referral-card">
-                <h3>Приглашай друзей и зарабатывай</h3>
-                <p>Получай <span id="ref-reward-text">50₽</span> за каждого друга <button type="button" class="info-circle info-circle-red" data-action="referral-info" aria-label="Подробнее о реферальной программе">i</button></p>
+                <div class="ref-head">
+                    <div class="ref-icon"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="18" height="4" rx="1"/><path d="M12 8v13M5 12v9h14v-9"/><path d="M7.5 8a2.5 2.5 0 0 1 0-5C11 3 12 8 12 8s1-5 4.5-5a2.5 2.5 0 0 1 0 5"/></svg></div>
+                    <div class="ref-head-text">
+                        <h3>Приглашай друзей — зарабатывай</h3>
+                        <p>Получай <span id="ref-reward-text">50₽</span> за каждого друга <button type="button" class="info-circle info-circle-red" data-action="referral-info" aria-label="Подробнее о реферальной программе">i</button></p>
+                    </div>
+                </div>
                 <div class="referral-stats">
-                    <span>Приглашено: <b id="ref-count">0</b></span>
-                    <span>Заработано: <b id="ref-earned">0 ₽</b></span>
+                    <div class="ref-stat"><span class="ref-stat-num" id="ref-count">0</span><span class="ref-stat-lbl">Приглашено</span></div>
+                    <div class="ref-stat"><span class="ref-stat-num" id="ref-earned">0 ₽</span><span class="ref-stat-lbl">Заработано</span></div>
                 </div>
                 <button type="button" class="btn-ref-link" data-action="copy-referral"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg> Копировать ссылку</button>
                 <div class="ref-link-display" id="ref-link-display"></div>
@@ -106,21 +125,30 @@
         </div>
 
         <div id="tab-info-content" class="info-card">
-            <div class="info-section">
-                <div class="info-icon"><span class="info-circle info-circle-lg">i</span></div>
+            <div class="info-hero">
+                <div class="info-hero-icon"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg></div>
                 <h3>О сервисе</h3>
                 <p>BlackVPN — защищённый VPN-сервис, предоставляющий скорость и анонимность.</p>
             </div>
             <div class="info-section">
-                <div class="info-icon"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></div>
                 <h3>Поддержка</h3>
-                <p>Технические вопросы: <button type="button" class="info-link" data-action="support-tech">@Asdzxclop_bot</button></p>
-                <p>Онлайн поддержка: <button type="button" class="info-link" data-action="support-online">@Judebellengham</button></p>
+                <div class="support-row">
+                    <button type="button" class="support-btn" data-action="support-tech">
+                        <span class="support-btn-icon"><svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg></span>
+                        <span class="support-btn-text"><b>@Asdzxclop_bot</b><span>Технические вопросы</span></span>
+                        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                    </button>
+                    <button type="button" class="support-btn" data-action="support-online">
+                        <span class="support-btn-icon"><svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></span>
+                        <span class="support-btn-text"><b>@Judebellengham</b><span>Онлайн поддержка</span></span>
+                        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                    </button>
+                </div>
             </div>
             <div class="info-section">
                 <h3>Правовая информация</h3>
-                <button type="button" class="btn-info-link" data-action="open-privacy">Политика конфиденциальности</button>
-                <button type="button" class="btn-info-link btn-info-link-gap" data-action="open-terms">Условия использования</button>
+                <button type="button" class="btn-info-link" data-action="open-privacy">Политика конфиденциальности <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>
+                <button type="button" class="btn-info-link btn-info-link-gap" data-action="open-terms">Условия использования <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>
             </div>
         </div>
     </main>
@@ -197,7 +225,7 @@
     <!-- Trial overlay -->
     <div class="trial-overlay" id="trial-overlay">
         <div class="trial-modal" id="trial-modal">
-            <div class="trial-icon"><svg width="48" height="48" fill="none" stroke="#e74c3c" stroke-width="1.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></div>
+            <div class="trial-icon"><svg width="32" height="32" fill="none" stroke="#fff" stroke-width="1.8" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="18" height="4" rx="1"/><path d="M12 8v13M5 12v9h14v-9"/><path d="M7.5 8a2.5 2.5 0 0 1 0-5C11 3 12 8 12 8s1-5 4.5-5a2.5 2.5 0 0 1 0 5"/></svg></div>
             <h2>Бесплатный триал</h2>
             <p class="trial-desc">Активируйте бесплатную подписку на 3 дня с полным функционалом VPN</p>
             <button type="button" class="trial-btn-activate" id="trial-btn-activate" data-action="trial-activate">Активировать</button>
@@ -224,6 +252,6 @@
         <button type="button" class="nav-item" id="nav-profile" data-action="switch-tab" data-tab="profile"><span class="nav-icon"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>Профиль</button>
     </nav>
 
-    <script type="module" src="/js/main.js?v=5"></script>
+    <script type="module" src="/js/main.js?v=6"></script>
 </body>
 </html>
