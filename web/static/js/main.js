@@ -72,7 +72,6 @@ const els = {
     ringWrap: $('ring-wrap'),
     ringProg: $('ring-prog'),
     priceDaily: $('price-daily-text'),
-    username: $('home-username'),
     statusBadge: $('statusBadge'),
     expiry: $('home-expiry'),
     traffic: $('home-traffic'),
@@ -155,9 +154,6 @@ function renderSubscription() {
     els.days.textContent = rest.value;
     els.daysLbl.textContent = rest.unit;
 
-    els.username.textContent = tgUser?.username
-        ? `@${tgUser.username}`
-        : (u.username ? `@${u.username}` : '—');
     els.expiry.textContent = fmt.formatDateShort(u.subscriptionEnd);
     els.profileSubStart.textContent = fmt.formatTs(u.subscriptionStart);
     els.profileSubEnd.textContent = fmt.formatTs(u.subscriptionEnd);
