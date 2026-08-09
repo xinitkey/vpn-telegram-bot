@@ -48,6 +48,20 @@ async def on_startup(_app):
     _app['bg_tasks'] = []
     _app['bg_tasks'].append(asyncio.create_task(_expire_payments_loop(_app)))
     _app['bg_tasks'].append(asyncio.create_task(_backup_loop(_app)))
+    _app['bg_tasks'].append(asyncio.create_task(_expiry_notify_loop(_app)))
+
+async def _expiry_notify_loop(_app):
+    from services.notify import check_sub_expiry_notifications
+    bot = _app['bot']
+    while True:
+        try:
+            await check_sub_expiry_notifications(bot)
+        except Exception as e:
+            logger.error("Expiry notification error: %s", e)
+        try:
+            await asyncio.wait_for(asyncio.sleep(60), timeout=60)
+        except asyncio.CancelledError:
+            break
 
 async def _expire_payments_loop(_app):
     from services.db import expire_old_payments

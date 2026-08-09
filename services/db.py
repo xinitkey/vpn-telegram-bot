@@ -92,6 +92,14 @@ async def init_db():
                 PRIMARY KEY (code, user_id)
             )
         ''')
+        await db.execute('''
+            CREATE TABLE IF NOT EXISTS subscription_notifications (
+                user_id INTEGER NOT NULL,
+                kind TEXT NOT NULL,
+                sent_at INTEGER NOT NULL,
+                PRIMARY KEY (user_id, kind)
+            )
+        ''')
         await db.commit()
 
 async def close_db():
@@ -193,6 +201,7 @@ async def set_subscription(user_id: int, days: int):
             'UPDATE users SET subscription = ?, subscription_start = ? WHERE user_id = ?',
             (new_sub, start, user_id)
         )
+        await db.execute('DELETE FROM subscription_notifications WHERE user_id = ?', (user_id,))
         await db.commit()
 
 async def update_vpn_info(user_id: int, **kwargs):
@@ -239,6 +248,33 @@ async def update_payment_status(payment_id: str, status: str):
             (status, int(time.time()), payment_id)
         )
         await db.commit()
+
+async def has_sub_notification(user_id: int, kind: str) -> bool:
+    async with _db_lock:
+        db = await _get_db()
+        async with db.execute(
+            'SELECT 1 FROM subscription_notifications WHERE user_id = ? AND kind = ?',
+            (user_id, kind)
+        ) as cur:
+            return await cur.fetchone() is not None
+
+
+async def record_sub_notification(user_id: int, kind: str):
+    async with _db_lock:
+        db = await _get_db()
+        await db.execute(
+            'INSERT OR IGNORE INTO subscription_notifications (user_id, kind, sent_at) VALUES (?, ?, ?)',
+            (user_id, kind, int(time.time()))
+        )
+        await db.commit()
+
+
+async def clear_sub_notifications(user_id: int):
+    async with _db_lock:
+        db = await _get_db()
+        await db.execute('DELETE FROM subscription_notifications WHERE user_id = ?', (user_id,))
+        await db.commit()
+
 
 async def get_all_users() -> list[User]:
     async with _db_lock:

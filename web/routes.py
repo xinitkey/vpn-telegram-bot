@@ -13,6 +13,7 @@ from services.db import (
     create_payment, get_payment, update_payment_status,
     get_promocode, increment_promocode_uses, validate_promocode,
     discounted_price, record_promocode_use, user_used_promocode,
+    clear_sub_notifications,
     TARIFF_INDEX_MAP, TARIFF_PRICE_MAP,
 )
 from services.xui_api import (
@@ -310,6 +311,7 @@ def setup_routes(app: web.Application, bot: Bot, dp: Dispatcher):
             await increment_promocode_uses(promo_code)
             await record_promocode_use(promo_code, user_id)
         await update_user(user)
+        await clear_sub_notifications(user_id)
         try:
             from bot.handlers import send_key_with_platforms
             if user.link:
