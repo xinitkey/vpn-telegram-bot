@@ -156,7 +156,7 @@ def setup_routes(app: web.Application, bot: Bot, dp: Dispatcher):
             'topUpPresets': [50, 100, 200, 500, 1000, 2000],
             'paymentMethods': [
                 {'id': 'platega_sbp', 'label': 'СБП', 'code': 2},
-                {'id': 'platega_mir', 'label': 'Карта МИР', 'code': 10},
+                {'id': 'platega_mir', 'label': 'МИР', 'code': 'CardRu'},
                 {'id': 'platega_crypto', 'label': 'Криптовалюта', 'code': 13},
             ],
             'referralReward': settings.REFERRAL_REWARD,
@@ -343,10 +343,7 @@ def setup_routes(app: web.Application, bot: Bot, dp: Dispatcher):
         except (ValueError, TypeError):
             amount = 0
         method = raw.get('method', '')
-        try:
-            pay_method = int(raw.get('paymentMethod', 0))
-        except (ValueError, TypeError):
-            pay_method = 0
+        pay_method = raw.get('paymentMethod', 0)
         if amount < 50 or amount > 1000000:
             return web.json_response({'error': 'Invalid data. Minimum 50₽'}, status=400)
 
