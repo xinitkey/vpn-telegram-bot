@@ -230,14 +230,15 @@ body.theme-light .plat-dropdown{background:rgba(255,255,255,.94)}
 .plat-opt.active{color:var(--red2);font-weight:700}
 
 /* ── CLIENT TABS ── */
-.ctabs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+.ctabs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;margin-top:16px}
+.ctab-wrap{position:relative;flex:1;min-width:120px;max-width:calc(50% - 4px)}
 .ctab{
   position:relative;overflow:hidden;
   display:flex;align-items:center;gap:9px;
   padding:11px 13px;border-radius:14px;cursor:pointer;
   background:var(--surface2);border:1px solid var(--border);
   font-size:13.5px;font-weight:600;color:var(--muted);
-  transition:all .18s cubic-bezier(.22,1,.36,1);flex:1;min-width:120px;max-width:calc(50% - 4px);
+  transition:all .18s cubic-bezier(.22,1,.36,1);
 }
 .ctab:hover{color:var(--text);border-color:var(--border-strong)}
 .ctab.on{
@@ -254,11 +255,11 @@ body.theme-light .plat-dropdown{background:rgba(255,255,255,.94)}
 .ctab.on .ctab-dot{background:var(--red2);box-shadow:0 0 8px var(--red-glow)}
 .ctab-name{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .ctab-rec{
-  position:absolute;top:0;right:12px;z-index:2;
-  font-size:7.5px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;
-  padding:3px 7px 4px;border-radius:0 0 7px 7px;
+  position:absolute;top:-17px;left:50%;transform:translateX(-50%);z-index:3;
+  font-size:8px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;
+  padding:3px 8px;border-radius:7px;white-space:nowrap;
   background:var(--grad);color:#fff;
-  box-shadow:0 4px 10px var(--red-glow);
+  box-shadow:0 4px 12px var(--red-glow);
   pointer-events:none;
 }
 .ctab-rec::after{
@@ -355,7 +356,7 @@ body.theme-light .plat-dropdown{background:rgba(255,255,255,.94)}
 /* ── RESPONSIVE ── */
 @media(max-width:480px){
   .sub-grid{grid-template-columns:1fr 1fr}
-  .ctab{min-width:calc(50% - 4px)}
+  .ctab-wrap{min-width:calc(50% - 4px)}
   .step-actions{flex-direction:column}
   .step-actions .btn{width:100%;justify-content:center}
 }
@@ -688,12 +689,13 @@ function renderInstall() {
 
   // tabs
   document.getElementById('ctabs').innerHTML = plat.apps.map(function(a) {
-    return '<div class="ctab' + (a.id===app.id?' on':'') + '" onclick="selectApp(\'' + a.id + '\')">'
+    return '<div class="ctab-wrap">'
+      + (a.recommended ? '<span class="ctab-rec">Рекомендуем</span>' : '')
+      + '<div class="ctab' + (a.id===app.id?' on':'') + '" onclick="selectApp(\'' + a.id + '\')">'
       + '<span class="ctab-dot"></span>'
       + '<span class="ctab-name">' + a.name + '</span>'
-      + (a.recommended ? '<span class="ctab-rec">Рекомендуем</span>' : '')
       + logoEl(a.iconId)
-      + '</div>';
+      + '</div></div>';
   }).join('');
 
   // steps
