@@ -253,6 +253,16 @@ body.theme-light .plat-dropdown{background:rgba(255,255,255,.94)}
 }
 .ctab.on .ctab-dot{background:var(--red2);box-shadow:0 0 8px var(--red-glow)}
 .ctab-name{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ctab-rec{
+  flex-shrink:0;z-index:1;
+  font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;
+  padding:3px 6px;border-radius:6px;
+  background:var(--red-soft);border:1px solid var(--red-border);color:var(--red2);
+}
+.ctab.on .ctab-rec{
+  background:var(--grad);border-color:transparent;color:#fff;
+  box-shadow:0 3px 10px var(--red-glow);
+}
 /* Background logo */
 .ctab-logo{
   position:absolute;right:-2px;top:50%;transform:translateY(-50%);
@@ -475,7 +485,7 @@ var PLATFORMS = [
     id: 'ios', label: 'iOS', icon: 'ios',
     apps: [
       {
-        id: 'happ', name: 'Happ', iconId: 'happ',
+        id: 'happ', name: 'Happ', iconId: 'happ', recommended: true,
         install: {
           desc: 'Откройте App Store и установите приложение. Запустите его, в окне разрешения VPN-конфигурации нажмите Allow и введите пароль.',
           btns: [
@@ -497,7 +507,7 @@ var PLATFORMS = [
     id: 'android', label: 'Android', icon: 'android',
     apps: [
       {
-        id: 'happ', name: 'Happ', iconId: 'happ',
+        id: 'happ', name: 'Happ', iconId: 'happ', recommended: true,
         install: { desc: 'Установите Happ из Google Play или с официального сайта.', btns: [{label:'Google Play', url:'https://play.google.com/store/apps/details?id=com.happproxy', ext:true}, {label:'Официальный сайт', url:'https://happ.press/#downloads', ext:true}] },
         subscribe: { deeplink: true },
         connect: { desc: 'В главном разделе нажмите большую кнопку включения. Выберите сервер из списка.' }
@@ -514,7 +524,7 @@ var PLATFORMS = [
     id: 'macos', label: 'macOS', icon: 'macos',
     apps: [
       {
-        id: 'happ', name: 'Happ', iconId: 'happ',
+        id: 'happ', name: 'Happ', iconId: 'happ', recommended: true,
         install: { desc: 'Установите Happ из App Store для Mac.', btns: [{label:'App Store', url:'https://apps.apple.com/app/id6504287215', ext:true}] },
         subscribe: { deeplink: true },
         connect: { desc: 'Запустите Happ, выберите сервер и включите VPN.' }
@@ -531,7 +541,7 @@ var PLATFORMS = [
     id: 'windows', label: 'Windows', icon: 'windows',
     apps: [
       {
-        id: 'happ', name: 'Happ', iconId: 'happ',
+        id: 'happ', name: 'Happ', iconId: 'happ', recommended: true,
         install: { desc: 'Скачайте Happ для Windows с GitHub или с официального сайта.', btns: [{label:'GitHub', url:'https://github.com/Happ-proxy/happ-desktop/releases', ext:true}, {label:'Официальный сайт', url:'https://happ.press/#downloads', ext:true}] },
         subscribe: { deeplink: true },
         connect: { desc: 'Запустите Happ, выберите сервер и включите VPN.' }
@@ -548,7 +558,7 @@ var PLATFORMS = [
     id: 'linux', label: 'Linux', icon: 'linux',
     apps: [
       {
-        id: 'happ', name: 'Happ', iconId: 'happ',
+        id: 'happ', name: 'Happ', iconId: 'happ', recommended: true,
         install: { desc: 'Скачайте Happ для Linux с GitHub или с официального сайта.', btns: [{label:'GitHub', url:'https://github.com/Happ-proxy/happ-desktop/releases', ext:true}, {label:'Официальный сайт', url:'https://happ.press/#downloads', ext:true}] },
         subscribe: { deeplink: true },
         connect: { desc: 'Запустите Happ, выберите сервер и включите VPN.' }
@@ -565,7 +575,7 @@ var PLATFORMS = [
     id: 'androidtv', label: 'Android TV', icon: 'androidtv',
     apps: [
       {
-        id: 'happ', name: 'Happ', iconId: 'happ',
+        id: 'happ', name: 'Happ', iconId: 'happ', recommended: true,
         install: { desc: 'Откройте Google Play на Android TV и установите приложение. Или установите через APK напрямую.', btns: [{label:'Google Play', url:'https://play.google.com/store/apps/details?id=com.happproxy', ext:true}, {label:'Скачать APK', url:'#', ext:true}, {label:'Официальный сайт', url:'https://happ.press/#downloads', ext:true}] },
         subscribe: false,
         instructions: true,
@@ -577,7 +587,7 @@ var PLATFORMS = [
     id: 'appletv', label: 'Apple TV', icon: 'appletv',
     apps: [
       {
-        id: 'happ', name: 'Happ', iconId: 'happ',
+        id: 'happ', name: 'Happ', iconId: 'happ', recommended: true,
         install: { desc: 'Откройте App Store на Apple TV и установите Happ. Предоставьте разрешение на VPN-конфигурацию и введите пароль.', btns: [{label:'App Store', url:'https://apps.apple.com/app/id6504287215', ext:true}] },
         subscribe: false,
         instructions: true,
@@ -679,6 +689,7 @@ function renderInstall() {
     return '<div class="ctab' + (a.id===app.id?' on':'') + '" onclick="selectApp(\'' + a.id + '\')">'
       + '<span class="ctab-dot"></span>'
       + '<span class="ctab-name">' + a.name + '</span>'
+      + (a.recommended ? '<span class="ctab-rec">Рекомендуем</span>' : '')
       + logoEl(a.iconId)
       + '</div>';
   }).join('');
