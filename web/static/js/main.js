@@ -26,6 +26,7 @@ const DEFAULT_CONFIG = {
     topUpPresets: [50, 100, 200, 500, 1000, 2000],
     paymentMethods: [
         { id: 'platega_sbp', label: 'СБП', code: 2 },
+        { id: 'platega_mir', label: 'Карта МИР', code: 10 },
         { id: 'platega_crypto', label: 'Криптовалюта', code: 13 },
     ],
     referralReward: 50,
@@ -54,6 +55,7 @@ const TARIFF_META = {
 
 const METHOD_ICONS = {
     platega_sbp: '<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2"/><path d="M1 10h22"/></svg>',
+    platega_mir: '<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2"/><path d="M3 15c2.5-3 4.5-3 7 0s4.5 3 7 0c1.2-1.4 2.3-1.6 4-1"/></svg>',
     platega_crypto: '<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2a10 10 0 100 20 10 10 0 000-20z"/><path d="M9 8h6a2 2 0 010 4H9z"/><path d="M9 12h7a2 2 0 010 4H9z"/><path d="M12 8v8M10 6v2M14 6v2"/></svg>',
 };
 

@@ -156,6 +156,7 @@ def setup_routes(app: web.Application, bot: Bot, dp: Dispatcher):
             'topUpPresets': [50, 100, 200, 500, 1000, 2000],
             'paymentMethods': [
                 {'id': 'platega_sbp', 'label': 'СБП', 'code': 2},
+                {'id': 'platega_mir', 'label': 'Карта МИР', 'code': 10},
                 {'id': 'platega_crypto', 'label': 'Криптовалюта', 'code': 13},
             ],
             'referralReward': settings.REFERRAL_REWARD,

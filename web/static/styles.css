@@ -672,6 +672,12 @@ body.theme-light .bottom-nav { box-shadow: inset 0 1px 0 var(--glass-hi), 0 16px
 }
 .method-btn[data-method="platega_sbp"].active { border-color: rgba(77, 159, 255, 0.5); background: var(--blue-soft); }
 .method-btn[data-method="platega_sbp"].active::after { border-color: var(--blue); box-shadow: 0 0 10px rgba(77, 159, 255, 0.4); }
+.method-btn[data-method="platega_mir"]::before {
+    background: linear-gradient(135deg, rgba(53, 194, 107, 0.15), rgba(99, 230, 165, 0.08), rgba(53, 194, 107, 0.15));
+    background-size: 200% 200%; animation: shimmer 8s ease infinite;
+}
+.method-btn[data-method="platega_mir"].active { border-color: rgba(53, 194, 107, 0.5); background: var(--green-soft); }
+.method-btn[data-method="platega_mir"].active::after { border-color: var(--green); box-shadow: 0 0 10px rgba(53, 194, 107, 0.45); }
 .method-btn[data-method="platega_crypto"]::before {
     background: linear-gradient(135deg, rgba(226, 50, 64, 0.15), rgba(255, 85, 99, 0.08), rgba(226, 50, 64, 0.15));
     background-size: 200% 200%; animation: shimmer 8s ease infinite;
