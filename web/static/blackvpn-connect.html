@@ -253,8 +253,9 @@ body.theme-light .plat-dropdown{background:rgba(255,255,255,.94)}
 }
 .ctab.on .ctab-dot{background:var(--red2);box-shadow:0 0 8px var(--red-glow)}
 .ctab-name{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ctab.has-rec{padding-top:27px}
 .ctab-rec{
-  position:absolute;top:0;right:12px;z-index:2;
+  position:absolute;top:0;left:11px;z-index:2;
   font-size:7.5px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;
   padding:3px 7px 4px;border-radius:0 0 7px 7px;
   background:var(--grad);color:#fff;
@@ -262,7 +263,7 @@ body.theme-light .plat-dropdown{background:rgba(255,255,255,.94)}
   pointer-events:none;
 }
 .ctab-rec::after{
-  content:'';position:absolute;top:100%;left:50%;transform:translateX(-50%);
+  content:'';position:absolute;top:100%;left:14px;
   border:4px solid transparent;border-top:4px solid #c11a2e;
 }
 /* Background logo */
@@ -688,7 +689,7 @@ function renderInstall() {
 
   // tabs
   document.getElementById('ctabs').innerHTML = plat.apps.map(function(a) {
-    return '<div class="ctab' + (a.id===app.id?' on':'') + '" onclick="selectApp(\'' + a.id + '\')">'
+    return '<div class="ctab' + (a.id===app.id?' on':'') + (a.recommended?' has-rec':'') + '" onclick="selectApp(\'' + a.id + '\')">'
       + '<span class="ctab-dot"></span>'
       + '<span class="ctab-name">' + a.name + '</span>'
       + (a.recommended ? '<span class="ctab-rec">Рекомендуем</span>' : '')
