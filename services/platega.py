@@ -1,4 +1,3 @@
-import uuid
 import logging
 from aiohttp import ClientSession
 from config.settings import settings
@@ -29,8 +28,7 @@ async def create_transaction(
         "Accept": "application/json",
     }
     body = {
-        "paymentMethod": payment_method or settings.PLATEGA_PAYMENT_METHOD,
-        "id": str(uuid.uuid4()),
+        "paymentMethod": int(payment_method) if payment_method else settings.PLATEGA_PAYMENT_METHOD,
         "paymentDetails": {
             "amount": amount,
             "currency": "RUB",
