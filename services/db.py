@@ -76,7 +76,8 @@ async def init_db():
         await db.execute('''
             CREATE TABLE IF NOT EXISTS promocodes (
                 code TEXT PRIMARY KEY,
-                discount_percent INTEGER NOT NULL,
+                discount_percent INTEGER NOT NULL DEFAULT 0,
+                grant_days INTEGER NOT NULL DEFAULT 0,
                 tariff_ids TEXT,
                 max_uses INTEGER,
                 used_count INTEGER NOT NULL DEFAULT 0,
@@ -84,6 +85,11 @@ async def init_db():
                 created_at INTEGER NOT NULL
             )
         ''')
+        for col in ('grant_days',):
+            try:
+                await db.execute(f'ALTER TABLE promocodes ADD COLUMN {col} INTEGER NOT NULL DEFAULT 0')
+            except Exception:
+                pass
         await db.execute('''
             CREATE TABLE IF NOT EXISTS promocode_uses (
                 code TEXT NOT NULL,
@@ -501,14 +507,15 @@ async def get_referral_stats(user_id: int) -> dict:
 
 
 async def create_promocode(code: str, discount_percent: int, tariff_ids: str = None,
-                           max_uses: int = None, expires_at: int = None):
+                           max_uses: int = None, expires_at: int = None,
+                           grant_days: int = 0):
     async with _db_lock:
         db = await _get_db()
         try:
             await db.execute(
-                '''INSERT INTO promocodes (code, discount_percent, tariff_ids, max_uses, used_count, expires_at, created_at)
-                   VALUES (?, ?, ?, ?, 0, ?, ?)''',
-                (code.upper(), discount_percent, tariff_ids, max_uses, expires_at, int(time.time()))
+                '''INSERT INTO promocodes (code, discount_percent, grant_days, tariff_ids, max_uses, used_count, expires_at, created_at)
+                   VALUES (?, ?, ?, ?, ?, 0, ?, ?)''',
+                (code.upper(), discount_percent, grant_days, tariff_ids, max_uses, expires_at, int(time.time()))
             )
             await db.commit()
             return True
@@ -584,7 +591,7 @@ async def validate_promocode(promo: dict, tariff_days: int, user_id: int = None)
         return False, 'Срок действия промокода истёк'
     if promo['max_uses'] is not None and promo['used_count'] >= promo['max_uses']:
         return False, 'Промокод исчерпал лимит использований'
-    if promo['tariff_ids']:
+    if not promo.get('grant_days') and promo['tariff_ids']:
         allowed_idxes = [int(x.strip()) for x in promo['tariff_ids'].split(',') if x.strip()]
         idx = _DAYS_TO_INDEX.get(tariff_days)
         if idx is None or idx not in allowed_idxes:

@@ -204,6 +204,12 @@ def setup_routes(app: web.Application, bot: Bot, dp: Dispatcher):
             return web.json_response({'error': 'Промокод исчерпал лимит использований'}, status=400)
         if user_id and await user_used_promocode(code, user_id):
             return web.json_response({'error': 'Вы уже использовали этот промокод'}, status=400)
+        grant_days = int(promo.get('grant_days') or 0)
+        if grant_days:
+            return web.json_response({
+                'valid': True,
+                'grantDays': grant_days,
+            })
         discount = promo['discount_percent']
         applicable = []
         if promo['tariff_ids']:
@@ -247,20 +253,26 @@ def setup_routes(app: web.Application, bot: Bot, dp: Dispatcher):
             return web.json_response({'error': 'User not found'}, status=404)
         if user.banned:
             return web.json_response({'error': 'Вы заблокированы'}, status=403)
-        is_trial = days == 3 and (price is None or price == 0) and not user.trial_used
-        if is_trial:
+        promo = None
+        if promo_code:
+            promo = await get_promocode(promo_code)
+            if promo is None:
+                return web.json_response({'error': 'Промокод не найден'}, status=400)
+            valid, err = await validate_promocode(promo, days, user_id)
+            if not valid:
+                return web.json_response({'error': err}, status=400)
+        grant_days = int(promo.get('grant_days') or 0) if promo else 0
+        is_grant = grant_days > 0
+        if is_grant:
+            days = grant_days
+            total_price = 0
+        elif days == 3 and (price is None or price == 0) and not user.trial_used:
             total_price = 0
         else:
             # Price is ALWAYS computed server-side; client-provided price is ignored
             total_price = TARIFF_PRICE_MAP.get(days) or days * settings.TARIFF_DAILY_PRICE
             # Apply promo code discount
-            if promo_code:
-                promo = await get_promocode(promo_code)
-                if promo is None:
-                    return web.json_response({'error': 'Промокод не найден'}, status=400)
-                valid, err = await validate_promocode(promo, days, user_id)
-                if not valid:
-                    return web.json_response({'error': err}, status=400)
+            if promo_code and promo:
                 discounted = discounted_price(days, promo['discount_percent'])
                 if discounted > 0:
                     total_price = discounted
@@ -297,7 +309,7 @@ def setup_routes(app: web.Application, bot: Bot, dp: Dispatcher):
             except Exception as e:
                 log.error(f"3x-UI error for user {user_id}: {e}")
                 xui_error = str(e)
-                if not is_trial:
+                if total_price > 0:
                     user.balance += total_price
                 user.subscription = user.subscription - add_ms if user.subscription else 0
                 if not is_extension:
@@ -306,7 +318,7 @@ def setup_routes(app: web.Application, bot: Bot, dp: Dispatcher):
                 return web.json_response(
                     {'error': f'Ошибка VPN-панели: {xui_error}'}, status=502
                 )
-        if is_trial:
+        if not is_grant and days == 3 and (price is None or price == 0) and not user.trial_used:
             user.trial_used = True
         if promo_code:
             await increment_promocode_uses(promo_code)

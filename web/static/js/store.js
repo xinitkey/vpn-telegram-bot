@@ -10,7 +10,7 @@ export const state = {
     user: null,               // /api/user-data payload
     config: null,             // /api/config payload (falls back to defaults)
     devices: null,            // cached /api/user-devices payload
-    promo: { code: '', discountPercent: 0, tariffPrices: {} },
+    promo: { code: '', discountPercent: 0, tariffPrices: {}, grantDays: 0 },
     selection: { tariffDays: 0 },   // UI state that must survive re-renders
 };
 
@@ -25,5 +25,5 @@ export function subscribe(fn) {
 }
 
 export function resetPromo() {
-    state.promo = { code: '', discountPercent: 0, tariffPrices: {} };
+    state.promo = { code: '', discountPercent: 0, tariffPrices: {}, grantDays: 0 };
 }

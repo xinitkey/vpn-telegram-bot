@@ -367,8 +367,14 @@ function renderTariffs() {
 }
 
 function updateTariffConfirm() {
-    const days = state.selection.tariffDays;
     const btn = els.confirmTariffBtn;
+    const grant = state.promo.grantDays || 0;
+    if (grant > 0) {
+        btn.disabled = false;
+        btn.textContent = `Активировать +${grant} ${fmt.plural(grant, ['день', 'дня', 'дней'])} подписки`;
+        return;
+    }
+    const days = state.selection.tariffDays;
     if (!days) {
         btn.disabled = true;
         btn.textContent = 'Выберите тариф';
@@ -406,12 +412,23 @@ async function applyPromo(silent = false) {
     try {
         const data = await api.applyPromo(code);
         if (data.valid) {
-            state.promo = {
-                code,
-                discountPercent: data.discountPercent,
-                tariffPrices: data.tariffPrices || {},
-            };
-            setPromoStatus('success', `Промокод применён! Скидка ${data.discountPercent}%`);
+            if (data.grantDays) {
+                state.promo = {
+                    code,
+                    grantDays: data.grantDays,
+                    discountPercent: 0,
+                    tariffPrices: {},
+                };
+                setPromoStatus('success', `Промокод дарит ${data.grantDays} ${fmt.plural(data.grantDays, ['день', 'дня', 'дней'])} подписки!`);
+            } else {
+                state.promo = {
+                    code,
+                    discountPercent: data.discountPercent,
+                    tariffPrices: data.tariffPrices || {},
+                    grantDays: 0,
+                };
+                setPromoStatus('success', `Промокод применён! Скидка ${data.discountPercent}%`);
+            }
         } else {
             resetPromo();
             setPromoStatus('error', data.error || 'Промокод недействителен');
@@ -457,6 +474,25 @@ async function afterPurchaseDialog(message) {
 }
 
 async function confirmTariffPurchase() {
+    const grant = state.promo.grantDays || 0;
+    if (grant > 0) {
+        haptic('medium');
+        const btn = els.confirmTariffBtn;
+        const original = btn.textContent;
+        btn.disabled = true;
+        btn.textContent = 'Активация...';
+        const res = await purchase({ days: grant, price: 0 });
+        btn.disabled = false;
+        btn.textContent = original;
+        if (res.ok) {
+            resetPromo();
+            closeModal('tariffs-modal');
+            afterPurchaseDialog(`Промокод активирован! Подписка продлена на ${grant} ${fmt.plural(grant, ['день', 'дня', 'дней'])}.`);
+        } else {
+            alertDialog('Ошибка', res.error, true);
+        }
+        return;
+    }
     const days = state.selection.tariffDays;
     if (!days) return;
     const fp = finalPrice(days);

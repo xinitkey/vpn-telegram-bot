@@ -769,40 +769,66 @@ async def cmd_addpromo(message: Message, command: CommandObject):
     args = (command.args or "").strip().split()
     if len(args) < 2:
         await message.answer(
-            "Формат: /addpromo <code>код процент [тарифы] [макс_исп] [дата_до]\n\n"
+            "Формат: /addpromo <code>код процент [тарифы] [макс_исп] [дата_до]</code>\n"
+            "или: <code>/addpromo код days N [макс_исп] [дата_до]</code> — промокод дарит N дней подписки\n\n"
             "Примеры:\n"
             "/addpromo WELCOME20 20 — 20% на все тарифы без ограничений\n"
             "/addpromo SUMMER 30 2,3,5 100 — 30% на тарифы 2,3,5 на 100 активаций\n"
-            "/addpromo VIP10 10 '' 50 2026-12-31 — 10% на всё, 50 активаций, до 31.12.2026\n\n"
+            "/addpromo GIFT7 days 7 50 2026-12-31 — 7 дней подписки, 50 активаций, до 31.12.2026\n\n"
             "Нумерация тарифов: 1=3д, 2=30д, 3=90д, 4=180д, 5=365д",
             parse_mode='HTML'
         )
         return
     code = args[0].upper()
-    if not args[1].isdigit():
-        await message.answer("Процент скидки должен быть числом", parse_mode='HTML')
-        return
-    discount = int(args[1])
-    if discount < 1 or discount > 99:
-        await message.answer("Процент скидки от 1 до 99", parse_mode='HTML')
-        return
-    tariff_ids = args[2] if len(args) > 2 and args[2] and args[2].strip("'\"") else None
-    max_uses = int(args[3]) if len(args) > 3 and args[3].isdigit() else None
-    expires_at = None
-    if len(args) > 4 and args[4]:
-        from datetime import datetime
-        try:
-            dt = datetime.strptime(args[4], '%Y-%m-%d')
-            expires_at = int(dt.timestamp() * 1000) + 86400000
-        except ValueError:
-            await message.answer("Неверный формат даты. Используйте ГГГГ-ММ-ДД", parse_mode='HTML')
+    if args[1].lower() == 'days':
+        if len(args) < 3 or not args[2].isdigit():
+            await message.answer("Укажите количество дней: /addpromo <code>код days N</code>", parse_mode='HTML')
             return
-    ok = await create_promocode(code, discount, tariff_ids, max_uses, expires_at)
+        grant_days = int(args[2])
+        if grant_days < 1:
+            await message.answer("Количество дней должно быть больше 0", parse_mode='HTML')
+            return
+        discount = 0
+        tariff_ids = None
+        max_uses = int(args[3]) if len(args) > 3 and args[3].isdigit() else None
+        expires_at = None
+        if len(args) > 4 and args[4]:
+            from datetime import datetime
+            try:
+                dt = datetime.strptime(args[4], '%Y-%m-%d')
+                expires_at = int(dt.timestamp() * 1000) + 86400000
+            except ValueError:
+                await message.answer("Неверный формат даты. Используйте ГГГГ-ММ-ДД", parse_mode='HTML')
+                return
+    else:
+        if not args[1].isdigit():
+            await message.answer("Процент скидки должен быть числом", parse_mode='HTML')
+            return
+        discount = int(args[1])
+        if discount < 1 or discount > 99:
+            await message.answer("Процент скидки от 1 до 99", parse_mode='HTML')
+            return
+        grant_days = 0
+        tariff_ids = args[2] if len(args) > 2 and args[2] and args[2].strip("'\"") else None
+        max_uses = int(args[3]) if len(args) > 3 and args[3].isdigit() else None
+        expires_at = None
+        if len(args) > 4 and args[4]:
+            from datetime import datetime
+            try:
+                dt = datetime.strptime(args[4], '%Y-%m-%d')
+                expires_at = int(dt.timestamp() * 1000) + 86400000
+            except ValueError:
+                await message.answer("Неверный формат даты. Используйте ГГГГ-ММ-ДД", parse_mode='HTML')
+                return
+    ok = await create_promocode(code, discount, tariff_ids, max_uses, expires_at, grant_days)
     if ok:
         parts = [f"Промокод <code>{code}</code> создан"]
-        parts.append(f"Скидка: {discount}%")
-        if tariff_ids:
-            parts.append(f"Тарифы: {tariff_ids}")
+        if grant_days:
+            parts.append(f"Дарит дней: {grant_days}")
+        else:
+            parts.append(f"Скидка: {discount}%")
+            if tariff_ids:
+                parts.append(f"Тарифы: {tariff_ids}")
         if max_uses:
             parts.append(f"Макс. активаций: {max_uses}")
         if expires_at:
@@ -846,7 +872,11 @@ async def cmd_promos(message: Message):
         active_str = f"{p['used_count']}"
         if p['max_uses']:
             active_str += f"/{p['max_uses']}"
-        info = f"{status} <code>{p['code']}</code> — {p['discount_percent']}%"
+        info = f"{status} <code>{p['code']}</code>"
+        if p.get('grant_days'):
+            info += f" — дарит {p['grant_days']} дн."
+        else:
+            info += f" — {p['discount_percent']}%"
         if p['tariff_ids']:
             info += f" [тарифы {p['tariff_ids']}]"
         info += f" | {active_str}"
