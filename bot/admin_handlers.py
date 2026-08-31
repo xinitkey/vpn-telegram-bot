@@ -12,12 +12,9 @@ from services.db import (
     update_user, create_promocode, delete_promocode, get_all_promocodes,
     reset_trial, wipe_user,
 )
-from services.xui_api import add_client as xui_add_client, update_client_expiry as xui_update_expiry, build_link_for_email as xui_build_link_for_email, sync_or_create_client as xui_sync_or_create
+from services.vpn import get_provider
 import time
 import logging
-import csv
-import io
-import os
 
 router = Router()
 logger = logging.getLogger(__name__)
@@ -72,12 +69,9 @@ async def cmd_admin(message: Message):
         "/payments [количество] — последние платежи\n"
         "/paymentsall — все успешные платежи (сводка)\n"
         "/revenue — доходы\n\n"
-        "<b>Экспорт и система:</b>\n"
-        "/export — выгрузить CSV\n"
-        "/backup — скачать БД\n"
-        "/xui — статус 3x-UI панели\n"
-        "/devices <code>id</code> — диагностика устройств клиента\n"
-        "/resync <code>id</code> — пересоздать клиента в 3x-UI\n\n"
+        "<b>Система:</b>\n"
+        "/vpn — статус VPN-провайдера\n"
+        "/resync <code>id</code> — пересоздать клиента у провайдера\n\n"
         "<b>Промокоды:</b>\n"
         "/addpromo <code>код процент [тарифы] [макс] [дата]</code>\n"
         "/delpromo <code>код</code>\n"
@@ -305,13 +299,14 @@ async def cmd_give_sub(message: Message, command: CommandObject):
         user = await get_user(user_id)
     await set_subscription(user_id, days)
     user = await get_user(user_id)
-    if settings.XUI_URL and settings.XUI_PASSWORD and (settings.XUI_INBOUND_ID is not None or settings.XUI_INBOUND_IDS):
+    provider = get_provider()
+    if provider.enabled:
         email = f'user_{user_id}'
         now_ms = int(time.time() * 1000)
         total_days = max(1, (user.subscription - now_ms) // 86400000) if user.subscription and user.subscription > now_ms else days
         try:
             if user.xui_email:
-                result = await xui_sync_or_create(user.xui_email, total_days, user.xui_inbound_id or None)
+                result = await provider.sync_or_create_client(user.xui_email, total_days, user.xui_inbound_id or None)
                 await update_vpn_info(user_id, email=result['email'], link=result['link'])
                 if result.get('recreated'):
                     u_upd = await get_user(user_id)
@@ -320,14 +315,14 @@ async def cmd_give_sub(message: Message, command: CommandObject):
                         u_upd.xui_inbound_id = result.get('inbound_id', u_upd.xui_inbound_id)
                         await update_user(u_upd)
             else:
-                client = await xui_add_client(email, total_days, user.xui_inbound_id or None)
+                client = await provider.add_client(email, total_days, user.xui_inbound_id or None)
                 await update_vpn_info(user_id, uuid=client['uuid'], email=client['email'], link=client['link'])
                 u = await get_user(user_id)
                 if u:
                     u.xui_inbound_id = client['inbound_id']
                     await update_user(u)
         except Exception as e:
-            logger.error(f"3x-UI error in give: {e}")
+            logger.error(f"VPN provider error in give: {e}")
     user = await get_user(user_id)
     if user.link:
         try:
@@ -360,12 +355,10 @@ async def cmd_reset_sub(message: Message, command: CommandObject):
     user.subscription_start = 0
     user.trial_used = False
     if user.xui_email:
-        # Set expiry to now (0 days) in panel but keep the email reference
         try:
-            from services.xui_api import update_client_expiry
-            await update_client_expiry(user.xui_email, 0)
+            await get_provider().update_client_expiry(user.xui_email, 0)
         except Exception as e:
-            logger.warning(f"Failed to zero XUI client expiry for {user_id}: {e}")
+            logger.warning(f"Failed to zero provider client expiry for {user_id}: {e}")
     await update_user(user)
     await message.answer(
         f"Подписка пользователя <code>{user_id}</code> сброшена.",
@@ -389,10 +382,9 @@ async def cmd_wipe(message: Message, command: CommandObject):
         return
     if user.xui_email:
         try:
-            from services.xui_api import remove_client
-            await remove_client(user.xui_email)
+            await get_provider().remove_client(user.xui_email)
         except Exception as e:
-            logger.warning(f"Failed to remove XUI client on wipe for {user_id}: {e}")
+            logger.warning(f"Failed to remove VPN client on wipe for {user_id}: {e}")
     await wipe_user(user_id)
     await message.answer(
         f"Пользователь <code>{user_id}</code> полностью стёрт.\n"
@@ -419,10 +411,9 @@ async def cmd_ban(message: Message, command: CommandObject):
     # Revoke VPN key
     if user.xui_email:
         try:
-            from services.xui_api import remove_client
-            await remove_client(user.xui_email)
+            await get_provider().remove_client(user.xui_email)
         except Exception as e:
-            logger.warning(f"Failed to remove XUI client for {user_id}: {e}")
+            logger.warning(f"Failed to remove VPN client for {user_id}: {e}")
     user.xui_email = ''
     user.xui_uuid = ''
     user.link = ''
@@ -453,27 +444,27 @@ async def cmd_unban(message: Message, command: CommandObject):
         email = f'user_{user_id}'
         total_days = max(1, (user.subscription - now_ms) // 86400000)
         try:
-            from services.xui_api import add_client, build_link_for_email, remove_client
+            provider = get_provider()
             if user.xui_email:
                 try:
-                    await remove_client(user.xui_email)
+                    await provider.remove_client(user.xui_email)
                 except Exception:
                     pass
-            client = await add_client(email, total_days, user.xui_inbound_id or None)
+            client = await provider.add_client(email, total_days, user.xui_inbound_id or None)
             user.xui_uuid = client['uuid']
             user.xui_email = client['email']
             user.link = client['link']
             user.xui_inbound_id = client['inbound_id']
             key_restored = True
         except Exception as e:
-            logger.error(f"Failed to recreate XUI client for {user_id}: {e}")
+            logger.error(f"Failed to recreate VPN client for {user_id}: {e}")
     user.banned = False
     await update_user(user)
     msg = f"Пользователь <code>{user_id}</code> разблокирован."
     if key_restored:
         msg += " Ключ восстановлен."
     elif user.subscription and user.subscription > now_ms:
-        msg += " Не удалось восстановить ключ (ошибка XUI)."
+        msg += " Не удалось восстановить ключ (ошибка VPN-провайдера)."
     await message.answer(msg, parse_mode='HTML')
 
 
@@ -582,72 +573,21 @@ async def cmd_revenue(message: Message):
     await message.answer("\n".join(text), parse_mode='HTML')
 
 
-@router.message(Command("export"))
-async def cmd_export(message: Message):
+@router.message(Command("vpn"))
+async def cmd_vpn(message: Message):
     if not is_admin(message.from_user.id):
         await message.answer(_NOT_ADMIN_MSG)
         return
-    users = await get_all_users()
-    now_ms = int(time.time() * 1000)
-    buf = io.StringIO()
-    w = csv.writer(buf)
-    w.writerow(['user_id', 'balance', 'sub_active', 'days_left', 'trial_used', 'banned', 'link', 'email', 'sub_start', 'sub_end'])
-    for u in users:
-        w.writerow([
-            u.user_id, u.balance,
-            1 if u.is_subscription_active else 0,
-            u.days_left, int(u.trial_used), int(u.banned),
-            u.link, u.xui_email,
-            u.subscription_start_str, u.subscription_end_str
-        ])
-    data = buf.getvalue().encode('utf-8-sig')
-    await message.answer_document(
-        BufferedInputFile(data, filename=f"blackvpn_users_{int(time.time())}.csv"),
-        caption=f"Экспорт пользователей: {len(users)} записей"
-    )
-
-
-@router.message(Command("backup"))
-async def cmd_backup(message: Message):
-    if not is_admin(message.from_user.id):
-        await message.answer(_NOT_ADMIN_MSG)
-        return
-    db_path = settings.DB_URL.replace('sqlite+aiosqlite:///', '')
-    if not os.path.isfile(db_path):
-        await message.answer("Файл БД не найден.")
-        return
-    with open(db_path, 'rb') as f:
-        data = f.read()
-    await message.answer_document(
-        BufferedInputFile(data, filename=f"blackvpn_backup_{int(time.time())}.db"),
-        caption=f"Бэкап БД"
-    )
-
-
-@router.message(Command("xui"))
-async def cmd_xui(message: Message):
-    if not is_admin(message.from_user.id):
-        await message.answer(_NOT_ADMIN_MSG)
-        return
-    if not settings.XUI_URL:
-        await message.answer("XUI не настроен.")
-        return
-    try:
-        from services.xui_api import get_inbound_info
-        lines = [f"<b>3x-UI Статус</b>\n"]
-        for iid in settings.XUI_INBOUND_IDS:
-            inbound = await get_inbound_info(iid)
-            port = inbound.get("port", "?")
-            protocol = inbound.get("protocol", "?")
-            remark = inbound.get("remark", "?")
-            clients = inbound.get("clientStats", [])
-            lines.append(
-                f"#{iid} <code>{remark}</code> ({protocol}:{port}) — "
-                f"<code>{len(clients)}</code> клиентов"
-            )
-        await message.answer("\n".join(lines), parse_mode='HTML')
-    except Exception as e:
-        await message.answer(f"Ошибка: {e}", parse_mode='HTML')
+    provider = get_provider()
+    lines = [
+        f"<b>VPN-провайдер</b>\n",
+        f"Тип: <code>{provider.name}</code>",
+        f"Активен: <code>{'да' if provider.enabled else 'нет'}</code>",
+        f"Inbounds: <code>{provider.inbound_ids or '—'}</code>",
+    ]
+    if not provider.enabled:
+        lines.append("\nПровайдер не настроен. Используйте VPN_PROVIDER и связанные настройки.")
+    await message.answer("\n".join(lines), parse_mode='HTML')
 
 
 @router.message(Command("resync"))
@@ -666,7 +606,7 @@ async def cmd_resync(message: Message, command: CommandObject):
         return
     email = f'user_{user_id}'
     try:
-        client = await xui_add_client(email, 1, user.xui_inbound_id or None)
+        client = await get_provider().add_client(email, 1, user.xui_inbound_id or None)
         user.xui_uuid = client['uuid']
         user.xui_email = client['email']
         user.link = client['link']
@@ -678,87 +618,6 @@ async def cmd_resync(message: Message, command: CommandObject):
         )
     except Exception as e:
         await message.answer(f"Ошибка: {e}", parse_mode='HTML')
-
-
-@router.message(Command("devices"))
-async def cmd_devices(message: Message, command: CommandObject):
-    if not is_admin(message.from_user.id):
-        await message.answer(_NOT_ADMIN_MSG)
-        return
-    args = command.args.strip() if command.args else ""
-    if not args:
-        await message.answer("Использование: /devices <user_id>")
-        return
-    try:
-        user_id = int(args.split()[0])
-    except ValueError:
-        await message.answer("Неверный ID пользователя")
-        return
-    user = await get_user(user_id)
-    if user is None:
-        await message.answer("Пользователь не найден")
-        return
-    if not user.xui_email:
-        await message.answer(f"У пользователя {user_id} нет email в XUI")
-        return
-
-    try:
-        from services.xui_api import _request, get_inbound_info
-        import json
-        email = user.xui_email
-        lines = [f"<b>Диагностика устройств</b>\nUser: {user_id}\nEmail: {email}\n"]
-
-        async def try_r(method: str, path: str, tag: str):
-            try:
-                data = await _request(method, path)
-                lines.append(f"<b>{tag}:</b> <code>{json.dumps(data, default=str)[:400]}</code>")
-            except Exception as e:
-                lines.append(f"<b>{tag}:</b> <code>{str(e)[:200]}</code>")
-
-        await try_r("POST", f"/panel/api/inbounds/clientIps/{email}", "clientIps path POST")
-        await try_r("GET", f"/panel/api/inbounds/clientIps/{email}", "clientIps path GET")
-        await try_r("POST", f"/panel/api/inbounds/clientIps?email={email}", "clientIps query POST")
-        await try_r("POST", "/panel/api/inbounds/onlines", "onlines POST")
-        await try_r("GET", "/panel/api/inbounds/onlines", "onlines GET")
-        await try_r("POST", "/panel/api/inbounds/onlines?email={email}", "onlines with email POST")
-        await try_r("GET", "/panel/api/inbounds/list", "inbounds list")
-
-        for iid in settings.XUI_INBOUND_IDS:
-            inbound = await get_inbound_info(iid)
-            for cl in inbound.get("clientStats", []):
-                if isinstance(cl, dict) and cl.get("email") == email:
-                    lines.append(f"<b>clientStats:</b> <code>{json.dumps(cl, default=str)[:600]}</code>")
-                    break
-
-        await message.answer("\n".join(lines), parse_mode='HTML')
-    except Exception as e:
-        await message.answer(f"Ошибка: {e}", parse_mode='HTML')
-
-
-@router.message(Command("broadcast"))
-async def cmd_broadcast(message: Message, command: CommandObject):
-    if not is_admin(message.from_user.id):
-        await message.answer(_NOT_ADMIN_MSG)
-        return
-    text = command.args
-    if not text:
-        await message.answer("Формат: /broadcast <code>текст</code>", parse_mode='HTML')
-        return
-    users = await get_all_users()
-    sent = 0
-    failed = 0
-    for u in users:
-        try:
-            await message.bot.send_message(u.user_id, text, parse_mode='HTML')
-            sent += 1
-        except Exception:
-            failed += 1
-    await message.answer(
-        f"Рассылкa завершена\n"
-        f"Доставлено: <code>{sent}</code>\n"
-        f"Ошибок: <code>{failed}</code>",
-        parse_mode='HTML'
-    )
 
 
 @router.message(Command("addpromo"))
@@ -902,17 +761,17 @@ async def cmd_giveall(message: Message, command: CommandObject):
         try:
             await set_subscription(u.user_id, days)
             u = await get_user(u.user_id)
-            if settings.XUI_URL and settings.XUI_PASSWORD and (settings.XUI_INBOUND_ID is not None or settings.XUI_INBOUND_IDS):
+            if get_provider().enabled:
                 email = f'user_{u.user_id}'
                 now_ms = int(time.time() * 1000)
                 total_days = max(1, (u.subscription - now_ms) // 86400000) if u.subscription and u.subscription > now_ms else days
                 try:
                     if u.xui_email:
-                        await xui_update_expiry(u.xui_email, total_days)
-                        link = await xui_build_link_for_email(u.xui_email, u.xui_inbound_id or None)
+                        await get_provider().update_client_expiry(u.xui_email, total_days)
+                        link = await get_provider().build_link_for_email(u.xui_email, u.xui_inbound_id or None)
                         await update_vpn_info(u.user_id, link=link)
                     else:
-                        client = await xui_add_client(email, total_days, u.xui_inbound_id or None)
+                        client = await get_provider().add_client(email, total_days, u.xui_inbound_id or None)
                         await update_vpn_info(u.user_id, uuid=client['uuid'], email=client['email'], link=client['link'])
                         upd = await get_user(u.user_id)
                         if upd:
@@ -951,17 +810,17 @@ async def cmd_giveallactive(message: Message, command: CommandObject):
         try:
             await set_subscription(u.user_id, days)
             u = await get_user(u.user_id)
-            if settings.XUI_URL and settings.XUI_PASSWORD and (settings.XUI_INBOUND_ID is not None or settings.XUI_INBOUND_IDS):
+            if get_provider().enabled:
                 email = f'user_{u.user_id}'
                 now_ms = int(time.time() * 1000)
                 total_days = max(1, (u.subscription - now_ms) // 86400000) if u.subscription and u.subscription > now_ms else days
                 try:
                     if u.xui_email:
-                        await xui_update_expiry(u.xui_email, total_days)
-                        link = await xui_build_link_for_email(u.xui_email, u.xui_inbound_id or None)
+                        await get_provider().update_client_expiry(u.xui_email, total_days)
+                        link = await get_provider().build_link_for_email(u.xui_email, u.xui_inbound_id or None)
                         await update_vpn_info(u.user_id, link=link)
                     else:
-                        client = await xui_add_client(email, total_days, u.xui_inbound_id or None)
+                        client = await get_provider().add_client(email, total_days, u.xui_inbound_id or None)
                         await update_vpn_info(u.user_id, uuid=client['uuid'], email=client['email'], link=client['link'])
                         upd = await get_user(u.user_id)
                         if upd:

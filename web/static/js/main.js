@@ -1,4 +1,4 @@
-// ── BlackVPN WebApp — main controller ───────────────────────────────────
+// ── NoName WebApp — main controller ────────────────────────────────────
 // Sections: config → elements → render → data → topup → tariffs →
 // purchase → devices → trial → tabs → actions → init.
 
@@ -15,21 +15,21 @@ import { initParticles } from './ui/particles.js';
 // is missing (older backend). Server response overrides it.
 const DEFAULT_CONFIG = {
     tariffs: [
-        { days: 3, price: 18, perDay: 6 },
-        { days: 30, price: 129, perDay: 4.3 },
-        { days: 90, price: 329, perDay: 3.7 },
-        { days: 180, price: 599, perDay: 3.3 },
-        { days: 365, price: 1149, perDay: 3.1 },
+        { days: 3, price: 10, perDay: 3.3 },
+        { days: 30, price: 99, perDay: 3.3 },
+        { days: 90, price: 249, perDay: 2.8 },
+        { days: 180, price: 449, perDay: 2.5 },
+        { days: 365, price: 849, perDay: 2.3 },
     ],
-    dailyPrice: 6,
-    minTopUp: 50,
-    topUpPresets: [50, 100, 200, 500, 1000, 2000],
+    dailyPrice: 10,
+    minTopUp: 10,
+    topUpPresets: [10, 50, 100, 200, 500],
     paymentMethods: [
         { id: 'platega_sbp', label: 'СБП', code: 2 },
-        { id: 'platega_mir', label: 'МИР', code: 11 },
+        { id: 'platega_cards', label: 'Карта', code: 10 },
         { id: 'platega_crypto', label: 'Криптовалюта', code: 13 },
     ],
-    referralReward: 50,
+    referralReward: 10,
     trialDays: 3,
 };
 
@@ -55,13 +55,13 @@ const TARIFF_META = {
 
 const METHOD_ICONS = {
     platega_sbp: '<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2"/><path d="M1 10h22"/></svg>',
-    platega_mir: '<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2"/><path d="M3 15c2.5-3 4.5-3 7 0s4.5 3 7 0c1.2-1.4 2.3-1.6 4-1"/></svg>',
+    platega_cards: '<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2"/><path d="M3 15c2.5-3 4.5-3 7 0s4.5 3 7 0c1.2-1.4 2.3-1.6 4-1"/></svg>',
     platega_crypto: '<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2a10 10 0 100 20 10 10 0 000-20z"/><path d="M9 8h6a2 2 0 010 4H9z"/><path d="M9 12h7a2 2 0 010 4H9z"/><path d="M12 8v8M10 6v2M14 6v2"/></svg>',
 };
 
 const POLL_INTERVAL = 30000;
 const REFRESH_MIN_GAP = 15000;
-const CONNECT_PAGE = '/blackvpn-connect.html';
+const CONNECT_PAGE = '/connect.html';
 const RING_C = 2 * Math.PI * 50; // progress ring circumference (r=50)
 
 // ── Elements ────────────────────────────────────────────────────────────
@@ -702,8 +702,8 @@ const actions = {
     'referral-info': () => showReferralInfo(),
     'open-privacy': () => { haptic('light'); openExternal(`${location.origin}/privacy`); },
     'open-terms': () => { haptic('light'); openExternal(`${location.origin}/terms`); },
-    'support-tech': () => { haptic('light'); openTelegramLink('https://t.me/Asdzxclop_bot'); },
-    'support-online': () => { haptic('light'); openTelegramLink('https://t.me/Judebellengham'); },
+    'support-tech': () => { haptic('light'); openTelegramLink('https://t.me/YourBotUsername'); },
+    'support-online': () => { haptic('light'); openTelegramLink('https://t.me/YourBotUsername'); },
     'trial-activate': () => activateTrial(),
     'trial-remind': () => trialRemindLater(),
     'trial-cancel': () => {

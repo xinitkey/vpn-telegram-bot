@@ -1,628 +1,87 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="color-scheme" content="dark light" />
-  <title>BlackVPN — Условия использования</title>
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23e74c3c'><rect x='2' y='2' width='9' height='9' rx='1.5'/><rect x='13' y='2' width='9' height='9' rx='1.5'/><rect x='2' y='13' width='9' height='9' rx='1.5'/><path d='M13 18h2v-2h2v2h2v2h-2v2h-2v-2h-2v-2z'/></svg>">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-  <style>
-    :root {
-      --bg: #070709;
-      --card: rgba(255, 255, 255, 0.055);
-      --card-2: rgba(255, 255, 255, 0.04);
-      --accent: #e23240;
-      --accent-2: #ff5563;
-      --accent-soft: rgba(226, 50, 64, 0.13);
-      --accent-border: rgba(226, 50, 64, 0.32);
-      --text-1: #f5f3f2;
-      --text-2: #a39e99;
-      --text-3: #6f6a66;
-      --border: rgba(255, 255, 255, 0.09);
-      --glass-hi: rgba(255, 255, 255, 0.09);
-      --glass-shadow: 0 14px 40px rgba(0, 0, 0, 0.3);
-      --glass-blur: blur(20px) saturate(160%);
-      --radius-xl: 24px;
-      --radius-md: 16px;
-      --content: 980px;
-      color-scheme: dark;
-    }
-
-    @media (prefers-color-scheme: light) {
-      :root {
-        --bg: #f4f3f1;
-        --card: rgba(255, 255, 255, 0.62);
-        --card-2: rgba(255, 255, 255, 0.5);
-        --accent-soft: rgba(226, 50, 64, 0.1);
-        --accent-border: rgba(226, 50, 64, 0.28);
-        --text-1: #1b1815;
-        --text-2: #6e6a64;
-        --text-3: #a8a49e;
-        --border: rgba(25, 20, 15, 0.09);
-        --glass-hi: rgba(255, 255, 255, 0.85);
-        --glass-shadow: 0 14px 40px rgba(25, 20, 15, 0.1);
-        color-scheme: light;
-      }
-    }
-
-    * { box-sizing: border-box; }
-    html { scroll-behavior: smooth; }
-
-    .bg-mesh { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
-    .droplet {
-      position: absolute; top: -20px;
-      border-radius: 50% 50% 50% 50% / 38% 32% 70% 68%;
-      background: linear-gradient(168deg, rgba(255,255,255,.4) 0%, rgba(195,220,248,.18) 35%, rgba(140,175,220,.04) 100%);
-      opacity: 0;
-      will-change: transform;
-      animation: droplet-fall var(--d-dur,7s) ease-in infinite;
-      animation-delay: var(--d-delay,0s);
-    }
-    .droplet-red { background: linear-gradient(168deg, rgba(242,85,90,.3) 0%, rgba(215,60,68,.12) 35%, rgba(180,40,50,.02) 100%); }
-    @media (prefers-color-scheme: light) {
-      .droplet { background: linear-gradient(168deg, rgba(50,42,36,.2) 0%, rgba(55,65,80,.07) 35%, transparent 100%); }
-      .droplet-red { background: linear-gradient(168deg, rgba(226,50,64,.16) 0%, rgba(180,42,50,.05) 35%, transparent 100%); }
-    }
-    @keyframes droplet-fall {
-      0% { transform: translateY(0) rotate(-1deg); opacity: 0; }
-      4% { opacity: .6; }
-      30% { transform: translateY(35vh) rotate(1.5deg); }
-      60% { transform: translateY(70vh) rotate(-1deg); opacity: .6; }
-      85% { transform: translateY(95vh) rotate(0deg); opacity: .35; }
-      100% { transform: translateY(100vh); opacity: 0; }
-    }
-
-    body {
-      margin: 0;
-      min-height: 100vh;
-      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      color: var(--text-1);
-      background: var(--bg);
-      -webkit-font-smoothing: antialiased;
-      transition: background-color .25s ease, color .25s ease;
-    }
-
-    a { color: var(--accent-2); text-decoration: none; }
-    a:hover { text-decoration: underline; }
-
-    .page {
-      max-width: var(--content);
-      margin: 0 auto;
-      padding: 18px 16px 36px;
-      position: relative;
-      z-index: 1;
-    }
-
-    .topbar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      margin-bottom: 16px;
-      padding: 10px 12px;
-      border-radius: 20px;
-      background: var(--card);
-      border: 1px solid var(--border);
-      backdrop-filter: var(--glass-blur);
-      -webkit-backdrop-filter: var(--glass-blur);
-      box-shadow: inset 0 1px 0 var(--glass-hi), var(--glass-shadow);
-    }
-
-    .brand { display: flex; align-items: center; gap: 12px; min-width: 0; }
-
-    .logo {
-      width: 40px;
-      height: 40px;
-      border-radius: 12px;
-      overflow: hidden;
-      flex: 0 0 auto;
-      background: var(--card-2);
-      display: grid;
-      place-items: center;
-    }
-
-    .logo img { width: 100%; height: 100%; object-fit: cover; display: block; }
-
-    .brand-title {
-      font-size: 15px;
-      font-weight: 700;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .lang-switcher {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      padding: 4px;
-      background: var(--card-2);
-      border: 1px solid var(--border);
-      border-radius: 999px;
-    }
-
-    .lang-btn {
-      border: 0;
-      background: transparent;
-      color: var(--text-3);
-      min-width: 52px;
-      padding: 8px 12px;
-      border-radius: 999px;
-      font-weight: 800;
-      font-size: 13px;
-      cursor: pointer;
-      transition: all .18s ease;
-    }
-
-    .lang-btn.active {
-      background: linear-gradient(180deg, var(--accent-2), var(--accent));
-      color: #fff;
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22), 0 4px 14px rgba(226, 50, 64, 0.3);
-    }
-
-    .hero-card, .content-card, .note-card {
-      border-radius: var(--radius-xl);
-      background: var(--card);
-      border: 1px solid var(--border);
-      backdrop-filter: var(--glass-blur);
-      -webkit-backdrop-filter: var(--glass-blur);
-      box-shadow: inset 0 1px 0 var(--glass-hi), var(--glass-shadow);
-    }
-
-    .hero-card { padding: 26px 20px; margin-bottom: 14px; }
-
-    .eyebrow {
-      margin: 0 0 8px;
-      color: var(--accent-2);
-      font-size: 12px;
-      text-transform: uppercase;
-      letter-spacing: 0.14em;
-      font-weight: 700;
-    }
-
-    h1 {
-      margin: 0;
-      font-size: clamp(34px, 6vw, 56px);
-      line-height: 0.98;
-      letter-spacing: -0.04em;
-      font-weight: 900;
-    }
-
-    .hero-accent { color: var(--accent-2); }
-
-    .hero-text {
-      margin: 14px 0 0;
-      max-width: 60ch;
-      color: var(--text-2);
-      font-size: 15px;
-      line-height: 1.55;
-    }
-
-    .meta-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      gap: 10px;
-      margin-top: 20px;
-    }
-
-    .meta-item {
-      border-radius: var(--radius-md);
-      padding: 13px 14px;
-      background: var(--card-2);
-      border: 1px solid var(--border);
-    }
-
-    .meta-label {
-      display: block;
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: var(--text-3);
-      margin-bottom: 5px;
-      font-weight: 700;
-    }
-
-    .meta-value {
-      color: var(--text-1);
-      font-size: 14px;
-      font-weight: 700;
-      line-height: 1.35;
-      word-break: break-word;
-    }
-
-    .content-card { padding: 20px 18px 24px; }
-
-    .doc h2 {
-      margin: 26px 0 10px;
-      font-size: 22px;
-      line-height: 1.2;
-      letter-spacing: -0.02em;
-      font-weight: 800;
-    }
-
-    .doc h2:first-child { margin-top: 0; }
-
-    .doc p { margin: 0 0 13px; color: var(--text-1); font-size: 15px; line-height: 1.65; }
-    .doc ul { margin: 0 0 15px 18px; padding: 0; }
-    .doc li { margin: 0 0 7px; color: var(--text-1); font-size: 15px; line-height: 1.6; }
-    .doc strong { color: var(--text-1); font-weight: 700; }
-
-    .note-card {
-      margin-top: 14px;
-      padding: 14px 18px;
-      color: var(--text-2);
-      font-size: 13px;
-      line-height: 1.6;
-    }
-
-    .footer {
-      display: flex;
-      justify-content: space-between;
-      gap: 14px;
-      flex-wrap: wrap;
-      margin-top: 16px;
-      color: var(--text-3);
-      font-size: 13px;
-    }
-
-    [hidden] { display: none !important; }
-
-    @media (max-width: 640px) {
-      .page { padding-left: 10px; padding-right: 10px; }
-      .topbar { padding: 10px; }
-      .brand-title { font-size: 14px; }
-      .hero-card, .content-card, .note-card { border-radius: 20px; padding-left: 14px; padding-right: 14px; }
-      .lang-switcher { flex: 0 0 auto; }
-      .lang-btn { min-width: 46px; padding: 8px 10px; }
-      .doc h2 { font-size: 20px; }
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>NoName — Terms of Service (template)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Inter', system-ui, sans-serif; background: #0e1116; color: #e8eaed; line-height: 1.65; }
+        .wrap { max-width: 760px; margin: 0 auto; padding: 40px 20px 80px; }
+        h1 { font-size: 28px; font-weight: 800; margin-bottom: 8px; }
+        h2 { font-size: 19px; font-weight: 700; margin: 32px 0 10px; }
+        .notice { border: 1px solid #b45309; background: #3a2a10; color: #fcd34d; border-radius: 10px; padding: 14px 16px; font-size: 14px; margin: 18px 0 26px; }
+        .meta { display: grid; gap: 4px; font-size: 14px; color: #9aa3af; margin: 16px 0; }
+        .meta b { color: #e8eaed; font-weight: 600; }
+        p { margin: 10px 0; font-size: 15px; }
+        ul { margin: 8px 0 8px 22px; font-size: 15px; }
+        li { margin: 4px 0; }
+        a { color: #6ea8fe; }
+        .back { display: inline-block; margin-bottom: 24px; color: #9aa3af; text-decoration: none; font-size: 14px; }
+    </style>
 </head>
 <body>
-  <div class="bg-mesh"></div>
-  <div class="page">
-
-    <header class="topbar">
-      <div class="brand">
-        <div class="logo" style="background:transparent;box-shadow:none">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="#ff4747"><rect x="1" y="10" width="2" height="4" rx="1"/><rect x="5" y="6" width="2" height="12" rx="1"/><rect x="9" y="3" width="2" height="18" rx="1"/><rect x="13" y="6" width="2" height="12" rx="1"/><rect x="17" y="8" width="2" height="8" rx="1"/><rect x="21" y="10" width="2" height="4" rx="1"/></svg>
+    <div class="wrap">
+        <a class="back" href="/">← Back</a>
+        <h1>Terms of Service</h1>
+        <p class="notice">Template notice: This document is a general template and must be reviewed and adapted by qualified legal counsel for your service, jurisdiction and business model before production use. This template alone provides no legal protection.</p>
+        <div class="meta">
+            <span><b>Operator:</b> [Operator Name]</span>
+            <span><b>Service:</b> [Service Name] (Telegram bot / mini app / web)</span>
+            <span><b>Contact:</b> [Contact Email]</span>
+            <span><b>Jurisdiction:</b> [Jurisdiction]</span>
+            <span><b>Effective date:</b> [Effective Date]</span>
         </div>
-        <div class="brand-title" data-copy="topbarTitle">BlackVPN — Условия использования</div>
-      </div>
-      <div class="lang-switcher" aria-label="Language switcher">
-        <button class="lang-btn active" type="button" data-switch-lang="ru">RU</button>
-        <button class="lang-btn" type="button" data-switch-lang="en">EN</button>
-      </div>
-    </header>
 
-    <section class="hero-card">
-      <p class="eyebrow" data-copy="eyebrow">Юридическая информация</p>
-      <h1><span>Black</span><span class="hero-accent">VPN</span></h1>
-      <p class="hero-text" data-copy="heroText">
-        Условия использования сервиса BlackVPN — Telegram-бота , mini app и веб-интерфейса.
-      </p>
-      <div class="meta-grid">
-        <div class="meta-item">
-          <span class="meta-label" data-copy="effectiveLabel">Дата вступления в силу</span>
-          <div class="meta-value">24 июня 2026</div>
-        </div>
-        <div class="meta-item">
-          <span class="meta-label" data-copy="serviceLabel">Сервис</span>
-          <div class="meta-value">BlackVPN / @BlackVPN_OfficialBot</div>
-        </div>
-        <div class="meta-item">
-          <span class="meta-label" data-copy="contactLabel">Контакты</span>
-          <div class="meta-value"><a href="mailto:blackvpn2026@mail.ru">blackvpn2026@mail.ru</a></div>
-        </div>
-      </div>
-    </section>
+        <h2>1. Acceptance of terms</h2>
+        <p>By accessing or using the service you agree to these Terms. If you do not agree, do not use the service.</p>
 
-    <section class="content-card">
+        <h2>2. Eligibility</h2>
+        <p>You must be of legal age in your jurisdiction to use the service. If you use the service on behalf of an organization, you represent that you have authority to bind it.</p>
 
-      <!-- RU -->
-      <article class="doc" lang="ru" data-lang-block="ru">
+        <h2>3. Accounts and security</h2>
+        <p>You are responsible for your Telegram account, credentials and for all activity performed through your account. Notify us immediately of any suspected unauthorized use.</p>
 
-        <h2>Условия использования BlackVPN</h2>
-        <p><strong>Дата вступления в силу:</strong> 24 июня 2026 года</p>
-        <p><strong>Исполнитель:</strong> Администрация сервиса BlackVPN</p>
-        <p><strong>Юрисдикция:</strong> Российская Федерация</p>
-        <p><strong>Сервис:</strong> BlackVPN, Telegram-бот <strong>@BlackVPN_OfficialBot</strong>, mini app / сайт: <strong>blackvpn.blackvpn.workers.dev</strong></p>
-        <p><strong>Контакты:</strong> <a href="mailto:blackvpn2026@mail.ru">blackvpn2026@mail.ru</a></p>
-        <p><strong>Техническая поддержка:</strong> <a href="https://t.me/Asdzxclop_bot" target="_blank" rel="noopener noreferrer">@Asdzxclop_bot</a></p>
-        <p><strong>Онлайн поддержка:</strong> <a href="https://t.me/Judebellengham" target="_blank" rel="noopener noreferrer">@Judebellengham</a></p>
-
-        <h2>1. Общие положения</h2>
-        <p>Настоящие Условия использования (далее — «Условия») регулируют доступ и использование сервиса BlackVPN, включая Telegram-бота @BlackVPN_OfficialBot и веб-интерфейс на blackvpn.blackvpn.workers.dev.</p>
-        <p>Используя сервис BlackVPN — в любой его форме — вы подтверждаете, что ознакомились с настоящими Условиями и соглашаетесь с ними в полном объёме. Если вы не согласны с Условиями, вы не вправе использовать сервис.</p>
-        <p>В дальнейшем «Пользователь» — любое физическое лицо, использующее сервис, «Исполнитель» — лицо, предоставляющее сервис BlackVPN.</p>
-
-        <h2>2. Описание сервиса</h2>
-        <p>BlackVPN предоставляет доступ к VPN-сервису через Telegram-бот и mini app. При оформлении подписки пользователю выдаётся уникальный VPN-ключ, привязанный к его Telegram-аккаунту.</p>
-        <p>Пользователь самостоятельно выбирает срок, на который хочет оформить подписку, и вправе продлить её в любой момент.</p>
-        <p>Сервис доступен круглосуточно, однако не гарантирует бесперебойной работы (см. раздел 9).</p>
-
-        <h2>3. Пробный период</h2>
-        <p>Новым пользователям предоставляется бесплатный пробный период сроком <strong>3 дня</strong> без ограничений по использованию.</p>
-        <p>Пробный период предоставляется однократно и не может быть активирован повторно на том же Telegram-аккаунте.</p>
-
-        <h2>4. Подписка и оплата</h2>
-        <p>Подписка оформляется на срок, выбранный пользователем. Стоимость подписки рассчитывается исходя из количества выбранных дней.</p>
-        <p>Оплата принимается следующими способами: банковская карта, криптовалюта, а также через платёжный сервис <strong>platega.io</strong>.</p>
-        <p>Подписка <strong>не продлевается автоматически</strong>. Пользователь самостоятельно принимает решение о продлении.</p>
-        <p>Дата окончания подписки отображается в личном кабинете в mini app.</p>
-
-        <h2>5. Количество устройств</h2>
-        <p>К одному VPN-ключу можно подключить до <strong>10 устройств одновременно</strong>.</p>
-        <p>Пользователь вправе использовать VPN-ключ на нескольких собственных устройствах. Ограничений по типу или операционной системе устройств не устанавливается.</p>
-
-        <h2>6. Совместное использование доступа</h2>
-        <p>Пользователь вправе использовать свой VPN-ключ совместно с другими лицами. Исполнитель не устанавливает ограничений по количеству пользователей, подключающихся с одного ключа, при условии соблюдения лимита в 10 одновременных устройств.</p>
-        <p>Ответственность за все действия, совершённые с использованием ключа пользователя, несёт сам пользователь.</p>
-
-        <h2>7. Допустимое использование</h2>
-        <p>Пользователь обязуется использовать BlackVPN исключительно в законных целях и в соответствии с применимым законодательством.</p>
-        <p>Запрещается использование сервиса для:</p>
+        <h2>4. Acceptable use</h2>
+        <p>You agree not to:</p>
         <ul>
-          <li>совершения противоправных действий, предусмотренных законодательством страны пользователя или международным правом;</li>
-          <li>распространения вредоносного программного обеспечения, спама или вирусов;</li>
-          <li>атак на сторонние серверы, сети и сервисы;</li>
-          <li>обхода систем защиты или несанкционированного доступа к чужим ресурсам;</li>
-          <li>нарушения авторских прав и интеллектуальной собственности третьих лиц;</li>
-          <li>эксплуатации материалов, связанных с насилием или жестоким обращением с несовершеннолетними.</li>
-        </ul>
-        <p>Исполнитель оставляет за собой право заблокировать доступ пользователю при нарушении данных условий без возврата оплаты.</p>
-
-        <h2>8. Блокировка аккаунта</h2>
-        <p>Исполнитель вправе ограничить или полностью заблокировать доступ пользователя к сервису в следующих случаях:</p>
-        <ul>
-          <li>чрезмерная нагрузка на серверы (DDoS-атаки, спам-запросы, массовый автоматизированный трафик);</li>
-          <li>нарушение раздела 7 настоящих Условий;</li>
-          <li>попытки обойти систему проверки подписки или мошенничество при оплате;</li>
-          <li>иные действия, наносящие ущерб сервису или другим пользователям.</li>
-        </ul>
-        <p>При блокировке по причине нарушения Условий возврат денежных средств не осуществляется.</p>
-
-        <h2>9. Доступность сервиса и технические неполадки</h2>
-        <p>Сервис предоставляется <strong>«как есть» (as is)</strong> без каких-либо гарантий бесперебойной работы, скорости, доступности или пригодности для конкретной цели.</p>
-        <p>В случае технических неполадок или временной недоступности сервиса Исполнитель обязуется:</p>
-        <ul>
-          <li>опубликовать уведомление в официальном Telegram-боте и/или канале;</li>
-          <li>приложить усилия для восстановления работы сервиса в кратчайшие сроки.</li>
-        </ul>
-        <p>Исполнитель не несёт ответственности за убытки, упущенную выгоду или иной ущерб, возникший вследствие временной недоступности сервиса.</p>
-
-        <h2>10. Возвраты</h2>
-        <p>Оплачивая подписку, пользователь подтверждает, что ознакомился с настоящими Условиями использования, понимает характер приобретаемой услуги и принимает решение о покупке осознанно.</p>
-        <p><strong>Возврат денежных средств не осуществляется</strong> при следующих обстоятельствах:</p>
-        <ul>
-          <li>пользователь передумал использовать сервис;</li>
-          <li>пользователь не воспользовался подпиской;</li>
-          <li>сервис был недоступен в отдельные периоды по техническим причинам;</li>
-          <li>аккаунт заблокирован в связи с нарушением Условий использования.</li>
-        </ul>
-        <p>Вопросы оплаты и спорные ситуации рассматриваются индивидуально при обращении на <a href="mailto:blackvpn.support@gmail.com">blackvpn.support@gmail.com</a>.</p>
-
-        <h2>11. Ограничение ответственности</h2>
-        <p>Исполнитель не несёт ответственности за:</p>
-        <ul>
-          <li>любые прямые или косвенные убытки, связанные с использованием или невозможностью использования сервиса;</li>
-          <li>действия третьих лиц, использующих VPN-ключ пользователя;</li>
-          <li>последствия использования сервиса в нарушение законодательства страны пользователя;</li>
-          <li>технические сбои на стороне платёжных провайдеров;</li>
-          <li>перебои в работе сторонней инфраструктуры (Cloudflare, серверы, интернет-провайдеры).</li>
+            <li>engage in any illegal activity or violate applicable laws;</li>
+            <li>abuse, spam, attack, disrupt, or interfere with the service or other users;</li>
+            <li>infringe intellectual property rights;</li>
+            <li>commit fraud, or circumvent payment, access or safety mechanisms;</li>
+            <li>use the service to distribute malware or harmful content.</li>
         </ul>
 
-        <h2>12. Изменение Условий</h2>
-        <p>Исполнитель вправе вносить изменения в настоящие Условия в любое время. Актуальная версия публикуется по адресу страницы данного документа.</p>
-        <p>Продолжение использования сервиса после публикации обновлённых Условий означает согласие с ними.</p>
+        <h2>5. User responsibility</h2>
+        <p>You are solely responsible for lawful use of the service and for the traffic generated through it in your jurisdiction.</p>
 
-        <h2>13. Применимое право</h2>
-        <p>Настоящие Условия регулируются законодательством Российской Федерации. Все споры разрешаются путём переговоров, а при невозможности — в соответствии с действующим законодательством РФ.</p>
+        <h2>6. Third-party services and integrations</h2>
+        <p>The service may rely on third-party providers (e.g., VPN infrastructure, payment processors). We are not responsible for third-party services; their own terms and policies apply.</p>
 
-        <h2>14. Контакты</h2>
-        <p><strong>Исполнитель:</strong> Администрация сервиса BlackVPN</p>
-        <p><strong>Юрисдикция:</strong> Российская Федерация</p>
-        <p><strong>Email:</strong> <a href="mailto:blackvpn2026@mail.ru">blackvpn2026@mail.ru</a></p>
-        <p><strong>Техническая поддержка:</strong> <a href="https://t.me/Asdzxclop_bot" target="_blank" rel="noopener noreferrer">@Asdzxclop_bot</a></p>
-        <p><strong>Онлайн поддержка:</strong> <a href="https://t.me/Judebellengham" target="_blank" rel="noopener noreferrer">@Judebellengham</a></p>
+        <h2>7. Availability and changes</h2>
+        <p>The service is provided on an "as is" and "as available" basis. We may change, suspend or discontinue any part of the service at any time.</p>
 
-      </article>
+        <h2>8. Subscriptions and payments</h2>
+        <p>[Placeholder: describe your subscription tiers, pricing, renewal, refund and dispute policies.]</p>
 
-      <!-- EN -->
-      <article class="doc" lang="en" data-lang-block="en" hidden>
+        <h2>9. Termination</h2>
+        <p>We may suspend or terminate access to the service for violations of these Terms or applicable law, with or without notice.</p>
 
-        <h2>BlackVPN Terms of Use</h2>
-        <p><strong>Effective date:</strong> June 24, 2026</p>
-        <p><strong>Provider:</strong> BlackVPN service administration</p>
-        <p><strong>Jurisdiction:</strong> Russian Federation</p>
-        <p><strong>Service:</strong> BlackVPN, Telegram bot <strong>@BlackVPN_OfficialBot</strong>, mini app / website: <strong>blackvpn.blackvpn.workers.dev</strong></p>
-        <p><strong>Contacts:</strong> <a href="mailto:blackvpn2026@mail.ru">blackvpn2026@mail.ru</a></p>
-        <p><strong>Technical support:</strong> <a href="https://t.me/Asdzxclop_bot" target="_blank" rel="noopener noreferrer">@Asdzxclop_bot</a></p>
-        <p><strong>Online support:</strong> <a href="https://t.me/Judebellengham" target="_blank" rel="noopener noreferrer">@Judebellengham</a></p>
+        <h2>10. Disclaimers</h2>
+        <p>To the maximum extent permitted by law, the service is provided without warranties of any kind, express or implied.</p>
 
-        <h2>1. General</h2>
-        <p>These Terms of Use ("Terms") govern access to and use of the BlackVPN service, including the Telegram bot @BlackVPN_OfficialBot and the web interface at blackvpn.blackvpn.workers.dev.</p>
-        <p>By using BlackVPN in any form, you confirm that you have read, understood, and agree to these Terms in full. If you do not agree, you must not use the service.</p>
-        <p>"User" refers to any individual using the service. "Provider" refers to the person operating BlackVPN.</p>
+        <h2>11. Limitation of liability</h2>
+        <p>To the maximum extent permitted by law, we are not liable for indirect, incidental, special or consequential damages, or for any loss of data, revenue or profits.</p>
 
-        <h2>2. Service Description</h2>
-        <p>BlackVPN provides access to a VPN service via a Telegram bot and mini app. Upon subscribing, the user receives a unique VPN key tied to their Telegram account.</p>
-        <p>The user independently chooses the subscription duration and may renew it at any time.</p>
-        <p>The service is available 24/7, but no guarantee of uninterrupted availability is made (see section 9).</p>
+        <h2>12. Governing law</h2>
+        <p>[Placeholder: specify governing law and dispute resolution mechanism for your jurisdiction.]</p>
 
-        <h2>3. Free Trial</h2>
-        <p>New users are eligible for a <strong>3-day free trial</strong> with no usage restrictions.</p>
-        <p>The free trial is available once per Telegram account and cannot be reactivated.</p>
-
-        <h2>4. Subscription and Payment</h2>
-        <p>A subscription is purchased for a duration chosen by the user. The cost is calculated based on the number of days selected.</p>
-        <p>Payment is accepted via bank card, cryptocurrency, and the <strong>platega.io</strong> payment service.</p>
-        <p>Subscriptions are <strong>not renewed automatically</strong>. The user decides when to renew.</p>
-        <p>The subscription expiry date is displayed in the mini app dashboard.</p>
-
-        <h2>5. Number of Devices</h2>
-        <p>A single VPN key supports up to <strong>10 simultaneous connections</strong>.</p>
-        <p>The user may use the VPN key across multiple personal devices. No restrictions apply to device type or operating system.</p>
-
-        <h2>6. Sharing Access</h2>
-        <p>The user may share their VPN key with others. The Provider does not restrict the number of people using a single key, provided the 10-device simultaneous connection limit is observed.</p>
-        <p>The user bears full responsibility for all actions performed using their VPN key.</p>
-
-        <h2>7. Acceptable Use</h2>
-        <p>The user agrees to use BlackVPN only for lawful purposes and in compliance with all applicable laws.</p>
-        <p>The following uses are prohibited:</p>
-        <ul>
-          <li>any actions that violate the laws of the user's country or international law;</li>
-          <li>distributing malware, spam, or viruses;</li>
-          <li>attacks on third-party servers, networks, or services;</li>
-          <li>bypassing security systems or gaining unauthorized access to third-party resources;</li>
-          <li>infringing the intellectual property rights of third parties;</li>
-          <li>accessing or distributing content related to the abuse of minors.</li>
-        </ul>
-        <p>The Provider reserves the right to block access for violations of these Terms without a refund.</p>
-
-        <h2>8. Account Blocking</h2>
-        <p>The Provider may restrict or fully block a user's access in the following cases:</p>
-        <ul>
-          <li>excessive server load (DDoS attacks, spam requests, mass automated traffic);</li>
-          <li>violation of section 7 of these Terms;</li>
-          <li>attempts to bypass the subscription verification system or payment fraud;</li>
-          <li>other actions that damage the service or other users.</li>
-        </ul>
-        <p>No refund will be issued for accounts blocked due to Terms violations.</p>
-
-        <h2>9. Service Availability and Technical Issues</h2>
-        <p>The service is provided <strong>"as is"</strong> without any warranty of uninterrupted availability, speed, uptime, or fitness for a particular purpose.</p>
-        <p>In the event of technical issues or temporary unavailability, the Provider will:</p>
-        <ul>
-          <li>publish a notice in the official Telegram bot and/or channel;</li>
-          <li>make reasonable efforts to restore service as soon as possible.</li>
-        </ul>
-        <p>The Provider is not liable for losses, lost revenue, or other damages resulting from temporary service unavailability.</p>
-
-        <h2>10. Refund Policy</h2>
-        <p>By purchasing a subscription, the user confirms they have read these Terms, understand the nature of the service, and make a conscious purchase decision.</p>
-        <p><strong>No refunds will be issued</strong> in the following circumstances:</p>
-        <ul>
-          <li>the user changed their mind about using the service;</li>
-          <li>the user did not use the subscription;</li>
-          <li>the service was temporarily unavailable due to technical issues;</li>
-          <li>the account was blocked due to a Terms violation.</li>
-        </ul>
-        <p>Payment issues and disputes are handled individually — please contact <a href="mailto:blackvpn.support@gmail.com">blackvpn.support@gmail.com</a>.</p>
-
-        <h2>11. Limitation of Liability</h2>
-        <p>The Provider is not liable for:</p>
-        <ul>
-          <li>any direct or indirect losses related to the use or inability to use the service;</li>
-          <li>actions of third parties using the user's VPN key;</li>
-          <li>consequences of using the service in violation of the laws of the user's country;</li>
-          <li>technical failures on the side of payment providers;</li>
-          <li>outages in third-party infrastructure (Cloudflare, servers, ISPs).</li>
-        </ul>
-
-        <h2>12. Changes to These Terms</h2>
-        <p>The Provider may update these Terms at any time. The current version is always published at the URL of this document.</p>
-        <p>Continued use of the service after updated Terms are published constitutes acceptance of the new Terms.</p>
-
-        <h2>13. Governing Law</h2>
-        <p>These Terms are governed by the laws of the Russian Federation. All disputes shall be resolved through negotiation, and if that is not possible, in accordance with applicable Russian Federation law.</p>
+        <h2>13. Changes to these terms</h2>
+        <p>We may update these Terms at any time. Continued use of the service after changes constitutes acceptance of the revised Terms.</p>
 
         <h2>14. Contact</h2>
-        <p><strong>Provider:</strong> BlackVPN service administration</p>
-        <p><strong>Jurisdiction:</strong> Russian Federation</p>
-        <p><strong>Email:</strong> <a href="mailto:blackvpn2026@mail.ru">blackvpn2026@mail.ru</a></p>
-        <p><strong>Technical support:</strong> <a href="https://t.me/Asdzxclop_bot" target="_blank" rel="noopener noreferrer">@Asdzxclop_bot</a></p>
-        <p><strong>Online support:</strong> <a href="https://t.me/Judebellengham" target="_blank" rel="noopener noreferrer">@Judebellengham</a></p>
-
-      </article>
-    </section>
-
-    <section class="note-card">
-      <div data-note-lang="ru">Версия документа: 2026-06-24.</div>
-      <div data-note-lang="en" hidden>Document version: 2026-06-24.</div>
-    </section>
-
-    <footer class="footer">
-      <div><a href="https://blackvpn.blackvpn.workers.dev" target="_blank" rel="noopener noreferrer">blackvpn.blackvpn.workers.dev</a></div>
-      <div>BlackVPN · Terms of Use</div>
-    </footer>
-  </div>
-
-  <script>
-    const buttons = document.querySelectorAll('[data-switch-lang]');
-    const blocks = document.querySelectorAll('[data-lang-block]');
-    const noteRu = document.querySelector('[data-note-lang="ru"]');
-    const noteEn = document.querySelector('[data-note-lang="en"]');
-    const topbarTitle = document.querySelector('[data-copy="topbarTitle"]');
-    const eyebrow = document.querySelector('[data-copy="eyebrow"]');
-    const heroText = document.querySelector('[data-copy="heroText"]');
-    const effectiveLabel = document.querySelector('[data-copy="effectiveLabel"]');
-    const serviceLabel = document.querySelector('[data-copy="serviceLabel"]');
-    const contactLabel = document.querySelector('[data-copy="contactLabel"]');
-
-    const copy = {
-      ru: {
-        title: 'BlackVPN — Условия использования',
-        topbarTitle: 'BlackVPN — Условия использования',
-        eyebrow: 'Юридическая информация',
-        heroText: 'Условия использования сервиса BlackVPN — Telegram-бота, mini app и веб-интерфейса.',
-        effectiveLabel: 'Дата вступления в силу',
-        serviceLabel: 'Сервис',
-        contactLabel: 'Контакты'
-      },
-      en: {
-        title: 'BlackVPN — Terms of Use',
-        topbarTitle: 'BlackVPN — Terms of Use',
-        eyebrow: 'Legal information',
-        heroText: 'Terms of Use for the BlackVPN Telegram bot, mini app, and web interface.',
-        effectiveLabel: 'Effective date',
-        serviceLabel: 'Service',
-        contactLabel: 'Contacts'
-      }
-    };
-
-    function setLang(lang) {
-      document.documentElement.lang = lang;
-      document.title = copy[lang].title;
-      topbarTitle.textContent = copy[lang].topbarTitle;
-      eyebrow.textContent = copy[lang].eyebrow;
-      heroText.textContent = copy[lang].heroText;
-      effectiveLabel.textContent = copy[lang].effectiveLabel;
-      serviceLabel.textContent = copy[lang].serviceLabel;
-      contactLabel.textContent = copy[lang].contactLabel;
-
-      blocks.forEach(b => { b.hidden = b.dataset.langBlock !== lang; });
-      buttons.forEach(b => { b.classList.toggle('active', b.dataset.switchLang === lang); });
-      noteRu.hidden = lang !== 'ru';
-      noteEn.hidden = lang !== 'en';
-    }
-
-    buttons.forEach(btn => btn.addEventListener('click', () => setLang(btn.dataset.switchLang)));
-
-    const initialLang = (navigator.language || 'ru').toLowerCase().startsWith('ru') ? 'ru' : 'en';
-    setLang(initialLang);
-  </script>
-<script>
-(function(){
-  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-  var c = document.querySelector('.bg-mesh');
-  if (!c) return;
-  var frag = document.createDocumentFragment();
-  function rand(a,b){return a+Math.random()*(b-a)}
-  for(var i=0;i<4;i++){
-    var left=rand(2,98),w=rand(3,8),h=w*rand(1.5,2.2),dur=rand(6,12),delay=rand(0,16);
-    var d=document.createElement('i');
-    d.className=Math.random()<0.15?'droplet droplet-red':'droplet';
-    d.style.cssText='left:'+left.toFixed(1)+'%;width:'+w.toFixed(1)+'px;height:'+h.toFixed(1)+'px;--d-dur:'+dur.toFixed(1)+'s;--d-delay:'+(-delay).toFixed(1)+'s;';
-    frag.appendChild(d);
-  }
-  }
-  c.appendChild(frag);
-})();
-</script>
+        <p>[Operator Name] — [Contact Email]</p>
+    </div>
 </body>
 </html>

@@ -1,80 +1,81 @@
-# Byte-compiled / optimized / DLL files
+# Environment files
+.env
+.env.*
+!.env.example
+.envrc
+
+# Secrets and certificates
+*.pem
+*.key
+*.crt
+*.cer
+*.p12
+*.pfx
+*.jks
+
+# VPN and private configuration
+*.ovpn
+wg*.conf
+wireguard*.conf
+openvpn*.conf
+secrets.*
+config.local.*
+config.production.*
+settings.local.*
+
+# Database and user data
+*.db
+*.sqlite
+*.sqlite3
+*.sql
+*.dump
+*.bak
+*.backup
+data/
+!data/
+!data/.gitkeep
+
+# Logs and runtime files
+*.log
+logs/
+storage/
+uploads/
+tmp/
+cache/
+
+# Archives and exports
+*.zip
+*.tar
+*.tar.gz
+*.7z
+
+# Python
 __pycache__/
 *.py[cod]
 *$py.class
-
-# Distribution / packaging
-.Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-share/python-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
-
-# PyInstaller
-#  Usually these files are written by a python script from a template
-#  before PyInstaller builds the exe, so as to inject date/other infos into it.
-*.manifest
-*.spec
-
-# Installer logs
-pip-log.txt
-pip-delete-this-directory.txt
-
-# Unit test / coverage reports
+.venv/
+venv/
+env/
+ENV/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
 htmlcov/
 .tox/
 .nox/
-.coverage
-.coverage.*
-.cache
-nosetests.xml
-coverage.xml
-*.cover
-*.py,cover
-.hypothesis/
-.pytest_cache/
-.env
-.venv
-env/
-venv/
-ENV/
-env.bak/
-venv.bak/
+build/
+dist/
+*.egg-info/
+.eggs/
 
-# Spyder project settings
-.spyderproject
-.spyproject
+# JavaScript / Node.js (if frontend tooling is added later)
+node_modules/
+.next/
+coverage/
 
-# Rope project settings
-.ropeproject
-
-# mkdocs documentation
-/site
-
-# mypy
-.mypy_cache/
-.dmypy.json
-dmypy.json
-
-# Pyright type checker
-.pyright/
-
-# Environments
-.env
-.env.*
-!**.env.example  # Optionally keep template
-
-# macOS
+# IDE and OS files
+.idea/
+.vscode/
 .DS_Store
+Thumbs.db

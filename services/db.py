@@ -159,7 +159,7 @@ async def add_balance(user_id: int, amount: float) -> User:
         user = await get_user(user_id)
     user.balance += amount
     await update_user(user)
-    # Referral reward: 50₽ to referrer on first top-up
+    # Referral reward to referrer on first top-up (amount taken from settings)
     if amount > 0 and user.referred_by:
         await _reward_referrer(user.referred_by, user.user_id, amount)
     return user
@@ -580,9 +580,9 @@ async def record_promocode_use(code: str, user_id: int):
         await db.commit()
 
 
-TARIFF_INDEX_MAP = {1: 3, 2: 30, 3: 90, 4: 180, 5: 365}
-TARIFF_PRICE_MAP = {3: 18, 30: 129, 90: 329, 180: 599, 365: 1149}
-_DAYS_TO_INDEX = {v: k for k, v in TARIFF_INDEX_MAP.items()}
+TARIFF_INDEX_MAP = settings.TARIFF_INDEX_MAP
+TARIFF_PRICE_MAP = settings.TARIFF_PRICE_MAP
+_DAYS_TO_INDEX = settings._DAYS_TO_INDEX
 
 
 async def validate_promocode(promo: dict, tariff_days: int, user_id: int = None) -> tuple[bool, str]:

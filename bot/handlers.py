@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 def _connect_keyboard():
     return InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="Подключить", web_app=WebAppInfo(url=f"{settings.BASE_URL}/blackvpn-connect.html"))]
+        [InlineKeyboardButton(text="Подключить", web_app=WebAppInfo(url=f"{settings.BASE_URL}/connect.html"))]
     ])
 
 
@@ -66,10 +66,10 @@ async def cmd_start(message: Message, command: CommandObject = None):
             await db.commit()
 
     keyboard = InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="🚀 Открыть BlackVPN App", web_app=WebAppInfo(url=f"{settings.BASE_URL}/"))]
+        [InlineKeyboardButton(text="🚀 Открыть App", web_app=WebAppInfo(url=f"{settings.BASE_URL}/"))]
     ])
     await message.answer(
-        f"Добро пожаловать в <b>BlackVPN</b>!\n"
+        f"Добро пожаловать в <b>{settings.APP_NAME}</b>!\n"
         f"Ваш ID: <code>{message.from_user.id}</code>\n"
         f"Нажмите кнопку ниже, чтобы открыть приложение управления VPN:",
         reply_markup=keyboard,
@@ -88,8 +88,8 @@ async def cmd_referral(message: Message):
     stats = await get_referral_stats(message.from_user.id) if user else {'referrals': 0, 'earned': 0}
 
     keyboard = InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="🔗 Поделиться ссылкой", url=f"https://t.me/share/url?url={user.referral_url}&text=BlackVPN — быстрый и надёжный VPN! Попробуй по моей ссылке!")],
-        [InlineKeyboardButton(text="🚀 Открыть BlackVPN App", web_app=WebAppInfo(url=f"{settings.BASE_URL}/"))]
+        [InlineKeyboardButton(text="🔗 Поделиться ссылкой", url=f"https://t.me/share/url?url={user.referral_url}&text={settings.APP_NAME} — быстрый и надёжный VPN! Попробуй по моей ссылке!")],
+        [InlineKeyboardButton(text="🚀 Открыть App", web_app=WebAppInfo(url=f"{settings.BASE_URL}/"))]
     ])
     await message.answer(
         f"<b>Реферальная программа</b>\n\n"
@@ -141,12 +141,12 @@ async def web_app_data_handler(message: Message):
             try:
                 await message.bot.send_invoice(
                     chat_id=user_id,
-                    title="Пополнение BlackVPN",
+                    title=f"Пополнение {settings.APP_NAME}",
                     description=f"Пополнение личного баланса на {amount} ₽",
                     payload=f"topup_{user_id}_{amount}",
                     provider_token="",
                     currency="XTR",
-                    prices=[LabeledPrice(label="Пополнение BlackVPN", amount=int(amount))],
+                    prices=[LabeledPrice(label=f"Пополнение {settings.APP_NAME}", amount=int(amount))],
                     need_name=False,
                     need_phone_number=False,
                     need_email=False,

@@ -1,69 +1,25 @@
 import asyncio
 import logging
-import os
-import time
+
 from aiohttp import web
 from aiogram import Bot, Dispatcher
 from aiogram.types import MenuButtonWebApp, WebAppInfo
 from aiogram.webhook.aiohttp_server import SimpleRequestHandler
-from bot.handlers import register_router
+
 from bot.admin_handlers import router as admin_router
-from web.routes import setup_routes
+from bot.handlers import register_router
 from config import settings
-from services.db import init_db, close_db
+from services.db import close_db, init_db
+from web.routes import setup_routes
 
 logging.basicConfig(
-    level=logging.INFO,
+    level=getattr(logging, settings.LOG_LEVEL, logging.INFO),
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
 
-_REQUIRED_ENV = [
-    ('TELEGRAM_BOT_TOKEN', 'TELEGRAM_BOT_TOKEN'),
-    ('XUI_URL', 'XUI_URL'),
-    ('XUI_API_TOKEN', 'XUI_API_TOKEN'),
-    ('XUI_INBOUND_IDS', 'XUI_INBOUND_IDS'),
-    ('XUI_PASSWORD', 'XUI_PASSWORD'),
-    ('BASE_URL', 'BASE_URL'),
-]
 
-def _validate_settings():
-    missing = []
-    for name, attr in _REQUIRED_ENV:
-        if not getattr(settings, attr, None):
-            missing.append(name)
-    if missing:
-        logger.warning("Missing required env vars: %s", ', '.join(missing))
-
-async def on_startup(_app):
-    bot = _app['bot']
-    await bot.delete_webhook(drop_pending_updates=True)
-    await init_db()
-    webhook_url = f"{settings.BASE_URL}/telegram-webhook"
-    await bot.set_webhook(webhook_url)
-    await bot.set_chat_menu_button(
-        menu_button=MenuButtonWebApp(text="BlackVPN", web_app=WebAppInfo(url=f"{settings.BASE_URL}/"))
-    )
-    logger.info("Webhook set to %s", webhook_url)
-    _app['bg_tasks'] = []
-    _app['bg_tasks'].append(asyncio.create_task(_expire_payments_loop(_app)))
-    _app['bg_tasks'].append(asyncio.create_task(_backup_loop(_app)))
-    _app['bg_tasks'].append(asyncio.create_task(_expiry_notify_loop(_app)))
-
-async def _expiry_notify_loop(_app):
-    from services.notify import check_sub_expiry_notifications
-    bot = _app['bot']
-    while True:
-        try:
-            await check_sub_expiry_notifications(bot)
-        except Exception as e:
-            logger.error("Expiry notification error: %s", e)
-        try:
-            await asyncio.wait_for(asyncio.sleep(60), timeout=60)
-        except asyncio.CancelledError:
-            break
-
-async def _expire_payments_loop(_app):
+async def _expire_payments_loop():
     from services.db import expire_old_payments
     while True:
         try:
@@ -75,55 +31,67 @@ async def _expire_payments_loop(_app):
         except asyncio.CancelledError:
             break
 
-async def _backup_loop(_app):
-    import shutil
-    from aiogram.types import BufferedInputFile
-    from services.db import DB_PATH
-    bot = _app['bot']
-    admin_ids = settings.ADMIN_IDS
-    backup_dir = os.path.join(os.path.dirname(DB_PATH or 'data'), 'backups')
-    os.makedirs(backup_dir, exist_ok=True)
+
+async def _expiry_notify_loop(bot):
+    from services.notify import check_sub_expiry_notifications
     while True:
         try:
-            if DB_PATH and os.path.exists(DB_PATH):
-                ts = int(time.time())
-                dst = os.path.join(backup_dir, f'bot_backup_{ts}.db')
-                shutil.copy2(DB_PATH, dst)
-                # Keep only last 48 backups
-                backups = sorted([f for f in os.listdir(backup_dir) if f.startswith('bot_backup_')])
-                while len(backups) > 48:
-                    os.remove(os.path.join(backup_dir, backups.pop(0)))
-                # Send silently to all admins
-                for admin_id in admin_ids:
-                    try:
-                        with open(dst, 'rb') as f:
-                            await bot.send_document(
-                                admin_id,
-                                BufferedInputFile(f.read(), filename=f'backup_{ts}.db'),
-                                disable_notification=True
-                            )
-                    except Exception as e:
-                        logger.warning("Failed to send backup to admin %s: %s", admin_id, e)
+            await check_sub_expiry_notifications(bot)
+        except Exception as e:
+            logger.error("Expiry notification error: %s", e)
+        try:
+            await asyncio.wait_for(asyncio.sleep(60), timeout=60)
         except asyncio.CancelledError:
             break
-        except Exception as e:
-            logger.error("Backup error: %s", e)
-        await asyncio.sleep(3600)
+
+
+def _start_background_tasks(bot) -> list[asyncio.Task]:
+    return [
+        asyncio.create_task(_expire_payments_loop()),
+        asyncio.create_task(_expiry_notify_loop(bot)),
+    ]
+
+
+async def _stop_background_tasks(tasks: list[asyncio.Task]):
+    for task in tasks:
+        task.cancel()
+    for task in tasks:
+        try:
+            await task
+        except (asyncio.CancelledError, Exception):
+            pass
+
+
+async def on_startup(_app):
+    await init_db()
+    if settings.WEBHOOK_ENABLED:
+        bot = _app['bot']
+        await bot.delete_webhook(drop_pending_updates=True)
+        webhook_url = f"{settings.BASE_URL}/telegram-webhook"
+        await bot.set_webhook(webhook_url)
+        await bot.set_chat_menu_button(
+            menu_button=MenuButtonWebApp(
+                text=settings.APP_NAME,
+                web_app=WebAppInfo(url=f"{settings.BASE_URL}/"),
+            )
+        )
+        logger.info("Webhook set to %s", webhook_url)
+        _app['bg_tasks'] = _start_background_tasks(bot)
+    else:
+        logger.info("Webhook mode disabled; long polling mode active")
+
 
 async def on_shutdown(_app):
-    for task in _app.get('bg_tasks', []):
-        task.cancel()
+    await _stop_background_tasks(_app.get('bg_tasks', []))
     await close_db()
 
-def main():
-    _validate_settings()
-    bot = Bot(token=settings.TELEGRAM_BOT_TOKEN)
-    dp = Dispatcher()
 
+def _build_dispatcher() -> Dispatcher:
     from aiogram import BaseMiddleware
-    from aiogram.types import Message, CallbackQuery, TelegramObject
+    from aiogram.types import CallbackQuery, Message, TelegramObject
+    from typing import Any, Awaitable, Callable, Dict
+
     from services.db import update_user_profile
-    from typing import Callable, Dict, Any, Awaitable
 
     class SaveProfileMiddleware(BaseMiddleware):
         async def __call__(
@@ -145,10 +113,58 @@ def main():
                 )
             return await handler(event, data)
 
+    dp = Dispatcher()
     dp.message.middleware(SaveProfileMiddleware())
     dp.callback_query.middleware(SaveProfileMiddleware())
     dp.include_router(admin_router)
     register_router(dp)
+    return dp
+
+
+def main():
+    if not settings.TELEGRAM_BOT_TOKEN:
+        logger.warning("TELEGRAM_BOT_TOKEN is not set; the bot will not start.")
+
+    dp = _build_dispatcher()
+    bot = Bot(token=settings.TELEGRAM_BOT_TOKEN) if settings.TELEGRAM_BOT_TOKEN else None
+
+    if not settings.WEBHOOK_ENABLED:
+        # Development mode: Telegram long polling + local web app for the WebApp UI.
+        async def _polling():
+            await asyncio.sleep(0.5)
+            await bot.delete_webhook(drop_pending_updates=True)
+            await dp.start_polling(bot)
+
+        async def _dev_main():
+            app = web.Application()
+            app['bot'] = bot
+            await init_db()
+            setup_routes(app, bot, dp)
+            runner = web.AppRunner(app)
+            await runner.setup()
+            site = web.TCPSite(runner, settings.HOST, settings.PORT)
+            await site.start()
+            polling_task = asyncio.create_task(_polling())
+            bg_tasks = _start_background_tasks(bot)
+            try:
+                await asyncio.Event().wait()
+            except (KeyboardInterrupt, SystemExit):
+                pass
+            finally:
+                polling_task.cancel()
+                await _stop_background_tasks(bg_tasks)
+                await close_db()
+                await runner.cleanup()
+
+        try:
+            asyncio.run(_dev_main())
+        except KeyboardInterrupt:
+            logger.info("Bot stopped")
+        return
+
+    if bot is None:
+        logger.error("WEBHOOK_ENABLED requires TELEGRAM_BOT_TOKEN.")
+        raise SystemExit(1)
 
     app = web.Application()
     app['bot'] = bot
@@ -159,14 +175,8 @@ def main():
     webhook_requests_handler = SimpleRequestHandler(dispatcher=dp, bot=bot)
     webhook_requests_handler.register(app, path='/telegram-webhook')
 
-    if settings.ADMIN_BOT_TOKEN:
-        from aiogram import Bot as AdminBot
-        AdminBot(token=settings.ADMIN_BOT_TOKEN)
-
     web.run_app(app, host=settings.HOST, port=settings.PORT)
 
+
 if __name__ == '__main__':
-    try:
-        main()
-    except (KeyboardInterrupt, SystemExit):
-        logger.info("Bot stopped")
+    main()

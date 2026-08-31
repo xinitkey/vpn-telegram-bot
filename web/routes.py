@@ -14,14 +14,8 @@ from services.db import (
     get_promocode, increment_promocode_uses, validate_promocode,
     discounted_price, record_promocode_use, user_used_promocode,
     clear_sub_notifications,
-    TARIFF_INDEX_MAP, TARIFF_PRICE_MAP,
 )
-from services.xui_api import (
-    add_client as xui_add_client,
-    update_client_expiry as xui_update_expiry,
-    sync_or_create_client as xui_sync_or_create,
-    get_client_activity as xui_get_client_activity,
-)
+from services.vpn import get_provider
 from services.payment import generate_payment_id
 from services.auth import verify_telegram_init_data
 from services.sub_convert import convert as sub_convert
@@ -76,6 +70,10 @@ def _require_user_id(request, data: dict | None = None) -> int | None:
     return None
 
 
+def _platega_configured() -> bool:
+    return settings.PAYMENT_PROVIDER == 'platega' and bool(settings.PLATEGA_MERCHANT_ID and settings.PLATEGA_SECRET)
+
+
 def setup_routes(app: web.Application, bot: Bot, dp: Dispatcher):
     app.middlewares.append(_rate_middleware())
 
@@ -87,7 +85,7 @@ def setup_routes(app: web.Application, bot: Bot, dp: Dispatcher):
                     headers={'Cache-Control': 'no-cache'},
                 )
         except FileNotFoundError:
-            return web.Response(text="BlackVPN API Operational", content_type='text/plain')
+            return web.Response(text=f"{settings.APP_NAME} API Operational", content_type='text/plain')
     app.router.add_get('/', index)
 
     async def api_user_data(request):
@@ -144,23 +142,26 @@ def setup_routes(app: web.Application, bot: Bot, dp: Dispatcher):
         tariffs = [
             {
                 'days': days,
-                'price': TARIFF_PRICE_MAP[days],
-                'perDay': round(TARIFF_PRICE_MAP[days] / days, 1),
+                'price': settings.TARIFF_PRICE_MAP[days],
+                'perDay': round(settings.TARIFF_PRICE_MAP[days] / days, 1),
             }
-            for days in sorted(TARIFF_PRICE_MAP)
+            for days in sorted(settings.TARIFF_PRICE_MAP)
         ]
+        payment_methods = []
+        if _platega_configured():
+            payment_methods = [
+                {'id': 'platega_sbp', 'label': 'СБП', 'code': 2},
+                {'id': 'platega_cards', 'label': 'Карта', 'code': 10},
+                {'id': 'platega_crypto', 'label': 'Криптовалюта', 'code': 13},
+            ]
         return web.json_response({
             'tariffs': tariffs,
             'dailyPrice': settings.TARIFF_DAILY_PRICE,
-            'minTopUp': 50,
-            'topUpPresets': [50, 100, 200, 500, 1000, 2000],
-            'paymentMethods': [
-                {'id': 'platega_sbp', 'label': 'СБП', 'code': 2},
-                {'id': 'platega_mir', 'label': 'МИР', 'code': 11},
-                {'id': 'platega_crypto', 'label': 'Криптовалюта', 'code': 13},
-            ],
+            'minTopUp': settings.MIN_TOPUP,
+            'topUpPresets': settings.TOPUP_PRESETS,
+            'paymentMethods': payment_methods,
             'referralReward': settings.REFERRAL_REWARD,
-            'trialDays': 3,
+            'trialDays': settings.TRIAL_DAYS,
         })
 
     async def api_user_devices(request):
@@ -174,7 +175,7 @@ def setup_routes(app: web.Application, bot: Bot, dp: Dispatcher):
                 'trafficUp': 0, 'trafficDown': 0, 'ips': [], 'devices': 0,
             })
         try:
-            info = await xui_get_client_activity(user.xui_email)
+            info = await get_provider().get_client_activity(user.xui_email)
         except Exception as e:
             log.warning(f"Failed to get client activity for {user.xui_email}: {e}")
             info = {"active": False, "lastOnline": 0, "trafficUp": 0, "trafficDown": 0, "ips": []}
@@ -215,12 +216,12 @@ def setup_routes(app: web.Application, bot: Bot, dp: Dispatcher):
         if promo['tariff_ids']:
             idxes = [int(x.strip()) for x in promo['tariff_ids'].split(',') if x.strip()]
         else:
-            idxes = list(TARIFF_INDEX_MAP.keys())
+            idxes = list(settings.TARIFF_INDEX_MAP.keys())
         tariff_prices = {}
         for idx in idxes:
-            days = TARIFF_INDEX_MAP.get(idx)
+            days = settings.TARIFF_INDEX_MAP.get(idx)
             if days:
-                original = TARIFF_PRICE_MAP.get(days, 0)
+                original = settings.TARIFF_PRICE_MAP.get(days, 0)
                 disc = discounted_price(days, discount)
                 applicable.append(idx)
                 tariff_prices[str(idx)] = {'days': days, 'original': original, 'discounted': disc}
@@ -266,11 +267,11 @@ def setup_routes(app: web.Application, bot: Bot, dp: Dispatcher):
         if is_grant:
             days = grant_days
             total_price = 0
-        elif days == 3 and (price is None or price == 0) and not user.trial_used:
+        elif days in settings.TARIFF_PRICE_MAP and (price is None or price == 0) and not user.trial_used and days == settings.TRIAL_DAYS:
             total_price = 0
         else:
             # Price is ALWAYS computed server-side; client-provided price is ignored
-            total_price = TARIFF_PRICE_MAP.get(days) or days * settings.TARIFF_DAILY_PRICE
+            total_price = settings.TARIFF_PRICE_MAP.get(days) or days * settings.TARIFF_DAILY_PRICE
             # Apply promo code discount
             if promo_code and promo:
                 discounted = discounted_price(days, promo['discount_percent'])
@@ -288,27 +289,28 @@ def setup_routes(app: web.Application, bot: Bot, dp: Dispatcher):
         user.subscription = new_sub
         if not is_extension:
             user.subscription_start = now_ms
-        xui_error = None
-        if settings.XUI_URL and settings.XUI_PASSWORD and (settings.XUI_INBOUND_ID is not None or settings.XUI_INBOUND_IDS):
+        provider_error = None
+        provider = get_provider()
+        if provider.enabled:
             email = f'user_{user_id}'
             total_days = max(1, (new_sub - now_ms) // 86400000)
             try:
                 if user.xui_email:
-                    result = await xui_sync_or_create(user.xui_email, total_days, user.xui_inbound_id or None)
+                    result = await provider.sync_or_create_client(user.xui_email, total_days, user.xui_inbound_id or None)
                     user.xui_email = result['email']
                     user.link = result['link']
                     if result.get('recreated'):
                         user.xui_uuid = result.get('uuid', user.xui_uuid)
                         user.xui_inbound_id = result.get('inbound_id', user.xui_inbound_id)
                 else:
-                    client = await xui_add_client(email, total_days, user.xui_inbound_id or None)
+                    client = await provider.add_client(email, total_days, user.xui_inbound_id or None)
                     user.xui_uuid = client['uuid']
                     user.xui_email = client['email']
                     user.link = client['link']
                     user.xui_inbound_id = client['inbound_id']
             except Exception as e:
-                log.error(f"3x-UI error for user {user_id}: {e}")
-                xui_error = str(e)
+                log.error(f"VPN provider error for user {user_id}: {e}")
+                provider_error = str(e)
                 if total_price > 0:
                     user.balance += total_price
                 user.subscription = user.subscription - add_ms if user.subscription else 0
@@ -316,9 +318,9 @@ def setup_routes(app: web.Application, bot: Bot, dp: Dispatcher):
                     user.subscription_start = 0
                 await update_user(user)
                 return web.json_response(
-                    {'error': f'Ошибка VPN-панели: {xui_error}'}, status=502
+                    {'error': f'Ошибка VPN-провайдера: {provider_error}'}, status=502
                 )
-        if not is_grant and days == 3 and (price is None or price == 0) and not user.trial_used:
+        if not is_grant and days == settings.TRIAL_DAYS and (price is None or price == 0) and not user.trial_used:
             user.trial_used = True
         if promo_code:
             await increment_promocode_uses(promo_code)
@@ -337,8 +339,8 @@ def setup_routes(app: web.Application, bot: Bot, dp: Dispatcher):
             'subscription': user.subscription,
             'link': user.link or ''
         }
-        if xui_error:
-            resp['xui_warning'] = xui_error
+        if provider_error:
+            resp['provider_warning'] = provider_error
         return web.json_response(resp)
 
     async def api_create_payment(request):
@@ -356,8 +358,8 @@ def setup_routes(app: web.Application, bot: Bot, dp: Dispatcher):
             amount = 0
         method = raw.get('method', '')
         pay_method = raw.get('paymentMethod', 0)
-        if amount < 50 or amount > 1000000:
-            return web.json_response({'error': 'Invalid data. Minimum 50₽'}, status=400)
+        if amount < settings.MIN_TOPUP or amount > 1000000:
+            return web.json_response({'error': 'Invalid data.'}, status=400)
 
         user = await get_user(user_id)
         if user is None:
@@ -369,10 +371,10 @@ def setup_routes(app: web.Application, bot: Bot, dp: Dispatcher):
         await create_payment(payment_id, user_id, amount, method)
 
         payment_url = None
-        if method.startswith('platega') and settings.PLATEGA_MERCHANT_ID and settings.PLATEGA_SECRET:
+        if method.startswith('platega') and _platega_configured():
             try:
                 from services.platega import create_transaction as platega_create
-                desc = f"Пополнение BlackVPN на {amount}₽"
+                desc = f"Пополнение {settings.APP_NAME} на {amount}₽"
                 result = await platega_create(
                     payment_id=payment_id,
                     amount=amount,
@@ -381,8 +383,10 @@ def setup_routes(app: web.Application, bot: Bot, dp: Dispatcher):
                 )
                 payment_url = result.get("redirect", "")
             except Exception as e:
-                log.error(f"Platega error: {e}")
-                return web.json_response({'error': f'Ошибка платежной системы: {e}'}, status=502)
+                log.error(f"Payment adapter error: {e}")
+                return web.json_response({'error': f'Ошибка платежного провайдера: {e}'}, status=502)
+        elif method.startswith('platega'):
+            return web.json_response({'error': 'Платежный провайдер не настроен'}, status=400)
 
         return web.json_response({
             'success': True,
@@ -408,7 +412,7 @@ def setup_routes(app: web.Application, bot: Bot, dp: Dispatcher):
         if not user_id:
             try:
                 user_id = int(request.match_info.get('user_id', 0))
-            except (ValueError, TypeError):
+            except (TypeError, ValueError):
                 user_id = 0
         if not user_id:
             return web.json_response({'error': 'Missing auth'}, status=401)
@@ -475,6 +479,9 @@ rules:
     app.router.add_get('/api/sub-test', api_sub_test)
 
     async def platega_webhook(request):
+        # Payment webhook is only active when a provider is configured
+        if not _platega_configured():
+            return web.Response(status=404)
         # Rate-limit webhook (10 requests/minute/IP)
         ip = request.remote or 'unknown'
         now = time.time()
@@ -482,7 +489,7 @@ rules:
         while wh_window and wh_window[0] < now - 60:
             wh_window.pop(0)
         if len(wh_window) >= 10:
-            log.warning(f"Platega webhook rate limit exceeded from {ip}")
+            log.warning(f"Payment webhook rate limit exceeded from {ip}")
             return web.Response(status=429)
         wh_window.append(now)
 
@@ -490,12 +497,12 @@ rules:
         if settings.PLATEGA_WEBHOOK_TOKEN:
             token = request.query.get('token', '')
             if not hmac.compare_digest(token, settings.PLATEGA_WEBHOOK_TOKEN):
-                log.error(f"Platega webhook invalid token from {ip}")
+                log.error(f"Payment webhook invalid token from {ip}")
                 return web.Response(status=403)
 
         body_bytes = await request.read()
         if not body_bytes:
-            log.warning(f"Platega webhook empty body from {ip}")
+            log.warning(f"Payment webhook empty body from {ip}")
             return web.Response(status=400)
 
         if settings.PLATEGA_WEBHOOK_VERIFY and settings.PLATEGA_WEBHOOK_SECRET:
@@ -506,7 +513,7 @@ rules:
                 or ''
             )
             if not sig_header:
-                log.warning("Platega webhook missing signature header (X-Signature / X-Webhook-Signature / Webhook-Signature)")
+                log.warning("Payment webhook missing signature header")
                 return web.Response(status=400)
 
             expected = hmac.new(
@@ -530,7 +537,7 @@ rules:
                     pass
 
             if not match:
-                log.error("Platega webhook signature verification failed")
+                log.error("Payment webhook signature verification failed")
                 return web.Response(status=400)
 
         try:
@@ -548,7 +555,7 @@ rules:
                 return web.json_response({'error': 'Already processed'}, status=409)
             wh_amount = float(raw.get("paymentDetails", {}).get("amount", 0))
             if wh_amount and abs(wh_amount - payment['amount']) > 0.01:
-                log.error(f"Platega amount mismatch for {payload_id}: expected {payment['amount']}, got {wh_amount}")
+                log.error(f"Payment amount mismatch for {payload_id}")
                 return web.Response(status=400)
             amount = wh_amount or payment['amount']
             await update_payment_status(payload_id, 'completed')
@@ -556,7 +563,7 @@ rules:
             try:
                 await bot.send_message(
                     payment['user_id'],
-                    f"Баланс пополнен через Platega!\nСумма: {amount} ₽\nСтатус: Успешно",
+                    f"Баланс пополнен!\nСумма: {amount} ₽\nСтатус: Успешно",
                     parse_mode='HTML'
                 )
             except Exception as e:
